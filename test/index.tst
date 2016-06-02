@@ -8,21 +8,8 @@
 %% TESTS
 %%
 
-"match".
+"CREATE INDEX ON :Actor(name)".
+"create index on :Actor(name)".
 
-"cypher match".
-"explain match".
-"profile match".
-"explain profile match".
-"EXPLAIN PROFILE MATCH".
-
-% "cypher 2.2 match".
-
-% "cypher planner=cost match".
-% "cypher planner=rule match".
-
-% "cypher 2.2 planner=cost match".
-
-% "cypher explain 2.2 planner=cost match".
-% "cypher profile 2.2 planner=cost match".
-% "cypher explain profile 2.2 planner=cost match".
+"DROP INDEX ON :Person(name)".
+"drop index on :Person(name)".
