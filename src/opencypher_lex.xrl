@@ -9,7 +9,7 @@ Rules.
 
 %% punctuation
 % (=|<>|<|>|<=|>=)                                    : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
-([=\|\-\+\*\/\(\)\,\.\;]|(\|\|)|(div))              : {token, {list_to_atom(TokenChars), TokenLine}}.
+([:=\|\-\+\*\/\(\)\,\.\;]|(\|\|)|(div))             : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% names
 [A-Za-z][A-Za-z0-9_@:#\$]*                          : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
