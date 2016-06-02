@@ -12,14 +12,17 @@ Nonterminals
  clause
 % command
 % configuration_option
-% cypher_option
+ cypher_option
+ cypher_option_spec
+ cypher_option_spec_option
+ cypher_option_spec_options
  query
  query_options
  regular_query
  root
  single_query
+ symbolic_name
  statement
-% version_number
  .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,6 +74,7 @@ Terminals
 % LOAD
  MATCH
 % MERGE
+ NAME
 % NODE
 % NONE
 % NOT
@@ -99,15 +103,17 @@ Terminals
 % UNSIGNED_DECIMAL_INTEGER
 % UNWIND
 % USING
+ VERSION_NUMBER
 % WHEN
 % WHERE
 % WITH
 % XOR
+ '='
+ ';'
 % '+'
 % '-'
 % '*'
 % '/'
- ';'
 % '('
 % ')'
 % ','
@@ -133,7 +139,8 @@ Endsymbol
 % Left        110 'OR'.
 % Left        120 'AND'.
 % Left        130 'NOT'.
-% Nonassoc    200 COMPARISON. %% = <> < > <= >=
+ Nonassoc    210 '='.
+% Nonassoc    220 COMPARISON. %% = <> < > <= >=
 % Left        300 '+' '-'.
 % Left        400 '*' '/'.
 % %Unary      500 '-'.
@@ -141,24 +148,31 @@ Endsymbol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
 
-root -> query_options statement                                                                 : [{cypher, {'query options', '$1'}, {'statement', '$2'}}].
-root -> query_options statement ';'                                                             : [{cypher, {'query options', '$1'}, {'statement', '$2'}}].
-root -> statement                                                                               : [{cypher, {'statement', '$1'}}].
-root -> statement ';'                                                                           : [{cypher, {'statement', '$1'}}].
+root -> query_options statement                                                                 : {cypher_statement, {query_options, '$1'}, {statement, '$2'}}.
+root -> query_options statement ';'                                                             : {cypher_statement, {query_options, '$1'}, {statement, '$2'}}.
+root -> statement                                                                               : {cypher_statement, {statement, '$1'}}.
+root -> statement ';'                                                                           : {cypher_statement, {statement, '$1'}}.
 
 query_options -> query_options any_cypher_option                                                : '$1' ++ ['$2'].
 query_options -> any_cypher_option                                                              : ['$1'].
 
-% any_cypher_option -> cypher_option                                                              : {'%1'}.
 any_cypher_option -> CYPHER                                                                     : {'cypher', []}.
 any_cypher_option -> EXPLAIN                                                                    : {'explain', []}.
 any_cypher_option -> PROFILE                                                                    : {'profile', []}.
+any_cypher_option -> cypher_option                                                              : '$1'.
 
-% cypher_option -> CYPHER version_number                                                          : {'cypher', [{'version', '$2'}]}.
-% cypher_option -> CYPHER configuration_options                                                   : ['cypher', 'option', ''$2'].
-% cypher_option -> cypher_option configuration_options                                            : '$1' ++ ['$2'].
+cypher_option -> CYPHER cypher_option_spec                                                      : {'cypher', '$2'}.
 
-% version_number -> UNSIGNED_DECIMAL_INTEGER '.' UNSIGNED_DECIMAL_INTEGER                         : {'$1', '$3'}.
+cypher_option_spec -> cypher_option_spec_options                                                : {options, '$1'}.
+cypher_option_spec -> VERSION_NUMBER                                                            : {version, unwrap_bin('$1')}.
+cypher_option_spec -> VERSION_NUMBER cypher_option_spec_options                                 : {{version, unwrap_bin('$1')}, {options, '$2'}}.
+
+cypher_option_spec_options -> cypher_option_spec_options cypher_option_spec_option              : '$1' ++ ['$2'].
+cypher_option_spec_options -> cypher_option_spec_option                                         : ['$1'].
+
+cypher_option_spec_option -> symbolic_name '=' symbolic_name                                    : {option, '$1', '$3'}.
+
+symbolic_name -> NAME                                                                           : '$1'.
 
 statement -> query                                                                              : '$1'.
 
@@ -193,7 +207,8 @@ Erlang code.
          , parsetree_with_tokens/1
          , is_reserved/1]).
 
--include("ocparse.hrl").
+%-define(NODEBUG, true).
+-include_lib("eunit/include/eunit.hrl").
 
 -define(Dbg(__Rule, __Production),
 begin
@@ -293,14 +308,11 @@ pt_to_string(PTree) -> foldtd(fun(_,_) -> null_fun end, null_fun, PTree).
 
 -spec foldtd(fun(), term(), tuple() | list()) -> {error, term()} | binary().
 foldtd(Fun, Ctx, PTree) when is_function(Fun, 2) ->
-    ?LogDebug("wwe debugging foldtd/3 ===> Start ~n PTree: ~p~n", [PTree]),
     try ocparse_fold:fold(top_down, Fun, Ctx, 0, PTree) of
         {error,_} = Error -> Error;
         {Cypher, null_fun = Ctx} -> 
-            ?LogDebug("wwe debugging foldtd/3 ===> ~n Cypher: ~p~n", [Cypher]),
             list_to_binary(string:strip(Cypher));
         {_Output, NewCtx} -> 
-            ?LogDebug("wwe debugging foldtd/3 ===> ~n NewCtx: ~p~n", [NewCtx]),
             NewCtx
     catch
         _:Error -> {error, Error}
