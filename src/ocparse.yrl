@@ -10,12 +10,17 @@ Nonterminals
  any_cypher_option
 % bulk_import_query
  clause
-% command
-% configuration_option
+ command
+ configuration_option
+ configuration_options
+ create_index
  cypher_option
  cypher_option_spec
- cypher_option_spec_option
- cypher_option_spec_options
+ drop_index
+ index
+ label_name
+ node_label
+ property_key_name
  query
  query_options
  regular_query
@@ -43,7 +48,7 @@ Terminals
 % CONSTRAINT
 % CONTAINS
 % COUNT
-% CREATE
+ CREATE
 % CSV
  CYPHER
 % DELETE
@@ -51,7 +56,7 @@ Terminals
 % DESCENDING
 % DETACH
 % DISTINCT
-% DROP
+ DROP
 % ELSE
 % END
 % ENDS
@@ -65,7 +70,7 @@ Terminals
 % FROM
 % HEADERS
 % IN
-% INDEX
+ INDEX
 % IS
 % JOIN
 % L_0X
@@ -79,7 +84,7 @@ Terminals
 % NONE
 % NOT
 % NULL
-% ON
+ ON
 % OPTIONAL
 % OR
 % ORDER
@@ -109,13 +114,14 @@ Terminals
 % WITH
 % XOR
  '='
+ ':'
  ';'
+ '('
+ ')'
 % '+'
 % '-'
 % '*'
 % '/'
-% '('
-% ')'
 % ','
 % '||'
 % '|'
@@ -163,17 +169,16 @@ any_cypher_option -> cypher_option                                              
 
 cypher_option -> CYPHER cypher_option_spec                                                      : {'cypher', '$2'}.
 
-cypher_option_spec -> cypher_option_spec_options                                                : {options, '$1'}.
+cypher_option_spec -> configuration_options                                                     : {options, '$1'}.
 cypher_option_spec -> VERSION_NUMBER                                                            : {version, unwrap_bin('$1')}.
-cypher_option_spec -> VERSION_NUMBER cypher_option_spec_options                                 : {{version, unwrap_bin('$1')}, {options, '$2'}}.
+cypher_option_spec -> VERSION_NUMBER configuration_options                                      : {{version, unwrap_bin('$1')}, {options, '$2'}}.
 
-cypher_option_spec_options -> cypher_option_spec_options cypher_option_spec_option              : '$1' ++ ['$2'].
-cypher_option_spec_options -> cypher_option_spec_option                                         : ['$1'].
+configuration_options -> configuration_options configuration_option                             : '$1' ++ ['$2'].
+configuration_options -> configuration_option                                                   : ['$1'].
 
-cypher_option_spec_option -> symbolic_name '=' symbolic_name                                    : {option, '$1', '$3'}.
+configuration_option -> symbolic_name '=' symbolic_name                                         : {option, '$1', '$3'}.
 
-symbolic_name -> NAME                                                                           : '$1'.
-
+statement -> command                                                                            : '$1'.
 statement -> query                                                                              : '$1'.
 
 query -> regular_query                                                                          : '$1'.
@@ -183,6 +188,23 @@ regular_query -> single_query                                                   
 single_query -> clause                                                                          : '$1'.
 
 clause -> MATCH                                                                                 : 'match'.
+
+command -> create_index                                                                         : '$1'.
+command -> drop_index                                                                           : '$1'.
+
+create_index -> CREATE index                                                                    : {'create index on', '$2'}.
+
+drop_index -> DROP index                                                                        : {'drop index on', '$2'}.
+
+index -> INDEX ON node_label '(' property_key_name ')'                                          : {'$3', '$5'}.
+
+node_label -> ':' label_name                                                                    : '$2'.
+
+label_name -> symbolic_name                                                                     : '$1'.
+
+property_key_name -> symbolic_name                                                              : '$1'.
+
+symbolic_name -> NAME                                                                           : '$1'.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
