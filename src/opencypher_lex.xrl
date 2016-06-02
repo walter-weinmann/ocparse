@@ -3,20 +3,31 @@ Definitions.
 
 Rules.
 
-([\|\-\+\*\/\(\)\,\.\;]|(\|\|)|(div))               : {token, {list_to_atom(TokenChars), TokenLine}}.              %% punctuation
+%% strings
+% (\'([^\']*(\'\')*)*\')                              : {token, {'STRING', TokenLine, TokenChars}}.
+% (\"((\$|[^\"]*)*(\"\")*)*\")                        : {token, {'NAME', TokenLine, TokenChars}}.
 
-[A-Za-z][A-Za-z0-9_@:#\$]*                          : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).   %% name
+%% punctuation
+% (=|<>|<|>|<=|>=)                                    : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
+([=\|\-\+\*\/\(\)\,\.\;]|(\|\|)|(div))              : {token, {list_to_atom(TokenChars), TokenLine}}.
 
-%numbers
+%% names
+[A-Za-z][A-Za-z0-9_@:#\$]*                          : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
+
+%% parameters
+% (\:[A-Za-z0-9_\.][A-Za-z0-9_\.]*)                   : {token, {'PARAMETER', TokenLine, TokenChars}}.
+
+%% numbers
 (-?0X([0-9]|[A-F])+)                                : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
 (-[1-9][0-9]*)                                      : {token, {'NEGATIVE_DECIMAL_INTEGER', TokenLine, TokenChars}}.
 (-?0[0-7]+)                                         : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
 (\'([^\']*(\'\')*)*\')                              : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
 (\"([^\"]*(\"\")*)*\")                              : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
 (0|[1-9][0-9]*)                                     : {token, {'UNSIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
+([0-9]*\.[0-9]*)                                    : {token, {'VERSION_NUMBER', TokenLine, TokenChars}}.
 
+%% skip tokens
 ([\s\t\r\n]+)                                       : skip_token.                                                  %% white space
-
 (\/\/.*[\n|\r])                                     : skip_token.                                                  %% comment
 
 Erlang code.
