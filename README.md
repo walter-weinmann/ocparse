@@ -9,24 +9,32 @@ Example use
 -----------
 Parsing
 ````erlang
-1> {ok, {ParseTree, Tokens}} = ocparse:parsetree_with_tokens("select * from table_1").
+1> {ok, {ParseTree, Tokens}} = ocparse:parsetree_with_tokens("profile cypher 2.2 planner=cost create index on :Actor(name)").
 2> ParseTree.
-[{{select,[{hints,<<>>},
-           {opt,<<>>},
-           {fields,[<<"*">>]},
-           {into,[]},
-           {from,[<<"table_1">>]},
-           {where,{}},
-           {'hierarchical query',{}},
-           {'group by',[]},
-           {having,{}},
-           {'order by',[]}]},
-  {extra,<<>>}}]
+{cypher_statement,
+    {query_options,
+        [{profile,[]},
+         {cypher,
+             {{version,<<"2.2">>},
+              {options,
+                  [{option,{'NAME',7,"planner"},{'NAME',4,"cost"}}]}}}]},
+    {statement,
+        {'create index on',{{'NAME',5,"Actor"},{'NAME',4,"name"}}}}}
 3> Tokens.
-[{'SELECT',1},
- {'*',1},
- {'FROM',1},
- {'NAME',7,"table_1"},
+[{'PROFILE',1},
+ {'CYPHER',1},
+ {'VERSION_NUMBER',1,"2.2"},
+ {'NAME',7,"planner"},
+ {'=',1},
+ {'NAME',4,"cost"},
+ {'CREATE',1},
+ {'INDEX',1},
+ {'ON',1},
+ {':',1},
+ {'NAME',5,"Actor"},
+ {'(',1},
+ {'NAME',4,"name"},
+ {')',1},
  {';',1}]
 ````
 Compiling
@@ -37,13 +45,8 @@ Compiling
 
 Test Cases
 ---
-* [ALTER](https://github.com/K2InformaticsGmbH/ocparse/blob/master/test/alter.tst)
-* [CREATE](https://github.com/K2InformaticsGmbH/ocparse/blob/master/test/create.tst)
-* [DELETE](https://github.com/K2InformaticsGmbH/ocparse/blob/master/test/delete.tst)
-* [GRANTS](https://github.com/K2InformaticsGmbH/ocparse/blob/master/test/grants.tst)
-* [INDEX](https://github.com/K2InformaticsGmbH/ocparse/blob/master/test/index.tst)
-* [INSERT](https://github.com/K2InformaticsGmbH/ocparse/blob/master/test/insert.tst)
-* [JSON Path](https://github.com/K2InformaticsGmbH/ocparse/blob/master/test/jsonpath.tst)
+* [Index](https://github.com/walter-weinmann/ocparse/blob/master/test/index.tst)
+* [Query Options](https://github.com/walter-weinmann/ocparse/blob/master/test/query_options.tst)
 
 These test cases are also documentation of the current support.
 
