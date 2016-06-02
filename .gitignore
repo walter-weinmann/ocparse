@@ -11,4 +11,3 @@ ebin/
 deps/
 src/opencypher_lex.erl
 src/ocparse.erl
-/test/__ARCHIVE__
