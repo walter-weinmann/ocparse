@@ -39,8 +39,8 @@ Parsing
 ````
 Compiling
 ````erlang
-4> ocparse:fold(ParseTree).
-"select * from table_1"
+4> ocparse:pt_to_string(ParseTree).
+<<"profile cypher 2.2 planner = cost create index on :Actor (name)">>
 ````
 
 Test Cases
@@ -50,8 +50,8 @@ Test Cases
 
 These test cases are also documentation of the current support.
 
-* `cypher=<test> rebar eunit skip_deps=true` to run one specific <test>.tst file  from `test/` folder
-* `LOG=0,1,2,3,4,5 rebar eunit skip_deps=true` to enable different types of log, one or more logs can be enabled, default 0
+* `SET CYPHER=<test>` and run with `rebar eunit skip_deps=true` one specific <test>.tst file  from `test/` folder
+* `SET LOG=0,1,2,3,4,5` and enable with `rebar eunit skip_deps=true` different types of log, one or more logs can be enabled, default 0
 
 level|type
 ---|---
