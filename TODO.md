@@ -34,6 +34,16 @@ ToDo List
     
 #### 3. CREATE / DROP UNIQUE CONSTRAINT ####
 
+    Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
+    
+    Statement = Command | ... ;
+    
+    Command = ... | CreateUniqueConstraint | DropUniqueConstraint | ...;
+    
+    CreateUniqueConstraint = (C,R,E,A,T,E), WS, UniqueConstraint ;
+    
+    DropUniqueConstraint = (D,R,O,P), SP, UniqueConstraint ;
+
 #### 4. CREATE / DROP NODE PROPERTY EXISTENCE CONSTRAINT ####
 
 #### 5. DELETE ####

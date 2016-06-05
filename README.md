@@ -45,7 +45,8 @@ Compiling
 
 Test Cases
 ---
-* [Index](https://github.com/walter-weinmann/ocparse/blob/master/test/index.tst)
+* [Command CONSTRAINT](https://github.com/walter-weinmann/ocparse/blob/master/test/command_constraint.tst)
+* [Command INDEX](https://github.com/walter-weinmann/ocparse/blob/master/test/command_index.tst)
 * [Query Options](https://github.com/walter-weinmann/ocparse/blob/master/test/query_options.tst)
 
 These test cases are also documentation of the current support.
