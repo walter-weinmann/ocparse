@@ -1,9 +1,9 @@
 -module(ocparse_test).
 
--export([test_cypher/3]).
-
--define(NODEBUG, true).
+% -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
+
+-export([test_cypher/3]).
 
 cypher_test_() ->
     WCard = case os:getenv("CYPHER") of
@@ -114,10 +114,11 @@ tests_gen(TestGroup, [{I,T}|Tests], Logs, SelTests, Acc) ->
 
 test_cypher(TestGroup, Test, Logs) ->
     ?D1("~n ~s", [Test]),
+    ?debugFmt("~n", []),
+    ?debugFmt("wwe debugging test_cypher/3 ===> ~n Test: ~p~n", [Test]),
     case ocparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, Tokens}} ->
-            ?debugFmt("~n", []),
-            ?debugFmt("wwe debugging test_cypher/3 ===> ~n Test: ~p~n ParseTree: ~p~n", [Test, ParseTree]),
+            ?debugFmt("wwe debugging test_cypher/3 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
             ?D2("~n~p", [ParseTree]),
             NCypher = case ocparse:pt_to_string(ParseTree) of
                        {error, Error} ->

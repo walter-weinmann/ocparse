@@ -8,6 +8,7 @@ Header "%% Copyright (C) K2 Informatics GmbH"
 
 Nonterminals
  any_cypher_option
+ atom
 % bulk_import_query
  clause
  command
@@ -16,18 +17,31 @@ Nonterminals
  create_index
  cypher_option
  cypher_option_spec
+ decimal_integer
+ double_literal
  drop_index
+ hex_integer
  index
  label_name
  node_label
+ number_literal
+ octal_integer
+ parameter
  property_key_name
  query
  query_options
+ regular_decimal_real
  regular_query
  root
+ signed_integer_literal
  single_query
  symbolic_name
  statement
+ unsigned_decimal_integer
+ unsigned_hex_integer
+ % unsigned_integer_literal
+ unsigned_octal_integer
+ version_number
  .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -51,6 +65,7 @@ Terminals
  CREATE
 % CSV
  CYPHER
+ DECIMAL_INTEGER
 % DELETE
 % DESC
 % DESCENDING
@@ -62,13 +77,15 @@ Terminals
 % ENDS
 % EXISTS
  EXPLAIN
+ EXPONENT_DECIMAL_REAL
 % EXTRACT
-% FALSE
+ FALSE
 % FIELDTERMINATOR
 % FILTER
 % FOREACH
 % FROM
 % HEADERS
+ HEX_INTEGER
 % IN
  INDEX
 % IS
@@ -83,7 +100,8 @@ Terminals
 % NODE
 % NONE
 % NOT
-% NULL
+ NULL
+ OCTAL_INTEGER
  ON
 % OPTIONAL
 % OR
@@ -98,26 +116,32 @@ Terminals
 % SCAN
 % SET
 % SHORTESTPATH
+ SIGNED_FLOAT
 % SINGLE
 % START
 % STARTS
+ STRING_LITERAL
 % THEN
-% TRUE
+ TRUE
 % UNION
 % UNIQUE
-% UNSIGNED_DECIMAL_INTEGER
+ UNSIGNED_FLOAT
 % UNWIND
 % USING
- VERSION_NUMBER
 % WHEN
 % WHERE
 % WITH
 % XOR
  '='
+ '-'
  ':'
  ';'
  '('
  ')'
+ '{'
+ '}'
+ '0'
+% '.'
 % '+'
 % '-'
 % '*'
@@ -159,19 +183,23 @@ root -> query_options statement ';'                                             
 root -> statement                                                                               : {cypher_statement, {statement, '$1'}}.
 root -> statement ';'                                                                           : {cypher_statement, {statement, '$1'}}.
 
+root -> atom ';'                                                                                : '$1'.
+
 query_options -> query_options any_cypher_option                                                : '$1' ++ ['$2'].
 query_options -> any_cypher_option                                                              : ['$1'].
 
-any_cypher_option -> CYPHER                                                                     : {'cypher', []}.
-any_cypher_option -> EXPLAIN                                                                    : {'explain', []}.
-any_cypher_option -> PROFILE                                                                    : {'profile', []}.
+any_cypher_option -> CYPHER                                                                     : {cypher, []}.
+any_cypher_option -> EXPLAIN                                                                    : {explain, []}.
+any_cypher_option -> PROFILE                                                                    : {profile, []}.
 any_cypher_option -> cypher_option                                                              : '$1'.
 
-cypher_option -> CYPHER cypher_option_spec                                                      : {'cypher', '$2'}.
+cypher_option -> CYPHER cypher_option_spec                                                      : {cypher, '$2'}.
 
 cypher_option_spec -> configuration_options                                                     : {options, '$1'}.
-cypher_option_spec -> VERSION_NUMBER                                                            : {version, unwrap_bin('$1')}.
-cypher_option_spec -> VERSION_NUMBER configuration_options                                      : {{version, unwrap_bin('$1')}, {options, '$2'}}.
+cypher_option_spec -> version_number                                                            : {version, '$1'}.
+cypher_option_spec -> version_number configuration_options                                      : {{version, '$1'}, {options, '$2'}}.
+
+version_number -> UNSIGNED_FLOAT                                                                : unwrap('$1').
 
 configuration_options -> configuration_options configuration_option                             : '$1' ++ ['$2'].
 configuration_options -> configuration_option                                                   : ['$1'].
@@ -198,13 +226,54 @@ drop_index -> DROP index                                                        
 
 index -> INDEX ON node_label '(' property_key_name ')'                                          : {'$3', '$5'}.
 
-node_label -> ':' label_name                                                                    : '$2'.
+node_label -> ':' label_name                                                                    : ":" ++ '$2'.
 
 label_name -> symbolic_name                                                                     : '$1'.
 
+atom -> number_literal                                                                          : {atom, '$1'}.
+atom -> STRING_LITERAL                                                                          : {atom, unwrap('$1')}.
+atom -> parameter                                                                               : {atom, '$1'}.
+atom -> TRUE                                                                                    : {atom, 'true'}.
+atom -> FALSE                                                                                   : {atom, 'false'}.
+atom -> NULL                                                                                    : {atom, 'null'}.
+
+number_literal -> double_literal                                                                : '$1'.
+number_literal -> signed_integer_literal                                                        : '$1'.
+
+parameter -> '{' symbolic_name '}'                                                              : {parameter, '$2'}.
+parameter -> '{' unsigned_decimal_integer '}'                                                   : {parameter, '$2'}.
+
 property_key_name -> symbolic_name                                                              : '$1'.
 
-symbolic_name -> NAME                                                                           : '$1'.
+signed_integer_literal -> hex_integer                                                           : '$1'.
+signed_integer_literal -> decimal_integer                                                       : '$1'.
+signed_integer_literal -> octal_integer                                                         : '$1'.
+
+% unsigned_integer_literal -> unsigned_decimal_integer                                            : '$1'.
+
+hex_integer -> '-' unsigned_hex_integer                                                         : "-" ++ '$2'.
+hex_integer -> unsigned_hex_integer                                                             : '$1'.
+  
+decimal_integer -> '-' unsigned_decimal_integer                                                 : "-" ++ '$2'.
+decimal_integer -> unsigned_decimal_integer                                                     : '$1'.
+
+octal_integer -> '-' unsigned_octal_integer                                                     : "-" ++ '$2'.
+octal_integer -> unsigned_octal_integer                                                         : '$1'.
+
+unsigned_hex_integer -> HEX_INTEGER                                                             : unwrap('$1').
+
+unsigned_decimal_integer -> DECIMAL_INTEGER                                                     : unwrap('$1').
+unsigned_decimal_integer -> '0'                                                                 : "0".
+
+double_literal -> EXPONENT_DECIMAL_REAL                                                         : unwrap('$1').
+double_literal -> regular_decimal_real                                                          : '$1'.
+
+regular_decimal_real -> SIGNED_FLOAT                                                            : unwrap('$1').
+regular_decimal_real -> UNSIGNED_FLOAT                                                          : unwrap('$1').
+
+unsigned_octal_integer -> OCTAL_INTEGER                                                         : unwrap('$1').
+
+symbolic_name -> NAME                                                                           : unwrap('$1').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -243,11 +312,9 @@ end).
 %%-----------------------------------------------------------------------------
 
 start() ->
-    jpparse:start(),
     application:start(?MODULE).
 stop() ->
-    application:stop(?MODULE),
-    jpparse:stop().
+    application:stop(?MODULE).
 
 start(_Type, _Args) -> supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 stop(_State)        -> ok.
@@ -257,11 +324,6 @@ init([])            -> {ok, { {one_for_one, 5, 10}, []} }.
 %%-----------------------------------------------------------------------------
 %%                          parser helper functions
 %%-----------------------------------------------------------------------------
-
-jpparse({_,_,X}) -> jpparse(X);
-jpparse(X) ->
-    {ok, Pt} = jpparse:parsetree(X),
-    Pt.
 
 unwrap({_,_,X}) -> X;
 unwrap(X) -> X.

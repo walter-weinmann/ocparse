@@ -2,15 +2,75 @@
 
 -export([fold/5]).
 
--define(NODEBUG, true).
+% -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Atom
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {atom, {parameter, _} = Parameter} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ParameterNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Parameter),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {ParameterNew, NewCtx2},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, _Lvl, {atom, Value} = ST) 
+    when is_atom(Value) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {atom_to_list(Value) ++ " ", NewCtx1},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, _Lvl, {atom, Value} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {Value ++ " ", NewCtx1},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Command
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, _Lvl, {Command, {{'NAME', _, NodeLabel}, {'NAME', _, PropertyKeyName}}} = ST)
+fold(FType, Fun, Ctx, _Lvl, {Command, {NodeLabel, PropertyKeyName}} = ST)
     when Command == 'create index on';  Command == 'drop index on' ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {atom_to_list(Command) ++ " " ++ NodeLabel ++ "(" ++ PropertyKeyName ++ ")", NewCtx1},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, _Lvl, {Command, {{node_label, {'NAME', _, NodeLabel}}, {'NAME', _, PropertyKeyName}}} = ST)
+    when Command == 'create constraint on';  Command == 'drop constraint on' ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -55,6 +115,21 @@ fold(FType, Fun, Ctx, Lvl, {cypher_statement, {statement, _} = Statement} = ST)
                  bottom_up -> Ctx
              end,
     {StatementNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Statement),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {StatementNew, NewCtx2},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {cypher_statement, {wwe, Testobject} = Statement} = ST)
+    when is_tuple(Statement) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {StatementNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Testobject),
     NewCtx2 = case FType of
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
@@ -141,7 +216,7 @@ fold(FType, Fun, Ctx, Lvl, {options, CypherOptions} = ST) ->
     RT = {OptionStr, NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-fold(FType, Fun, Ctx, _Lvl, {option, {'NAME', _, LeftSide}, {'NAME', _, RightSide}} = ST) ->
+fold(FType, Fun, Ctx, _Lvl, {option, LeftSide, RightSide} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -152,6 +227,52 @@ fold(FType, Fun, Ctx, _Lvl, {option, {'NAME', _, LeftSide}, {'NAME', _, RightSid
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {LeftSide ++ " = " ++ RightSide ++ " ", NewCtx1},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Parameter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {parameter, {'0', 1}} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {"{0} ", NewCtx1},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {parameter, Parameter} = ST) 
+    when is_list(Parameter) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {"{" ++ Parameter ++ "} ", NewCtx1},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {parameter, Parameter} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ParameterNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Parameter),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {"{" ++ ParameterNew ++ "} ", NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -208,8 +329,7 @@ fold(FType, Fun, Ctx, Lvl, {statement, StatementDetails} = ST) ->
 % Version Number
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, _Lvl, {version, VersionNumber} = ST)
-    when is_binary(VersionNumber) ->
+fold(FType, Fun, Ctx, _Lvl, {version, VersionNumber} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -219,7 +339,7 @@ fold(FType, Fun, Ctx, _Lvl, {version, VersionNumber} = ST)
                   top_down -> NewCtx;
                   bottom_up -> Fun(ST, NewCtx)
               end,
-    RT = {binary_to_list(VersionNumber) ++ " ", NewCtx1},
+    RT = {VersionNumber ++ " ", NewCtx1},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
