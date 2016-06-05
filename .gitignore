@@ -11,3 +11,4 @@ ebin/
 deps/
 src/opencypher_lex.erl
 src/ocparse.erl
+/test/wwe.tst

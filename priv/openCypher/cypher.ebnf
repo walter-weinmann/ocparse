@@ -329,11 +329,10 @@ CaseAlternatives = (W,H,E,N), WS, Expression, WS, (T,H,E,N), WS, Expression ;
 
 Variable = SymbolicName ;
 
-# wwe StringLiteral = ('"', { ANY - ('"' | '\') | EscapedChar }, '"')
-# wwe               | ("'", { ANY - ("'" | '\') | EscapedChar }, "'")
-# wwe               ;
+StringLiteral = ('"', { ANY - ('"' | '\') | EscapedChar }, '"')
+              | ("'", { ANY - ("'" | '\') | EscapedChar }, "'")
 
-# wwe EscapedChar = '\', ('\' | "'" | '"' | (B) | (F) | (N) | (R) | (T) | '_' | '%' | ((U), 4 * HexDigit) | ((U), 8 * HexDigit)) ;
+EscapedChar = '\', ('\' | "'" | '"' | (B) | (F) | (N) | (R) | (T) | '_' | '%' | ((U), 4 * HexDigit) | ((U), 8 * HexDigit)) ;
 
 NumberLiteral = DoubleLiteral
               | SignedIntegerLiteral
@@ -490,9 +489,9 @@ whitespace = SPACE
            | Comment
            ;
 
-# wwe Comment = ('/*', { ANY - ('*') | ('*', ANY - ('/')) }, '*/')
-# wwe         | ('//', ANY - (LF | CR), [CR], (LF | EOI))
-# wwe         ;
+Comment = ('/*', { ANY - ('*') | ('*', ANY - ('/')) }, '*/')
+        | ('//', ANY - (LF | CR), [CR], (LF | EOI))
+        ;
 
 LeftArrowHead = '<'
               | '⟨'

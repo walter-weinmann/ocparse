@@ -88,3 +88,13 @@ cypher 2.2
 cypher planner=cost 
 cypher planner=rule 
 create index on :Actor(name)".
+"
+explain 
+profile 
+cypher 
+cypher 2.2 
+cypher planner=a 
+cypher planner=b planner=c 
+cypher 2.3 planner=d 
+cypher 2.4 planner=e planner=f 
+create index on :Actor(name)".

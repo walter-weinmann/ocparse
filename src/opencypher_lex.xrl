@@ -3,28 +3,22 @@ Definitions.
 
 Rules.
 
-%% strings
-% (\'([^\']*(\'\')*)*\')                              : {token, {'STRING', TokenLine, TokenChars}}.
-% (\"((\$|[^\"]*)*(\"\")*)*\")                        : {token, {'NAME', TokenLine, TokenChars}}.
-
 %% punctuation
-% (=|<>|<|>|<=|>=)                                    : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
-([:=\|\-\+\*\/\(\)\,\.\;]|(\|\|)|(div))             : {token, {list_to_atom(TokenChars), TokenLine}}.
+%  (=|<>|<|>|<=|>=)                                    : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
+([\=\-\:\;\(\)\{\}\.\?\!\*0])                       : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% names
-[A-Za-z][A-Za-z0-9_@:#\$]*                          : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
-
-%% parameters
-% (\:[A-Za-z0-9_\.][A-Za-z0-9_\.]*)                   : {token, {'PARAMETER', TokenLine, TokenChars}}.
+[A-Za-z][A-Za-z0-9_@#\$]*                           : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
 
 %% numbers
-(-?0X([0-9]|[A-F])+)                                : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
-(-[1-9][0-9]*)                                      : {token, {'NEGATIVE_DECIMAL_INTEGER', TokenLine, TokenChars}}.
-(-?0[0-7]+)                                         : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
-(\'([^\']*(\'\')*)*\')                              : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
-(\"([^\"]*(\"\")*)*\")                              : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
-(0|[1-9][0-9]*)                                     : {token, {'UNSIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
-([0-9]*\.[0-9]*)                                    : {token, {'VERSION_NUMBER', TokenLine, TokenChars}}.
+([1-9][0-9]*)                                       : {token, {'DECIMAL_INTEGER', TokenLine, TokenChars}}.
+((\-)?([0-9]|\.)(e|E)(\-)?[0-9]+)                   : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
+(\-?0X([0-9]|[A-F])+)                               : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
+(\-?0[0-7]+)                                        : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
+(\-[0-9]*\.[0-9]*)                                  : {token, {'SIGNED_FLOAT', TokenLine, TokenChars}}.
+(\'([^\\\']*)*\')                                   : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
+(\"([^\\\"]*)*\")                                   : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
+([0-9]*\.[0-9]*)                                    : {token, {'UNSIGNED_FLOAT', TokenLine, TokenChars}}.
 
 %% skip tokens
 ([\s\t\r\n]+)                                       : skip_token.                                                  %% white space

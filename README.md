@@ -1,9 +1,7 @@
 ocparse <a href="https://magnum.travis-ci.com/k2informatics/sqlparse"><img src="https://travis-ci.org/K2InformaticsGmbH/sqlparse.svg" alt="Travis-CI"></a>
 =======
 
-LALR grammar based open cypher parser.
-
-The project is based on the work of the [Cypher Language Group](https://github.com/opencypher/openCypher).
+LALR grammar based Cypher parser using the grammar rules from the [openCypher](https://github.com/opencypher/openCypher) project.
 
 Example use
 -----------
@@ -11,19 +9,25 @@ Parsing
 ````erlang
 1> {ok, {ParseTree, Tokens}} = ocparse:parsetree_with_tokens("profile cypher 2.2 planner=cost create index on :Actor(name)").
 2> ParseTree.
-{cypher_statement,
-    {query_options,
-        [{profile,[]},
-         {cypher,
-             {{version,<<"2.2">>},
-              {options,
-                  [{option,{'NAME',7,"planner"},{'NAME',4,"cost"}}]}}}]},
+{cypher,
+    {queryOptions,
+        [{anyCypherOption,profile,[]},
+         {anyCypherOption,
+             {cypherOption,
+                 {{versionNumber,"2.2"},
+                  [{configurationOption,
+                       {symbolicName,"planner"},
+                       {symbolicName,"cost"}}]}}}]},
     {statement,
-        {'create index on',{{'NAME',5,"Actor"},{'NAME',4,"name"}}}}}
+        {command,
+            {createIndex,
+                {index,
+                    {{nodeLabel,{labelName,{symbolicName,"Actor"}}},
+                     {propertyKeyName,{symbolicName,"name"}}}}}}}}
 3> Tokens.
 [{'PROFILE',1},
  {'CYPHER',1},
- {'VERSION_NUMBER',1,"2.2"},
+ {'UNSIGNED_FLOAT',1,"2.2"},
  {'NAME',7,"planner"},
  {'=',1},
  {'NAME',4,"cost"},
@@ -45,7 +49,8 @@ Compiling
 
 Test Cases
 ---
-* [Index](https://github.com/walter-weinmann/ocparse/blob/master/test/index.tst)
+* [Command CONSTRAINT](https://github.com/walter-weinmann/ocparse/blob/master/test/command_constraint.tst)
+* [Command INDEX](https://github.com/walter-weinmann/ocparse/blob/master/test/command_index.tst)
 * [Query Options](https://github.com/walter-weinmann/ocparse/blob/master/test/query_options.tst)
 
 These test cases are also documentation of the current support.
