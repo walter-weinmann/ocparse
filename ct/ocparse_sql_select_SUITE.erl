@@ -39,8 +39,10 @@ groups() ->
         ]},
         {atom_misc, [], [
             test_atom_constant,
+            test_atom_count,
             test_atom_parameter,
-            test_atom_string_literal
+            test_atom_string_literal,
+            test_atom_variable
         ]},
         {atom_number_literal, [], [
             test_atom_number_literal_decimal_integer,
@@ -63,6 +65,11 @@ groups() ->
         {command_constraint, [], [
             test_command_constraint_create,
             test_command_constraint_drop
+        ]},
+        {expression, [], [
+            test_expression_2,
+            test_expression_3,
+            test_expression_4
         ]},
         {query_options, [], [
             test_command_query_options
@@ -92,6 +99,7 @@ all() ->
         {group, atom},
         {group, command_constraint},
         {group, command_index},
+        {group, expression},
         {group, query_options}
     ].
 
@@ -107,6 +115,11 @@ test_atom_constant(_Config) ->
     test_cypher("TRUE"),
     test_cypher("FALSE"),
     test_cypher("NULL").
+
+test_atom_count(_Config) ->
+    test_cypher("count(*)"),
+    test_cypher("count ( * )"),
+    test_cypher("COUNT(*)").
 
 test_atom_number_literal_decimal_integer(_Config) ->
     test_cypher("1"),
@@ -223,6 +236,11 @@ test_atom_string_literal(_Config) ->
     test_cypher("'Dies ist ein String'"),
     test_cypher("'Dies\" ist \"ein String'").
 
+test_atom_variable(_Config) ->
+    test_cypher("Name1"),
+    test_cypher("name2"),
+    test_cypher("NAME3").
+
 %%--------------------------------------------------------------------
 %% Command Constraint.
 %%--------------------------------------------------------------------
@@ -255,6 +273,49 @@ test_command_index_drop(_Config) ->
     test_cypher("DROP INDEX ON :Actor(name)"),
     test_cypher("drop index on :Actor (name)"),
     test_cypher("drop index on :Actor ( name )").
+
+%%--------------------------------------------------------------------
+%% Expression.
+%%--------------------------------------------------------------------
+
+test_expression_2(_Config) ->
+    test_cypher("4711 :label_1"),
+    test_cypher("4711 :label_1 :label_2 :label_3"),
+    test_cypher("4711 .property_1"),
+    test_cypher("4711 .property_1!"),
+    test_cypher("4711 .property_1?"),
+    test_cypher("4711 .property_1 .property2! .property3?"),
+    test_cypher("4711 :label_1 .property_1"),
+    test_cypher("4711 :label_1 .property_1 :label_2"),
+    test_cypher("4711 .property_1 :label_1"),
+    test_cypher("4711 :label_1 :label_2 .property_1 .property2? :label_3 :label_4"),
+    test_cypher("4711 .property_1 .property2? :label_1 :label_2 .property_3 .property4?"),
+    test_cypher("'test' :label_1"),
+    test_cypher("'test' :label_1 :label_2 :label_3"),
+    test_cypher("'test' .property_1"),
+    test_cypher("'test' .property_1!"),
+    test_cypher("'test' .property_1?"),
+    test_cypher("'test' .property_1 .property2! .property3?"),
+    test_cypher("'test' :label_1 .property_1"),
+    test_cypher("'test' :label_1 .property_1 :label_2"),
+    test_cypher("'test' .property_1 :label_1"),
+    test_cypher("'test' :label_1 :label_2 .property_1 .property2? :label_3 :label_4"),
+    test_cypher("'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4?").
+
+test_expression_3(_Config) ->
+    test_cypher("'test_1' .property_1 :label_1 is null"),
+    test_cypher("'test_1' .property_1 :label_1 is NOT null"),
+    test_cypher("'test_1' .property_1 :label_1 =~ 'test_2' .property_1 :label_1"),
+    test_cypher("'test_1' .property_1 :label_1 iN 'test_2' .property_1 :label_1"),
+    test_cypher("'test_1' .property_1 :label_1 STARTS with 'test_2' .property_1 :label_1"),
+    test_cypher("'test_1' .property_1 :label_1 ends WITH 'test_2' .property_1 :label_1"),
+    test_cypher("'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1").
+
+test_expression_4(_Config) ->
+    test_cypher("'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("- 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1").
+
 
 %%--------------------------------------------------------------------
 %% Query Options.

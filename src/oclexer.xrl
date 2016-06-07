@@ -5,16 +5,18 @@ Rules.
 
 %% punctuation
 %  (=|<>|<|>|<=|>=)                                    : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
-([\=\-\:\;\(\)\{\}\.\?\!\*0])                       : {token, {list_to_atom(TokenChars), TokenLine}}.
+((\=\~))                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
+([\=\-\+\:\;\(\)\{\}\.\?\!\*\^0])                   : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% names
 [A-Za-z][A-Za-z0-9_@#\$]*                           : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
 
 %% numbers
-([1-9][0-9]*)                                       : {token, {'DECIMAL_INTEGER', TokenLine, TokenChars}}.
-((\-)?([0-9]|\.)(e|E)(\-)?[0-9]+)                   : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
+([1-9][0-9]*)                                       : {token, {'UNSIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
+(\-?([0-9]|\.)(e|E)(\-)?[0-9]+)                     : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
 (\-?0X([0-9]|[A-F])+)                               : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
 (\-?0[0-7]+)                                        : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
+(-[1-9][0-9]*)                                      : {token, {'SIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
 (\-[0-9]*\.[0-9]*)                                  : {token, {'SIGNED_FLOAT', TokenLine, TokenChars}}.
 (\'([^\\\']*)*\')                                   : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
 (\"([^\\\"]*)*\")                                   : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.

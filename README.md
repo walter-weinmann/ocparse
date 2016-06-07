@@ -49,8 +49,10 @@ Compiling
 
 Test Cases
 ---
+* [Atoms](https://github.com/walter-weinmann/ocparse/blob/master/test/atoms.tst)
 * [Command CONSTRAINT](https://github.com/walter-weinmann/ocparse/blob/master/test/command_constraint.tst)
 * [Command INDEX](https://github.com/walter-weinmann/ocparse/blob/master/test/command_index.tst)
+* [Expressions](https://github.com/walter-weinmann/ocparse/blob/master/test/expressions.tst)
 * [Query Options](https://github.com/walter-weinmann/ocparse/blob/master/test/query_options.tst)
 
 These test cases are also documentation of the current support.
@@ -61,8 +63,8 @@ These test cases are also documentation of the current support.
 level|type
 ---|---
 0|only errors
-1|test opencypher
-2|parse tree of test opencypher
-3|fold opencypher
-4|parse tree og fold opencypher
+1|test cypher
+2|parse tree of test cypher
+3|fold cypher
+4|parse tree og fold cypher
 5|unused

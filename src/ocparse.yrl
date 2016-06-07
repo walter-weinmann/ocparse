@@ -18,15 +18,28 @@ Nonterminals
  cypher
  cypher_option
  cypher_option_spec
- decimal_integer
  double_literal
  drop_index
+ % expression_10
+ % expression_11
+ % expression_12
+ expression_2
+ expression_2_addon
+ expression_3
+ expression_4
+ expression_5
+ % expression_6
+ % expression_7
+ % expression_8
+ % expression_9
  index
  label_name
  node_label
+ node_labels
  number_literal
  parameter
  property_key_name
+ property_lookup
  query
  query_options
  regular_decimal_real
@@ -37,6 +50,7 @@ Nonterminals
  statement
  unsigned_decimal_integer
  % unsigned_integer_literal
+ variable
  version_number
  .
 
@@ -56,12 +70,11 @@ Terminals
 % COMMIT
 % COMPARISON
 % CONSTRAINT
-% CONTAINS
-% COUNT
+ CONTAINS
+ COUNT
  CREATE
 % CSV
  CYPHER
- DECIMAL_INTEGER
 % DELETE
 % DESC
 % DESCENDING
@@ -70,7 +83,7 @@ Terminals
  DROP
 % ELSE
 % END
-% ENDS
+ ENDS
 % EXISTS
  EXPLAIN
  EXPONENT_DECIMAL_REAL
@@ -82,9 +95,9 @@ Terminals
 % FROM
 % HEADERS
  HEX_INTEGER
-% IN
+ IN
  INDEX
-% IS
+ IS
 % JOIN
 % L_0X
 % L_SKIP
@@ -95,7 +108,7 @@ Terminals
  NAME
 % NODE
 % NONE
-% NOT
+ NOT
  NULL
  OCTAL_INTEGER
  ON
@@ -112,41 +125,44 @@ Terminals
 % SCAN
 % SET
 % SHORTESTPATH
+ SIGNED_DECIMAL_INTEGER
  SIGNED_FLOAT
 % SINGLE
 % START
-% STARTS
+ STARTS
  STRING_LITERAL
 % THEN
  TRUE
 % UNION
 % UNIQUE
+ UNSIGNED_DECIMAL_INTEGER
  UNSIGNED_FLOAT
 % UNWIND
 % USING
 % WHEN
 % WHERE
-% WITH
+ WITH
 % XOR
  '='
+ '=~'
  '-'
+ '+'
  ':'
+ '*'
  ';'
+ '^'
  '('
  ')'
  '{'
  '}'
+ '.'
+ '!'
+ '?'
  '0'
-% '.'
-% '+'
-% '-'
-% '*'
 % '/'
 % ','
 % '||'
 % '|'
-% '.'
-% 'div'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -180,6 +196,10 @@ cypher -> statement                                                             
 cypher -> statement ';'                                                                         : {cypher, {statement, '$1'}}.
 
 cypher -> atom ';'                                                                              : '$1'.
+cypher -> expression_2 ';'                                                                      : '$1'.
+cypher -> expression_3 ';'                                                                      : '$1'.
+cypher -> expression_4 ';'                                                                      : '$1'.
+cypher -> expression_5 ';'                                                                      : '$1'.
 
 query_options -> query_options any_cypher_option                                                : '$1' ++ ['$2'].
 query_options -> any_cypher_option                                                              : ['$1'].
@@ -222,9 +242,38 @@ drop_index -> DROP index                                                        
 
 index -> INDEX ON node_label '(' property_key_name ')'                                          : {index ,{'$3', '$5'}}.
 
+node_labels -> node_labels node_label                                                           : '$1' ++ ['$2'].
+node_labels -> node_label                                                                       : ['$1'].
+
 node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
 
 label_name -> symbolic_name                                                                     : {labelName, '$1'}.
+
+expression_5 -> expression_4 '^' expression_4                                                   : {expression5, '$1', "^", '$3'}.
+expression_5 -> expression_4                                                                    : {expression5, '$1'}.
+
+expression_4 -> '+' expression_3                                                                : {expression4, '$2', "+"}.
+expression_4 -> '-' expression_3                                                                : {expression4, '$2', "-"}.
+expression_4 -> expression_3                                                                    : {expression4, '$1'}.
+
+% expression_3 -> expression_2 '[' expression '..' expression ']'                                 : {expression3, '$1', "[", '$3', "..", '$5', "]"}.
+% expression_3 -> expression_2 '[' expression ']'                                                 : {expression3, '$1', "[", '$3', "]"}.
+expression_3 -> expression_2 '=~' expression_2                                                  : {expression3, '$1', "=~", '$3'}.
+expression_3 -> expression_2 IN expression_2                                                    : {expression3, '$1', in, '$3'}.
+expression_3 -> expression_2 STARTS WITH expression_2                                           : {expression3, '$1', 'starts with', '$4'}.
+expression_3 -> expression_2 ENDS WITH expression_2                                             : {expression3, '$1', 'ends with', '$4'}.
+expression_3 -> expression_2 CONTAINS expression_2                                              : {expression3, '$1', contains, '$3'}.
+expression_3 -> expression_2 IS NOT NULL                                                        : {expression3, '$1', 'is not null'}.
+expression_3 -> expression_2 IS NULL                                                            : {expression3, '$1', 'is null'}.
+expression_3 -> expression_2                                                                    : {expression3, '$1'}.
+
+expression_2 -> atom expression_2_addon                                                         : {expression2, '$1', '$2'}.
+expression_2 -> atom                                                                            : {expression2, '$1', []}.
+
+expression_2_addon -> expression_2_addon node_labels                                            : lists:flatten('$1' ++ ['$2']).
+expression_2_addon -> expression_2_addon property_lookup                                        : lists:flatten('$1' ++ ['$2']).
+expression_2_addon -> node_labels                                                               : '$1'.
+expression_2_addon -> property_lookup                                                           : ['$1'].
 
 atom -> number_literal                                                                          : {atom, '$1'}.
 atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
@@ -232,6 +281,14 @@ atom -> parameter                                                               
 atom -> TRUE                                                                                    : {atom, {terminal, 'true'}}.
 atom -> FALSE                                                                                   : {atom, {terminal, 'false'}}.
 atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
+atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
+atom -> variable                                                                                : {atom, '$1'}.
+
+property_lookup -> '.' property_key_name '?'                                                    : {propertyLookup, '$2', "?"}.
+property_lookup -> '.' property_key_name '!'                                                    : {propertyLookup, '$2', "!"}.
+property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', ""}.
+
+variable -> symbolic_name                                                                       : {variable, '$1'}.
 
 number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
 number_literal -> signed_integer_literal                                                        : {numberLiteral, '$1'}.
@@ -242,15 +299,11 @@ parameter -> '{' unsigned_decimal_integer '}'                                   
 property_key_name -> symbolic_name                                                              : {propertyKeyName, '$1'}.
 
 signed_integer_literal -> HEX_INTEGER                                                           : {signedIntegerLiteral, {hexInteger, unwrap('$1')}}.
-signed_integer_literal -> decimal_integer                                                       : {signedIntegerLiteral, '$1'}.
 signed_integer_literal -> OCTAL_INTEGER                                                         : {signedIntegerLiteral, {octalInteger, unwrap('$1')}}.
+signed_integer_literal -> SIGNED_DECIMAL_INTEGER                                                : {signedIntegerLiteral, {decimalInteger, unwrap('$1')}}.
+signed_integer_literal -> unsigned_decimal_integer                                              : '$1'.
 
-% unsigned_integer_literal -> unsigned_decimal_integer                                            : {unsigned_integer_literal, '$1'}.
-
-decimal_integer -> '-' unsigned_decimal_integer                                                 : {decimalInteger, {"-", '$2'}}.
-decimal_integer -> unsigned_decimal_integer                                                     : {decimalInteger, '$1'}.
-
-unsigned_decimal_integer -> DECIMAL_INTEGER                                                     : {unsignedDecimalInteger, unwrap('$1')}.
+unsigned_decimal_integer -> UNSIGNED_DECIMAL_INTEGER                                            : {unsignedDecimalInteger, unwrap('$1')}.
 unsigned_decimal_integer -> '0'                                                                 : {unsignedDecimalInteger, "0"}.
 
 double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, {exponentDecimalReal, unwrap('$1')}}.
@@ -346,7 +399,7 @@ parsetree_with_tokens(Cypher0) ->
                      [global, {return, list}]),
     [C|_] = lists:reverse(Cypher),
     NCypher = if C =:= $; -> Cypher; true -> string:strip(Cypher) ++ ";" end,
-    case opencypher_lex:string(NCypher) of
+    case oclexer:string(NCypher) of
         {ok, Toks, _} ->
             case ocparse:parse(Toks) of
                 {ok, PTree} -> {ok, {PTree, Toks}};
@@ -364,7 +417,7 @@ is_reserved(Word) when is_atom(Word) ->
     is_reserved(erlang:atom_to_list(Word));
 is_reserved(Word) when is_list(Word) ->
     lists:member(erlang:list_to_atom(string:to_upper(Word)),
-                 opencypher_lex:reserved_keywords()).
+                 oclexer:reserved_keywords()).
 
 %%-----------------------------------------------------------------------------
 
