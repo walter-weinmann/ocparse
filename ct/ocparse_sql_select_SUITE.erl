@@ -69,7 +69,10 @@ groups() ->
         {expression, [], [
             test_expression_2,
             test_expression_3,
-            test_expression_4
+            test_expression_4,
+            test_expression_5,
+            test_expression_6,
+            test_expression_7
         ]},
         {query_options, [], [
             test_command_query_options
@@ -313,9 +316,31 @@ test_expression_3(_Config) ->
 
 test_expression_4(_Config) ->
     test_cypher("'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("+ 'test_1' .property_1 :label_1 is null"),
+    test_cypher("- 'test_1' .property_1 :label_1 is null"),
     test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
     test_cypher("- 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1").
 
+test_expression_5(_Config) ->
+    test_cypher("'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("'test_1' .property_1 :label_1 is null ^'test_1' .property_1 :label_1 is null"),
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1").
+
+test_expression_6(_Config) ->
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("'test_1' .property_1 :label_1 is null * 'test_1' .property_1 :label_1 is null"),
+    test_cypher("'test_1' .property_1 :label_1 is null / 'test_1' .property_1 :label_1 is null"),
+    test_cypher("'test_1' .property_1 :label_1 is null % 'test_1' .property_1 :label_1 is null"),
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 * + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 / + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1").
+
+test_expression_7(_Config) ->
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("'test_1' .property_1 :label_1 is null + 'test_1' .property_1 :label_1 is null"),
+    test_cypher("'test_1' .property_1 :label_1 is null - 'test_1' .property_1 :label_1 is null"),
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 + + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
+    test_cypher("+ 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 - + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1").
 
 %%--------------------------------------------------------------------
 %% Query Options.

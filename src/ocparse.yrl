@@ -28,8 +28,8 @@ Nonterminals
  expression_3
  expression_4
  expression_5
- % expression_6
- % expression_7
+ expression_6
+ expression_7
  % expression_8
  % expression_9
  index
@@ -147,8 +147,10 @@ Terminals
  '=~'
  '-'
  '+'
- ':'
  '*'
+ '/'
+ '%'
+ ':'
  ';'
  '^'
  '('
@@ -159,7 +161,6 @@ Terminals
  '!'
  '?'
  '0'
-% '/'
 % ','
 % '||'
 % '|'
@@ -200,6 +201,8 @@ cypher -> expression_2 ';'                                                      
 cypher -> expression_3 ';'                                                                      : '$1'.
 cypher -> expression_4 ';'                                                                      : '$1'.
 cypher -> expression_5 ';'                                                                      : '$1'.
+cypher -> expression_6 ';'                                                                      : '$1'.
+cypher -> expression_7 ';'                                                                      : '$1'.
 
 query_options -> query_options any_cypher_option                                                : '$1' ++ ['$2'].
 query_options -> any_cypher_option                                                              : ['$1'].
@@ -248,6 +251,15 @@ node_labels -> node_label                                                       
 node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
 
 label_name -> symbolic_name                                                                     : {labelName, '$1'}.
+
+expression_7 -> expression_6 '+' expression_6                                                   : {expression7, '$1', "+", '$3'}.
+expression_7 -> expression_6 '-' expression_6                                                   : {expression7, '$1', "-", '$3'}.
+expression_7 -> expression_6                                                                    : {expression7, '$1'}.
+
+expression_6 -> expression_5 '*' expression_5                                                   : {expression6, '$1', "*", '$3'}.
+expression_6 -> expression_5 '/' expression_5                                                   : {expression6, '$1', "/", '$3'}.
+expression_6 -> expression_5 '%' expression_5                                                   : {expression6, '$1', "%", '$3'}.
+expression_6 -> expression_5                                                                    : {expression6, '$1'}.
 
 expression_5 -> expression_4 '^' expression_4                                                   : {expression5, '$1', "^", '$3'}.
 expression_5 -> expression_4                                                                    : {expression5, '$1'}.
