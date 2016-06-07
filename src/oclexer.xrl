@@ -4,7 +4,7 @@ Definitions.
 Rules.
 
 %% punctuation
-%  (=|<>|<|>|<=|>=)                                    : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
+(\!\=|\<\>|\<|\>|\<\=|\>\=)                         : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
 ((\=\~))                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([\=\-\+\*\/\%\:\;\(\)\{\}\.\?\!\^0])               : {token, {list_to_atom(TokenChars), TokenLine}}.
 
