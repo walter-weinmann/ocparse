@@ -11,4 +11,6 @@ ebin/
 deps/
 src/opencypher_lex.erl
 src/ocparse.erl
+/ct/logs
+/ct/*.beam
 /test/wwe.tst
