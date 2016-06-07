@@ -4,7 +4,47 @@ ocparse <a href="https://magnum.travis-ci.com/k2informatics/sqlparse"><img src="
 ToDo List
 ---------
 
-#### 2. Refinement SymbolicName ####
+## Open Issues ##
+
+#### 2. CREATE / DROP UNIQUE CONSTRAINT ####
+
+    Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
+    
+    Statement = Command | ... ;
+    
+    Command = ... | CreateUniqueConstraint | DropUniqueConstraint | ...;
+    
+    CreateUniqueConstraint = (C,R,E,A,T,E), WS, UniqueConstraint ;
+    
+    DropUniqueConstraint = (D,R,O,P), SP, UniqueConstraint ;
+
+#### 3. CREATE / DROP NODE PROPERTY EXISTENCE CONSTRAINT ####
+
+#### 4. DELETE ####
+
+#### 5. FOR EACH ####
+
+#### 6. UNWIND ####
+
+#### 7. LOAD CSV ####
+
+#### 8. CREATE ####
+
+#### 9. MATCH ####
+
+#### 10. START ####
+
+#### 11. MERGE ####
+
+#### 12. SET ####
+
+#### 13. REMOVE ####
+
+#### 14. WITH ####
+
+#### 15. RETURN ####
+
+#### 16. Refinement SymbolicName ####
 
     SymbolicName = UnescapedSymbolicName
                  | EscapedSymbolicName
@@ -32,43 +72,9 @@ ToDo List
     
     EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
     
-#### 3. CREATE / DROP UNIQUE CONSTRAINT ####
+#### 17. Unary Operators ####
 
-    Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
-    
-    Statement = Command | ... ;
-    
-    Command = ... | CreateUniqueConstraint | DropUniqueConstraint | ...;
-    
-    CreateUniqueConstraint = (C,R,E,A,T,E), WS, UniqueConstraint ;
-    
-    DropUniqueConstraint = (D,R,O,P), SP, UniqueConstraint ;
-
-#### 4. CREATE / DROP NODE PROPERTY EXISTENCE CONSTRAINT ####
-
-#### 5. DELETE ####
-
-#### 6. FOR EACH ####
-
-#### 7. UNWIND ####
-
-#### 8. LOAD CSV ####
-
-#### 9. CREATE ####
-
-#### 10. MATCH ####
-
-#### 11. START ####
-
-#### 12. MERGE ####
-
-#### 13. SET ####
-
-#### 14. REMOVE ####
-
-#### 15. WITH ####
-
-#### 16. RETURN ####
+## Closed Issues ##
 
 #### Done at: 02.06.2016 : 1. CREATE / DROP INDEX ####
 

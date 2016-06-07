@@ -20,9 +20,10 @@ Nonterminals
  cypher_option_spec
  double_literal
  drop_index
- % expression_10
- % expression_11
- % expression_12
+ expression
+ expression_10
+ expression_11
+ expression_12
  expression_2
  expression_2_addon
  expression_3
@@ -30,14 +31,15 @@ Nonterminals
  expression_5
  expression_6
  expression_7
- % expression_8
- % expression_9
+ expression_8
+ expression_9
  index
  label_name
  node_label
  node_labels
  number_literal
  parameter
+ partial_comparison_expression
  property_key_name
  property_lookup
  query
@@ -59,7 +61,7 @@ Nonterminals
 Terminals
 % ALL
 % ALLSHORTESTPATHS
-% AND
+ AND
 % ANY
 % AS
 % ASC
@@ -68,7 +70,7 @@ Terminals
 % BY
 % CASE
 % COMMIT
-% COMPARISON
+ COMPARISON
 % CONSTRAINT
  CONTAINS
  COUNT
@@ -113,7 +115,7 @@ Terminals
  OCTAL_INTEGER
  ON
 % OPTIONAL
-% OR
+ OR
 % ORDER
 % PERIODIC
  PROFILE
@@ -142,7 +144,7 @@ Terminals
 % WHEN
 % WHERE
  WITH
-% XOR
+ XOR
  '='
  '=~'
  '-'
@@ -161,9 +163,6 @@ Terminals
  '!'
  '?'
  '0'
-% ','
-% '||'
-% '|'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -179,14 +178,16 @@ Endsymbol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Operator precedences.
 
-% Left        110 'OR'.
-% Left        120 'AND'.
-% Left        130 'NOT'.
- Nonassoc    210 '='.
-% Nonassoc    220 COMPARISON. %% = <> < > <= >=
-% Left        300 '+' '-'.
-% Left        400 '*' '/'.
-% %Unary      500 '-'.
+Left        110 'OR'.
+Left        120 'XOR'.
+Left        130 'AND'.
+Left        140 'NOT'.
+Nonassoc    210 '='.
+Nonassoc    220 COMPARISON.
+Left        300 '+' '-'.
+Left        400 '*' '/' '%'.
+Left        500 '^'.
+%Left        600 UMINUS.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
@@ -197,12 +198,7 @@ cypher -> statement                                                             
 cypher -> statement ';'                                                                         : {cypher, {statement, '$1'}}.
 
 cypher -> atom ';'                                                                              : '$1'.
-cypher -> expression_2 ';'                                                                      : '$1'.
-cypher -> expression_3 ';'                                                                      : '$1'.
-cypher -> expression_4 ';'                                                                      : '$1'.
-cypher -> expression_5 ';'                                                                      : '$1'.
-cypher -> expression_6 ';'                                                                      : '$1'.
-cypher -> expression_7 ';'                                                                      : '$1'.
+cypher -> expression ';'                                                                        : '$1'.
 
 query_options -> query_options any_cypher_option                                                : '$1' ++ ['$2'].
 query_options -> any_cypher_option                                                              : ['$1'].
@@ -252,6 +248,23 @@ node_label -> ':' label_name                                                    
 
 label_name -> symbolic_name                                                                     : {labelName, '$1'}.
 
+expression -> expression_12                                                                     : {expression, '$1'}.
+
+expression_12 -> expression_11 'OR' expression_11                                               : {expression12, '$1', '$2', '$3'}.
+expression_12 -> expression_11                                                                  : {expression12, '$1'}.
+
+expression_11 -> expression_10 'XOR' expression_10                                              : {expression11, '$1', '$2', '$3'}.
+expression_11 -> expression_10                                                                  : {expression11, '$1'}.
+
+expression_10 -> expression_9 'AND' expression_9                                                : {expression10, '$1', '$2', '$3'}.
+expression_10 -> expression_9                                                                   : {expression10, '$1'}.
+
+expression_9 -> NOT expression_8                                                                : {expression9, '$2', '$1'}.
+expression_9 -> expression_8                                                                    : {expression9, '$1'}.
+
+expression_8 -> expression_7 partial_comparison_expression                                      : {expression8, '$1', '$2'}.
+expression_8 -> expression_7                                                                    : {expression8, '$1'}.
+
 expression_7 -> expression_6 '+' expression_6                                                   : {expression7, '$1', "+", '$3'}.
 expression_7 -> expression_6 '-' expression_6                                                   : {expression7, '$1', "-", '$3'}.
 expression_7 -> expression_6                                                                    : {expression7, '$1'}.
@@ -296,9 +309,12 @@ atom -> NULL                                                                    
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
 atom -> variable                                                                                : {atom, '$1'}.
 
+partial_comparison_expression -> '=' expression_7                                               : {partialComparisonExpression, '$2', "="}.
+partial_comparison_expression -> COMPARISON expression_7                                        : {partialComparisonExpression, '$2', '$1'}.
+
 property_lookup -> '.' property_key_name '?'                                                    : {propertyLookup, '$2', "?"}.
 property_lookup -> '.' property_key_name '!'                                                    : {propertyLookup, '$2', "!"}.
-property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', ""}.
+property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', []}.
 
 variable -> symbolic_name                                                                       : {variable, '$1'}.
 
