@@ -9,6 +9,8 @@ erl_crash.dump
 .rebar/
 ebin/
 deps/
-src/opencypher_lex.erl
+src/oclexer.erl
 src/ocparse.erl
+/ct/logs
+/ct/*.beam
 /test/wwe.tst

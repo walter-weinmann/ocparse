@@ -15,32 +15,42 @@ Nonterminals
  configuration_option
  configuration_options
  create_index
+ cypher
  cypher_option
  cypher_option_spec
- decimal_integer
  double_literal
  drop_index
- hex_integer
+ % expression_10
+ % expression_11
+ % expression_12
+ expression_2
+ expression_2_addon
+ expression_3
+ expression_4
+ expression_5
+ expression_6
+ expression_7
+ % expression_8
+ % expression_9
  index
  label_name
  node_label
+ node_labels
  number_literal
- octal_integer
  parameter
  property_key_name
+ property_lookup
  query
  query_options
  regular_decimal_real
  regular_query
- root
  signed_integer_literal
  single_query
  symbolic_name
  statement
  unsigned_decimal_integer
- unsigned_hex_integer
  % unsigned_integer_literal
- unsigned_octal_integer
+ variable
  version_number
  .
 
@@ -60,12 +70,11 @@ Terminals
 % COMMIT
 % COMPARISON
 % CONSTRAINT
-% CONTAINS
-% COUNT
+ CONTAINS
+ COUNT
  CREATE
 % CSV
  CYPHER
- DECIMAL_INTEGER
 % DELETE
 % DESC
 % DESCENDING
@@ -74,7 +83,7 @@ Terminals
  DROP
 % ELSE
 % END
-% ENDS
+ ENDS
 % EXISTS
  EXPLAIN
  EXPONENT_DECIMAL_REAL
@@ -86,9 +95,9 @@ Terminals
 % FROM
 % HEADERS
  HEX_INTEGER
-% IN
+ IN
  INDEX
-% IS
+ IS
 % JOIN
 % L_0X
 % L_SKIP
@@ -99,7 +108,7 @@ Terminals
  NAME
 % NODE
 % NONE
-% NOT
+ NOT
  NULL
  OCTAL_INTEGER
  ON
@@ -116,47 +125,51 @@ Terminals
 % SCAN
 % SET
 % SHORTESTPATH
+ SIGNED_DECIMAL_INTEGER
  SIGNED_FLOAT
 % SINGLE
 % START
-% STARTS
+ STARTS
  STRING_LITERAL
 % THEN
  TRUE
 % UNION
 % UNIQUE
+ UNSIGNED_DECIMAL_INTEGER
  UNSIGNED_FLOAT
 % UNWIND
 % USING
 % WHEN
 % WHERE
-% WITH
+ WITH
 % XOR
  '='
+ '=~'
  '-'
+ '+'
+ '*'
+ '/'
+ '%'
  ':'
  ';'
+ '^'
  '('
  ')'
  '{'
  '}'
+ '.'
+ '!'
+ '?'
  '0'
-% '.'
-% '+'
-% '-'
-% '*'
-% '/'
 % ','
 % '||'
 % '|'
-% '.'
-% 'div'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Rootsymbol 
- root.
+ cypher.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -178,102 +191,140 @@ Endsymbol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
 
-root -> query_options statement                                                                 : {cypher_statement, {query_options, '$1'}, {statement, '$2'}}.
-root -> query_options statement ';'                                                             : {cypher_statement, {query_options, '$1'}, {statement, '$2'}}.
-root -> statement                                                                               : {cypher_statement, {statement, '$1'}}.
-root -> statement ';'                                                                           : {cypher_statement, {statement, '$1'}}.
+cypher -> query_options statement                                                               : {cypher, {queryOptions, '$1'}, {statement, '$2'}}.
+cypher -> query_options statement ';'                                                           : {cypher, {queryOptions, '$1'}, {statement, '$2'}}.
+cypher -> statement                                                                             : {cypher, {statement, '$1'}}.
+cypher -> statement ';'                                                                         : {cypher, {statement, '$1'}}.
 
-root -> atom ';'                                                                                : '$1'.
+cypher -> atom ';'                                                                              : '$1'.
+cypher -> expression_2 ';'                                                                      : '$1'.
+cypher -> expression_3 ';'                                                                      : '$1'.
+cypher -> expression_4 ';'                                                                      : '$1'.
+cypher -> expression_5 ';'                                                                      : '$1'.
+cypher -> expression_6 ';'                                                                      : '$1'.
+cypher -> expression_7 ';'                                                                      : '$1'.
 
 query_options -> query_options any_cypher_option                                                : '$1' ++ ['$2'].
 query_options -> any_cypher_option                                                              : ['$1'].
 
-any_cypher_option -> CYPHER                                                                     : {cypher, []}.
-any_cypher_option -> EXPLAIN                                                                    : {explain, []}.
-any_cypher_option -> PROFILE                                                                    : {profile, []}.
-any_cypher_option -> cypher_option                                                              : '$1'.
+any_cypher_option -> EXPLAIN                                                                    : {anyCypherOption, explain, []}.
+any_cypher_option -> PROFILE                                                                    : {anyCypherOption, profile, []}.
+any_cypher_option -> cypher_option                                                              : {anyCypherOption, '$1'}.
 
-cypher_option -> CYPHER cypher_option_spec                                                      : {cypher, '$2'}.
+cypher_option -> CYPHER cypher_option_spec                                                      : {cypherOption, '$2'}.
+cypher_option -> CYPHER                                                                         : {cypherOption, cypher}.
 
-cypher_option_spec -> configuration_options                                                     : {options, '$1'}.
-cypher_option_spec -> version_number                                                            : {version, '$1'}.
-cypher_option_spec -> version_number configuration_options                                      : {{version, '$1'}, {options, '$2'}}.
+cypher_option_spec -> configuration_options                                                     : '$1'.
+cypher_option_spec -> version_number                                                            : '$1'.
+cypher_option_spec -> version_number configuration_options                                      : {'$1', '$2'}.
 
-version_number -> UNSIGNED_FLOAT                                                                : unwrap('$1').
+version_number -> UNSIGNED_FLOAT                                                                : {versionNumber, unwrap('$1')}.
 
 configuration_options -> configuration_options configuration_option                             : '$1' ++ ['$2'].
 configuration_options -> configuration_option                                                   : ['$1'].
 
-configuration_option -> symbolic_name '=' symbolic_name                                         : {option, '$1', '$3'}.
+configuration_option -> symbolic_name '=' symbolic_name                                         : {configurationOption, '$1', '$3'}.
 
 statement -> command                                                                            : '$1'.
 statement -> query                                                                              : '$1'.
 
-query -> regular_query                                                                          : '$1'.
+query -> regular_query                                                                          : {query, '$1'}.
 
-regular_query -> single_query                                                                   : '$1'.
+regular_query -> single_query                                                                   : {regularQuery, '$1'}.
 
-single_query -> clause                                                                          : '$1'.
+single_query -> clause                                                                          : {singleQuery, '$1'}.
 
-clause -> MATCH                                                                                 : 'match'.
+clause -> MATCH                                                                                 : {clause, match}.
 
-command -> create_index                                                                         : '$1'.
-command -> drop_index                                                                           : '$1'.
+command -> create_index                                                                         : {command, '$1'}.
+command -> drop_index                                                                           : {command, '$1'}.
 
-create_index -> CREATE index                                                                    : {'create index on', '$2'}.
+create_index -> CREATE index                                                                    : {createIndex, '$2'}.
 
-drop_index -> DROP index                                                                        : {'drop index on', '$2'}.
+drop_index -> DROP index                                                                        : {dropIndex, '$2'}.
 
-index -> INDEX ON node_label '(' property_key_name ')'                                          : {'$3', '$5'}.
+index -> INDEX ON node_label '(' property_key_name ')'                                          : {index ,{'$3', '$5'}}.
 
-node_label -> ':' label_name                                                                    : ":" ++ '$2'.
+node_labels -> node_labels node_label                                                           : '$1' ++ ['$2'].
+node_labels -> node_label                                                                       : ['$1'].
 
-label_name -> symbolic_name                                                                     : '$1'.
+node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
+
+label_name -> symbolic_name                                                                     : {labelName, '$1'}.
+
+expression_7 -> expression_6 '+' expression_6                                                   : {expression7, '$1', "+", '$3'}.
+expression_7 -> expression_6 '-' expression_6                                                   : {expression7, '$1', "-", '$3'}.
+expression_7 -> expression_6                                                                    : {expression7, '$1'}.
+
+expression_6 -> expression_5 '*' expression_5                                                   : {expression6, '$1', "*", '$3'}.
+expression_6 -> expression_5 '/' expression_5                                                   : {expression6, '$1', "/", '$3'}.
+expression_6 -> expression_5 '%' expression_5                                                   : {expression6, '$1', "%", '$3'}.
+expression_6 -> expression_5                                                                    : {expression6, '$1'}.
+
+expression_5 -> expression_4 '^' expression_4                                                   : {expression5, '$1', "^", '$3'}.
+expression_5 -> expression_4                                                                    : {expression5, '$1'}.
+
+expression_4 -> '+' expression_3                                                                : {expression4, '$2', "+"}.
+expression_4 -> '-' expression_3                                                                : {expression4, '$2', "-"}.
+expression_4 -> expression_3                                                                    : {expression4, '$1'}.
+
+% expression_3 -> expression_2 '[' expression '..' expression ']'                                 : {expression3, '$1', "[", '$3', "..", '$5', "]"}.
+% expression_3 -> expression_2 '[' expression ']'                                                 : {expression3, '$1', "[", '$3', "]"}.
+expression_3 -> expression_2 '=~' expression_2                                                  : {expression3, '$1', "=~", '$3'}.
+expression_3 -> expression_2 IN expression_2                                                    : {expression3, '$1', in, '$3'}.
+expression_3 -> expression_2 STARTS WITH expression_2                                           : {expression3, '$1', 'starts with', '$4'}.
+expression_3 -> expression_2 ENDS WITH expression_2                                             : {expression3, '$1', 'ends with', '$4'}.
+expression_3 -> expression_2 CONTAINS expression_2                                              : {expression3, '$1', contains, '$3'}.
+expression_3 -> expression_2 IS NOT NULL                                                        : {expression3, '$1', 'is not null'}.
+expression_3 -> expression_2 IS NULL                                                            : {expression3, '$1', 'is null'}.
+expression_3 -> expression_2                                                                    : {expression3, '$1'}.
+
+expression_2 -> atom expression_2_addon                                                         : {expression2, '$1', '$2'}.
+expression_2 -> atom                                                                            : {expression2, '$1', []}.
+
+expression_2_addon -> expression_2_addon node_labels                                            : lists:flatten('$1' ++ ['$2']).
+expression_2_addon -> expression_2_addon property_lookup                                        : lists:flatten('$1' ++ ['$2']).
+expression_2_addon -> node_labels                                                               : '$1'.
+expression_2_addon -> property_lookup                                                           : ['$1'].
 
 atom -> number_literal                                                                          : {atom, '$1'}.
-atom -> STRING_LITERAL                                                                          : {atom, unwrap('$1')}.
+atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
 atom -> parameter                                                                               : {atom, '$1'}.
-atom -> TRUE                                                                                    : {atom, 'true'}.
-atom -> FALSE                                                                                   : {atom, 'false'}.
-atom -> NULL                                                                                    : {atom, 'null'}.
+atom -> TRUE                                                                                    : {atom, {terminal, 'true'}}.
+atom -> FALSE                                                                                   : {atom, {terminal, 'false'}}.
+atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
+atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
+atom -> variable                                                                                : {atom, '$1'}.
 
-number_literal -> double_literal                                                                : '$1'.
-number_literal -> signed_integer_literal                                                        : '$1'.
+property_lookup -> '.' property_key_name '?'                                                    : {propertyLookup, '$2', "?"}.
+property_lookup -> '.' property_key_name '!'                                                    : {propertyLookup, '$2', "!"}.
+property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', ""}.
+
+variable -> symbolic_name                                                                       : {variable, '$1'}.
+
+number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
+number_literal -> signed_integer_literal                                                        : {numberLiteral, '$1'}.
 
 parameter -> '{' symbolic_name '}'                                                              : {parameter, '$2'}.
 parameter -> '{' unsigned_decimal_integer '}'                                                   : {parameter, '$2'}.
 
-property_key_name -> symbolic_name                                                              : '$1'.
+property_key_name -> symbolic_name                                                              : {propertyKeyName, '$1'}.
 
-signed_integer_literal -> hex_integer                                                           : '$1'.
-signed_integer_literal -> decimal_integer                                                       : '$1'.
-signed_integer_literal -> octal_integer                                                         : '$1'.
+signed_integer_literal -> HEX_INTEGER                                                           : {signedIntegerLiteral, {hexInteger, unwrap('$1')}}.
+signed_integer_literal -> OCTAL_INTEGER                                                         : {signedIntegerLiteral, {octalInteger, unwrap('$1')}}.
+signed_integer_literal -> SIGNED_DECIMAL_INTEGER                                                : {signedIntegerLiteral, {decimalInteger, unwrap('$1')}}.
+signed_integer_literal -> unsigned_decimal_integer                                              : '$1'.
 
-% unsigned_integer_literal -> unsigned_decimal_integer                                            : '$1'.
+unsigned_decimal_integer -> UNSIGNED_DECIMAL_INTEGER                                            : {unsignedDecimalInteger, unwrap('$1')}.
+unsigned_decimal_integer -> '0'                                                                 : {unsignedDecimalInteger, "0"}.
 
-hex_integer -> '-' unsigned_hex_integer                                                         : "-" ++ '$2'.
-hex_integer -> unsigned_hex_integer                                                             : '$1'.
-  
-decimal_integer -> '-' unsigned_decimal_integer                                                 : "-" ++ '$2'.
-decimal_integer -> unsigned_decimal_integer                                                     : '$1'.
-
-octal_integer -> '-' unsigned_octal_integer                                                     : "-" ++ '$2'.
-octal_integer -> unsigned_octal_integer                                                         : '$1'.
-
-unsigned_hex_integer -> HEX_INTEGER                                                             : unwrap('$1').
-
-unsigned_decimal_integer -> DECIMAL_INTEGER                                                     : unwrap('$1').
-unsigned_decimal_integer -> '0'                                                                 : "0".
-
-double_literal -> EXPONENT_DECIMAL_REAL                                                         : unwrap('$1').
+double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, {exponentDecimalReal, unwrap('$1')}}.
 double_literal -> regular_decimal_real                                                          : '$1'.
 
-regular_decimal_real -> SIGNED_FLOAT                                                            : unwrap('$1').
-regular_decimal_real -> UNSIGNED_FLOAT                                                          : unwrap('$1').
+regular_decimal_real -> SIGNED_FLOAT                                                            : {doubleLiteral, {regularDecimalReal, unwrap('$1')}}.
+regular_decimal_real -> UNSIGNED_FLOAT                                                          : {doubleLiteral, {regularDecimalReal, unwrap('$1')}}.
 
-unsigned_octal_integer -> OCTAL_INTEGER                                                         : unwrap('$1').
-
-symbolic_name -> NAME                                                                           : unwrap('$1').
+symbolic_name -> NAME                                                                           : {symbolicName, unwrap('$1')}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -360,7 +411,7 @@ parsetree_with_tokens(Cypher0) ->
                      [global, {return, list}]),
     [C|_] = lists:reverse(Cypher),
     NCypher = if C =:= $; -> Cypher; true -> string:strip(Cypher) ++ ";" end,
-    case opencypher_lex:string(NCypher) of
+    case oclexer:string(NCypher) of
         {ok, Toks, _} ->
             case ocparse:parse(Toks) of
                 {ok, PTree} -> {ok, {PTree, Toks}};
@@ -378,7 +429,7 @@ is_reserved(Word) when is_atom(Word) ->
     is_reserved(erlang:atom_to_list(Word));
 is_reserved(Word) when is_list(Word) ->
     lists:member(erlang:list_to_atom(string:to_upper(Word)),
-                 opencypher_lex:reserved_keywords()).
+                 oclexer:reserved_keywords()).
 
 %%-----------------------------------------------------------------------------
 
