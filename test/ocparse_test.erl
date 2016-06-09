@@ -1,6 +1,6 @@
 -module(ocparse_test).
 
--define(NODEBUG, true).
+% -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 -export([test_cypher/3]).
