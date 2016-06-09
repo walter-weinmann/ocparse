@@ -159,7 +159,10 @@ Terminals
  ')'
  '{'
  '}'
+ '['
+ ']'
  '.'
+ '..'
  '!'
  '?'
  '0'
@@ -281,8 +284,8 @@ expression_4 -> '+' expression_3                                                
 expression_4 -> '-' expression_3                                                                : {expression4, '$2', "-"}.
 expression_4 -> expression_3                                                                    : {expression4, '$1'}.
 
-% expression_3 -> expression_2 '[' expression '..' expression ']'                                 : {expression3, '$1', "[", '$3', "..", '$5', "]"}.
-% expression_3 -> expression_2 '[' expression ']'                                                 : {expression3, '$1', "[", '$3', "]"}.
+expression_3 -> expression_2 '[' expression '..' expression ']'                                 : {expression3, '$1', "[", '$3', '$5'}.
+expression_3 -> expression_2 '[' expression ']'                                                 : {expression3, '$1', "[", '$3'}.
 expression_3 -> expression_2 '=~' expression_2                                                  : {expression3, '$1', "=~", '$3'}.
 expression_3 -> expression_2 IN expression_2                                                    : {expression3, '$1', in, '$3'}.
 expression_3 -> expression_2 STARTS WITH expression_2                                           : {expression3, '$1', 'starts with', '$4'}.
@@ -392,17 +395,7 @@ init([])            -> {ok, { {one_for_one, 5, 10}, []} }.
 %%                          parser helper functions
 %%-----------------------------------------------------------------------------
 
-unwrap({_,_,X}) -> X;
-unwrap(X) -> X.
-
-unwrap_bin({_,_,X}) when is_list(X) -> list_to_binary([X]);
-unwrap_bin({_,_,X}) when is_atom(X) -> atom_to_binary(X, unicode).
-
-strl2atom([]) -> '';
-strl2atom(Strs) -> list_to_atom(lists:flatten(string:join([string:to_lower(unwrap(S)) || S <- Strs], " "))).
-
-make_list(L) when is_list(L) -> L;
-make_list(L) -> [L].
+unwrap({_,_,X}) -> X.
 
 %%-----------------------------------------------------------------------------
 
