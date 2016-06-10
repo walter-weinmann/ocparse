@@ -10,6 +10,9 @@ Nonterminals
  any_cypher_option
  atom
 % bulk_import_query
+ case_alternative
+ case_alternatives
+ case_expression
  clause
  command
  configuration_option
@@ -68,7 +71,7 @@ Terminals
 % ASCENDING
 % ASSERT
 % BY
-% CASE
+ CASE
 % COMMIT
  COMPARISON
 % CONSTRAINT
@@ -83,8 +86,8 @@ Terminals
 % DETACH
 % DISTINCT
  DROP
-% ELSE
-% END
+ ELSE
+ END
  ENDS
 % EXISTS
  EXPLAIN
@@ -133,7 +136,7 @@ Terminals
 % START
  STARTS
  STRING_LITERAL
-% THEN
+ THEN
  TRUE
 % UNION
 % UNIQUE
@@ -141,7 +144,7 @@ Terminals
  UNSIGNED_FLOAT
 % UNWIND
 % USING
-% WHEN
+ WHEN
 % WHERE
  WITH
  XOR
@@ -309,6 +312,7 @@ atom -> parameter                                                               
 atom -> TRUE                                                                                    : {atom, {terminal, 'true'}}.
 atom -> FALSE                                                                                   : {atom, {terminal, 'false'}}.
 atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
+atom -> case_expression                                                                         : {atom, '$1'}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
 atom -> variable                                                                                : {atom, '$1'}.
 
@@ -319,7 +323,15 @@ property_lookup -> '.' property_key_name '?'                                    
 property_lookup -> '.' property_key_name '!'                                                    : {propertyLookup, '$2', "!"}.
 property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', []}.
 
-variable -> symbolic_name                                                                       : {variable, '$1'}.
+case_expression -> 'CASE' case_alternatives END                                                 : {caseExpression, '$2'}.
+case_expression -> 'CASE' case_alternatives ELSE expression END                                 : {caseExpression, '$2', '$4'}.
+case_expression -> 'CASE' expression case_alternatives END                                      : {caseExpression, '$2', '$3'}.
+case_expression -> 'CASE' expression case_alternatives ELSE expression END                      : {caseExpression, '$2', '$3', '$5'}.
+
+case_alternatives -> case_alternatives case_alternative                                         : '$1' ++ ['$2'].
+case_alternatives -> case_alternative                                                           : ['$1'].
+
+case_alternative -> WHEN expression THEN expression                                             : {caseAlternative, '$2', '$4'}.
 
 number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
 number_literal -> signed_integer_literal                                                        : {numberLiteral, '$1'}.
@@ -344,6 +356,8 @@ regular_decimal_real -> SIGNED_FLOAT                                            
 regular_decimal_real -> UNSIGNED_FLOAT                                                          : {doubleLiteral, {regularDecimalReal, unwrap('$1')}}.
 
 symbolic_name -> NAME                                                                           : {symbolicName, unwrap('$1')}.
+
+variable -> symbolic_name                                                                       : {variable, '$1'}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
