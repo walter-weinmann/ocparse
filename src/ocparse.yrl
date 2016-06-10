@@ -36,6 +36,7 @@ Nonterminals
  expression_7
  expression_8
  expression_9
+ id_in_coll
  index
  label_name
  node_label
@@ -47,6 +48,7 @@ Nonterminals
  property_lookup
  query
  query_options
+ reduce
  regular_decimal_real
  regular_query
  signed_integer_literal
@@ -122,7 +124,7 @@ Terminals
 % ORDER
 % PERIODIC
  PROFILE
-% REDUCE
+ REDUCE
 % REL
 % RELATIONSHIP
 % REMOVE
@@ -156,8 +158,10 @@ Terminals
  '/'
  '%'
  ':'
+ ','
  ';'
  '^'
+ '|'
  '('
  ')'
  '{'
@@ -314,19 +318,24 @@ atom -> FALSE                                                                   
 atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
 atom -> case_expression                                                                         : {atom, '$1'}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
+atom -> reduce                                                                                  : {atom, '$1'}.
 atom -> variable                                                                                : {atom, '$1'}.
+
+reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'                  : {reduce, '$3', '$5', '$7', '$9'}.
 
 partial_comparison_expression -> '=' expression_7                                               : {partialComparisonExpression, '$2', "="}.
 partial_comparison_expression -> COMPARISON expression_7                                        : {partialComparisonExpression, '$2', '$1'}.
+
+id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
 
 property_lookup -> '.' property_key_name '?'                                                    : {propertyLookup, '$2', "?"}.
 property_lookup -> '.' property_key_name '!'                                                    : {propertyLookup, '$2', "!"}.
 property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', []}.
 
-case_expression -> 'CASE' case_alternatives END                                                 : {caseExpression, '$2'}.
-case_expression -> 'CASE' case_alternatives ELSE expression END                                 : {caseExpression, '$2', '$4'}.
-case_expression -> 'CASE' expression case_alternatives END                                      : {caseExpression, '$2', '$3'}.
 case_expression -> 'CASE' expression case_alternatives ELSE expression END                      : {caseExpression, '$2', '$3', '$5'}.
+case_expression -> 'CASE' expression case_alternatives END                                      : {caseExpression, '$2', '$3'}.
+case_expression -> 'CASE' case_alternatives ELSE expression END                                 : {caseExpression, '$2', '$4'}.
+case_expression -> 'CASE' case_alternatives END                                                 : {caseExpression, '$2'}.
 
 case_alternatives -> case_alternatives case_alternative                                         : '$1' ++ ['$2'].
 case_alternatives -> case_alternative                                                           : ['$1'].

@@ -6,8 +6,8 @@ Rules.
 %% punctuation
 (!=|<>|<|>|<=|>=)                                         : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
 ((\.\.)|(=~))                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
-([\^\.\?\*\+\(\)\[\]\{\}\-])                              : {token, {list_to_atom(TokenChars), TokenLine}}.
-([=/%:;!0])                                               : {token, {list_to_atom(TokenChars), TokenLine}}.
+([\^\.\|\?\*\+\(\)\[\]\{\}\-])                            : {token, {list_to_atom(TokenChars), TokenLine}}.
+([=/%:,;!0])                                              : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% names
 [A-Za-z][A-Za-z0-9_@#\$]*                                 : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).

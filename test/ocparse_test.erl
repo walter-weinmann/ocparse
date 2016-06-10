@@ -147,7 +147,8 @@ test_cypher(TestGroup, Test, Logs) ->
         {lex_error, Error} ->
             ?D_("Failed lexer ~p", [Error]),
             ?assertEqual(ok, Error);
-        {parse_error, {Error, Tokens}} ->
-            ?D_("~nFailed: ~p~nTest: ~s~nTokens ~p", [Error, Test, Tokens]),
+        {parse_error, {Error,   _Tokens}} ->
+            ?D_("Failed lexer ~p", [Error]),
+            % ?D_("~nFailed: ~p~nTest: ~s~nTokens ~p", [Error, Test, Tokens]),
             ?assertEqual(ok, Error)
     end.
