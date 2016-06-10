@@ -33,25 +33,19 @@ end_per_suite(_Config) ->
 groups() ->
     [
         {atom, [], [
-            {group, atom_case},
             {group, atom_number_literal},
             {group, atom_number_literal_sign},
             {group, atom_misc}
         ]},
-        {atom_case, [], [
-            {group, atom_case_1},
-            {group, atom_case_2}
-        ]},
-        {atom_case_1, [], [
-            test_atom_case_1
-        ]},
-        {atom_case_2, [], [
-            test_atom_case_2
-        ]},
         {atom_misc, [], [
+            test_atom_case_1,
+            test_atom_case_2,
             test_atom_constant,
             test_atom_count,
+            test_atom_expression_list,
             test_atom_parameter,
+            test_atom_parenthesized_expression,
+            test_atom_reduce,
             test_atom_string_literal,
             test_atom_variable
         ]},
@@ -147,11 +141,16 @@ test_atom_case_2(_Config) ->
     test_cypher("cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd"),
     test_cypher("cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd").
 
-
 test_atom_count(_Config) ->
     test_cypher("count(*)"),
     test_cypher("count ( * )"),
     test_cypher("COUNT(*)").
+
+test_atom_expression_list(_Config) ->
+    test_cypher("[ nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
+    test_cypher("[nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]"),
+    test_cypher("[ nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
+    test_cypher("[nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]").
 
 test_atom_number_literal_decimal_integer(_Config) ->
     test_cypher("1"),
@@ -260,6 +259,16 @@ test_atom_parameter(_Config) ->
     test_cypher("{1}"),
     test_cypher("{10}"),
     test_cypher("{19}").
+
+test_atom_parenthesized_expression(_Config) ->
+    test_cypher("(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
+    test_cypher("( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
+    test_cypher("(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
+    test_cypher("( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )").
+
+test_atom_reduce(_Config) ->
+    test_cypher("rEduce ( variable_1 = nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
+    test_cypher("rEduce(variable_1=nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)").
 
 test_atom_string_literal(_Config) ->
     test_cypher("\"Dies ist ein String\""),
@@ -446,7 +455,7 @@ test_command_query_options(_Config) ->
 %%--------------------------------------------------------------------
 
 test_cypher(Test) ->
-    % ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n", [Test]),
+    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n", [Test]),
     case ocparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, Tokens}} ->
             % ?debugFmt("wwe debugging test_cypher/1 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
@@ -454,7 +463,7 @@ test_cypher(Test) ->
                           {error, Error} ->
                               throw({error, Error});
                           NS ->
-                              % ?debugFmt("wwe debugging test_cypher/1 ===> ~n NS: ~p~n", [NS]),
+                              ?debugFmt("wwe debugging test_cypher/1 ===> ~n NS: ~p~n", [NS]),
                               NS
                       end,
             {ok, {NPTree, NToks}}
@@ -462,20 +471,19 @@ test_cypher(Test) ->
                       {ok, {NPT, NT}} = ocparse:parsetree_with_tokens(NCypher),
                       {ok, {NPT, NT}}
                   catch _:_ ->
-                ?debugFmt("wwe debugging test_cypher/1 ===> ~n NCypher: ~p~n", [NCypher])
+                ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n NCypher: ~p~n", [Test, NCypher])
                   end,
             try
                 ParseTree = NPTree
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_cypher/1 ===> ~n NPTree: ~p~n Tokens: ~p~n NToks: ~p~n", [NPTree, Tokens, NToks])
+                    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n NPTree: ~p~n Tokens: ~p~n NToks: ~p~n", [Test, NPTree, Tokens, NToks])
             end,
             ?assertEqual(ParseTree, NPTree);
         {lex_error, Error} ->
-            ?debugFmt("wwe debugging test_cypher/1 ===> Failed lexer~n Error: ~p~n", [Error]),
+            ?debugFmt("wwe debugging test_cypher/1 ===> Failed lexer~n Test: ~p~n Error: ~p~n", [Test, Error]),
             ?assertEqual(ok, Error);
         {parse_error, {Error, Tokens}} ->
             ?debugFmt("wwe debugging test_cypher/1 ===> Failed~n Test: ~p~n Error: ~p~n Tokens: ~p~n", [Test, Error, Tokens]),
             ?assertEqual(ok, Error)
     end.
-
