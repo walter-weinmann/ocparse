@@ -455,7 +455,7 @@ test_command_query_options(_Config) ->
 %%--------------------------------------------------------------------
 
 test_cypher(Test) ->
-    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n", [Test]),
+    % ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n", [Test]),
     case ocparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, Tokens}} ->
             % ?debugFmt("wwe debugging test_cypher/1 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
@@ -463,7 +463,7 @@ test_cypher(Test) ->
                           {error, Error} ->
                               throw({error, Error});
                           NS ->
-                              ?debugFmt("wwe debugging test_cypher/1 ===> ~n NS: ~p~n", [NS]),
+                              % ?debugFmt("wwe debugging test_cypher/1 ===> ~n NS: ~p~n", [NS]),
                               NS
                       end,
             {ok, {NPTree, NToks}}
@@ -477,7 +477,7 @@ test_cypher(Test) ->
                 ParseTree = NPTree
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n NPTree: ~p~n Tokens: ~p~n NToks: ~p~n", [Test, NPTree, Tokens, NToks])
+                    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n ParseTree: ~p~n NPTree: ~p~n Tokens: ~p~n NToks: ~p~n", [Test, ParseTree, NPTree, Tokens, NToks])
             end,
             ?assertEqual(ParseTree, NPTree);
         {lex_error, Error} ->

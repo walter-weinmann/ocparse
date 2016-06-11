@@ -24,6 +24,7 @@ Nonterminals
  double_literal
  drop_index
  expression
+ expression_commalist
  expression_10
  expression_11
  expression_12
@@ -43,6 +44,7 @@ Nonterminals
  node_labels
  number_literal
  parameter
+ parenthesized_expression
  partial_comparison_expression
  property_key_name
  property_lookup
@@ -310,6 +312,9 @@ expression_2_addon -> expression_2_addon property_lookup                        
 expression_2_addon -> node_labels                                                               : '$1'.
 expression_2_addon -> property_lookup                                                           : ['$1'].
 
+expression_commalist -> expression                                                              : ['$1'].
+expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
+
 atom -> number_literal                                                                          : {atom, '$1'}.
 atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
 atom -> parameter                                                                               : {atom, '$1'}.
@@ -318,7 +323,9 @@ atom -> FALSE                                                                   
 atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
 atom -> case_expression                                                                         : {atom, '$1'}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
+atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
 atom -> reduce                                                                                  : {atom, '$1'}.
+atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> variable                                                                                : {atom, '$1'}.
 
 reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'                  : {reduce, '$3', '$5', '$7', '$9'}.
@@ -326,6 +333,7 @@ reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'  
 partial_comparison_expression -> '=' expression_7                                               : {partialComparisonExpression, '$2', "="}.
 partial_comparison_expression -> COMPARISON expression_7                                        : {partialComparisonExpression, '$2', '$1'}.
 
+parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
 id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
 
 property_lookup -> '.' property_key_name '?'                                                    : {propertyLookup, '$2', "?"}.
