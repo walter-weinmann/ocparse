@@ -149,7 +149,7 @@ test_cypher(TestGroup, Test, Logs) ->
             ?debugFmt("wwe debugging test_cypher/3 ===> ~n Error lexer: ~p~n", [Error]),
             ?D_("Failed lexer ~p", [Error]),
             ?assertEqual(ok, Error);
-        {parse_error, {Error, Tokens}} ->
+        {parse_error, {Error, _Tokens}} ->
             ?debugFmt("wwe debugging test_cypher/3 ===> ~n Error parse: ~p~n", [Error]),
             ?D_("Failed lexer ~p", [Error]),
             % ?D_("~nFailed: ~p~nTest: ~s~nTokens ~p", [Error, Test, Tokens]),
