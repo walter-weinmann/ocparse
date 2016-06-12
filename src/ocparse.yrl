@@ -37,6 +37,8 @@ Nonterminals
  expression_7
  expression_8
  expression_9
+ function_invocation
+ function_name
  id_in_coll
  index
  label_name
@@ -91,7 +93,7 @@ Terminals
 % DESC
 % DESCENDING
 % DETACH
-% DISTINCT
+ DISTINCT
  DROP
  ELSE
  END
@@ -330,6 +332,7 @@ atom -> map_literal                                                             
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
 atom -> reduce                                                                                  : {atom, '$1'}.
 atom -> parenthesized_expression                                                                : {atom, '$1'}.
+atom -> function_invocation                                                                     : {atom, '$1'}.
 atom -> variable                                                                                : {atom, '$1'}.
 
 reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'                  : {reduce, '$3', '$5', '$7', '$9'}.
@@ -338,7 +341,15 @@ partial_comparison_expression -> '=' expression_7                               
 partial_comparison_expression -> COMPARISON expression_7                                        : {partialComparisonExpression, '$2', '$1'}.
 
 parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
+
 id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
+
+function_invocation -> function_name '(' DISTINCT expression_commalist ')'                      : {functionInvocation, '$1', '$4', distinct}.
+function_invocation -> function_name '(' DISTINCT ')'                                           : {functionInvocation, '$1', [], distinct}.
+function_invocation -> function_name '(' expression_commalist ')'                               : {functionInvocation, '$1', '$3'}.
+function_invocation -> function_name '(' ')'                                                    : {functionInvocation, '$1', []}.
+
+function_name -> symbolic_name                                                                  : {functionName, '$1'}.
 
 property_lookup -> '.' property_key_name '?'                                                    : {propertyLookup, '$2', "?"}.
 property_lookup -> '.' property_key_name '!'                                                    : {propertyLookup, '$2', "!"}.

@@ -43,6 +43,7 @@ groups() ->
             test_atom_constant,
             test_atom_count,
             test_atom_expression_list,
+            test_atom_function_invocation,
             test_atom_map_literal,
             test_atom_parameter,
             test_atom_parenthesized_expression,
@@ -152,6 +153,20 @@ test_atom_expression_list(_Config) ->
     test_cypher("[nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]"),
     test_cypher("[ nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
     test_cypher("[nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]").
+
+test_atom_function_invocation(_Config) ->
+    test_cypher("function_1 ( )"),
+    test_cypher("function_1 ( dIstinct )"),
+    test_cypher("function_1 ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
+    test_cypher("function_1 ( dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
+    test_cypher("function_1 ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
+    test_cypher("function_1 ( dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
+    test_cypher("function_1()"),
+    test_cypher("function_1(dIstinct)"),
+    test_cypher("function_1(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
+    test_cypher("function_1(dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
+    test_cypher("function_1(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
+    test_cypher("function_1(dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)").
 
 test_atom_map_literal(_Config) ->
     test_cypher("{ }"),
