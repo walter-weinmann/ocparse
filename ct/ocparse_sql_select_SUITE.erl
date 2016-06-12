@@ -43,6 +43,7 @@ groups() ->
             test_atom_constant,
             test_atom_count,
             test_atom_expression_list,
+            test_atom_map_literal,
             test_atom_parameter,
             test_atom_parenthesized_expression,
             test_atom_reduce,
@@ -151,6 +152,14 @@ test_atom_expression_list(_Config) ->
     test_cypher("[nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]"),
     test_cypher("[ nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
     test_cypher("[nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]").
+
+test_atom_map_literal(_Config) ->
+    test_cypher("{ }"),
+    test_cypher("{ property_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null }"),
+    test_cypher("{ property_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null }"),
+    test_cypher("{}"),
+    test_cypher("{property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}"),
+    test_cypher("{property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,property_2:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}").
 
 test_atom_number_literal_decimal_integer(_Config) ->
     test_cypher("1"),

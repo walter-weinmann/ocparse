@@ -40,6 +40,7 @@ Nonterminals
  id_in_coll
  index
  label_name
+ map_literal
  node_label
  node_labels
  number_literal
@@ -47,6 +48,8 @@ Nonterminals
  parenthesized_expression
  partial_comparison_expression
  property_key_name
+ property_key_name_expression
+ property_key_name_expression_commalist
  property_lookup
  query
  query_options
@@ -323,6 +326,7 @@ atom -> FALSE                                                                   
 atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
 atom -> case_expression                                                                         : {atom, '$1'}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
+atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
 atom -> reduce                                                                                  : {atom, '$1'}.
 atom -> parenthesized_expression                                                                : {atom, '$1'}.
@@ -352,6 +356,15 @@ case_alternative -> WHEN expression THEN expression                             
 
 number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
 number_literal -> signed_integer_literal                                                        : {numberLiteral, '$1'}.
+
+map_literal -> '{' property_key_name_expression_commalist '}'                                   : {mapLiteral, '$2'}.
+map_literal -> '{' '}'                                                                          : {mapLiteral, []}.
+
+property_key_name_expression_commalist -> property_key_name_expression                          : ['$1'].
+property_key_name_expression_commalist -> property_key_name_expression ',' property_key_name_expression_commalist
+                                                                                                : ['$1' | '$3'].
+
+property_key_name_expression -> property_key_name ':' expression                                : {propertyKeyNameExpression, '$1', '$3'}.
 
 parameter -> '{' symbolic_name '}'                                                              : {parameter, '$2'}.
 parameter -> '{' unsigned_decimal_integer '}'                                                   : {parameter, '$2'}.
