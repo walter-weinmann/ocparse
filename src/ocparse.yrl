@@ -74,10 +74,10 @@ Nonterminals
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Terminals
-% ALL
+ ALL
 % ALLSHORTESTPATHS
  AND
-% ANY
+ ANY
 % AS
 % ASC
 % ASCENDING
@@ -104,10 +104,10 @@ Terminals
 % EXISTS
  EXPLAIN
  EXPONENT_DECIMAL_REAL
-% EXTRACT
+ EXTRACT
  FALSE
 % FIELDTERMINATOR
-% FILTER
+ FILTER
 % FOREACH
 % FROM
 % HEADERS
@@ -124,7 +124,7 @@ Terminals
 % MERGE
  NAME
 % NODE
-% NONE
+ NONE
  NOT
  NULL
  OCTAL_INTEGER
@@ -144,7 +144,7 @@ Terminals
 % SHORTESTPATH
  SIGNED_DECIMAL_INTEGER
  SIGNED_FLOAT
-% SINGLE
+ SINGLE
 % START
  STARTS
  STRING_LITERAL
@@ -336,7 +336,14 @@ atom -> COUNT '(' '*' ')'                                                       
 atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
+atom -> FILTER '(' filter_expression ')'                                                        : {atom, {'filter', '$3'}}.
+atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
+atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3'}}.
 atom -> reduce                                                                                  : {atom, '$1'}.
+atom -> ALL '(' filter_expression ')'                                                           : {atom, {'all', '$3'}}.
+atom -> ANY '(' filter_expression ')'                                                           : {atom, {'any', '$3'}}.
+atom -> NONE '(' filter_expression ')'                                                          : {atom, {'none', '$3'}}.
+atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single', '$3'}}.
 atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> function_invocation                                                                     : {atom, '$1'}.
 atom -> variable                                                                                : {atom, '$1'}.
