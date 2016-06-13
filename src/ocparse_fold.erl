@@ -1175,7 +1175,8 @@ fold(FType, Fun, Ctx, Lvl, {parenthesizedExpression, Value} = ST) ->
 % partialComparisonExpression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, Lvl, {partialComparisonExpression, Value, "=" = Terminal} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {partialComparisonExpression, Value, Terminal} = ST)
+    when Terminal == "="; Terminal == "<"; Terminal == ">" ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
