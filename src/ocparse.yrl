@@ -92,6 +92,7 @@ Terminals
  CREATE
 % CSV
  CYPHER
+ DASH
 % DELETE
 % DESC
 % DESCENDING
@@ -118,6 +119,7 @@ Terminals
 % JOIN
 % L_0X
 % L_SKIP
+ LEFT_ARROW_HEAD
 % LIMIT
 % LOAD
  MATCH
@@ -139,6 +141,7 @@ Terminals
 % RELATIONSHIP
 % REMOVE
 % RETURN
+ RIGHT_ARROW_HEAD
 % SCAN
 % SET
 % SHORTESTPATH
@@ -162,6 +165,8 @@ Terminals
  XOR
  '='
  '=~'
+ '<'
+ '>'
  '-'
  '+'
  '*'
@@ -203,7 +208,9 @@ Left        120 'XOR'.
 Left        130 'AND'.
 Left        140 'NOT'.
 Nonassoc    210 '='.
-Nonassoc    220 COMPARISON.
+Nonassoc    220 '<'.
+Nonassoc    230 '>'.
+Nonassoc    240 COMPARISON.
 Left        300 '+' '-'.
 Left        400 '*' '/' '%'.
 Left        500 '^'.
@@ -351,6 +358,8 @@ atom -> variable                                                                
 reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'                  : {reduce, '$3', '$5', '$7', '$9'}.
 
 partial_comparison_expression -> '=' expression_7                                               : {partialComparisonExpression, '$2', "="}.
+partial_comparison_expression -> '<' expression_7                                               : {partialComparisonExpression, '$2', "<"}.
+partial_comparison_expression -> '>' expression_7                                               : {partialComparisonExpression, '$2', ">"}.
 partial_comparison_expression -> COMPARISON expression_7                                        : {partialComparisonExpression, '$2', '$1'}.
 
 parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.

@@ -4,10 +4,13 @@ Definitions.
 Rules.
 
 %% punctuation
-(!=|<>|<|>|<=|>=)                                         : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.
+(!=|<>|<=|>=)                                             : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.        %% missing: = < >
+(¬|‐|‒|–|—|―|−|﹘|﹣|－)                                  : {token, {'DASH', TokenLine, list_to_atom(TokenChars)}}.              %% missing:   -
+(⟨|〈|﹤|＜)                                               : {token, {'LEFT_ARROW_HEAD', TokenLine, list_to_atom(TokenChars)}}.   %% missing: <
+(⟩|〉|﹥|＞)                                               : {token, {'RIGHT_ARROW_HEAD', TokenLine, list_to_atom(TokenChars)}}.  %% missing: >
 ((\.\.)|(=~))                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([\^\.\|\?\*\+\(\)\[\]\{\}\-])                            : {token, {list_to_atom(TokenChars), TokenLine}}.
-([=/%:,;!0])                                              : {token, {list_to_atom(TokenChars), TokenLine}}.
+([=<>/%:,;!0])                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% names
 [A-Za-z][A-Za-z0-9_@#\$]*                                 : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
@@ -24,8 +27,8 @@ Rules.
 ([0-9]*\.[0-9]*)                                          : {token, {'UNSIGNED_FLOAT', TokenLine, TokenChars}}.
 
 %% skip tokens
-([\s\t\r\n]+)                                             : skip_token.                                                  %% white space
-(\/\/.*[\n|\r])                                           : skip_token.                                                  %% comment
+([\s\t\r\n]+)                                             : skip_token.                                                          %% white space
+(\/\/.*[\n|\r])                                           : skip_token.                                                          %% comment
 
 Erlang code.
 
