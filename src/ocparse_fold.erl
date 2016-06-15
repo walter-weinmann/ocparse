@@ -325,64 +325,6 @@ fold(FType, Fun, Ctx, Lvl, {caseExpression, Expression_1, CaseAlternatives, Expr
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
 
-fold(FType, Fun, Ctx, Lvl, {caseExpression, Expression, CaseAlternatives} = ST)
-  when is_list(CaseAlternatives) ->
-  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-  NewCtx = case FType of
-             top_down -> Fun(ST, Ctx);
-             bottom_up -> Ctx
-           end,
-  {ExpressionNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Expression),
-  NewCtx2 = case FType of
-              top_down -> NewCtx1;
-              bottom_up -> Fun(ST, NewCtx1)
-            end,
-  {CaseAlternativesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, {caseAlternatives, CaseAlternatives}),
-  NewCtx4 = case FType of
-              top_down -> NewCtx3;
-              bottom_up -> Fun(ST, NewCtx3)
-            end,
-  RT = {"case " ++ ExpressionNew ++ " " ++ CaseAlternativesNew ++ " end", NewCtx4},
-  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
-  RT;
-
-fold(FType, Fun, Ctx, Lvl, {caseExpression, CaseAlternatives, Expression} = ST)
-  when is_list(CaseAlternatives) ->
-  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-  NewCtx = case FType of
-             top_down -> Fun(ST, Ctx);
-             bottom_up -> Ctx
-           end,
-  {CaseAlternativesNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, {caseAlternatives, CaseAlternatives}),
-  NewCtx2 = case FType of
-              top_down -> NewCtx1;
-              bottom_up -> Fun(ST, NewCtx1)
-            end,
-  {ExpressionNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Expression),
-  NewCtx4 = case FType of
-              top_down -> NewCtx3;
-              bottom_up -> Fun(ST, NewCtx3)
-            end,
-  RT = {"case " ++ CaseAlternativesNew ++ "else " ++ ExpressionNew ++ " end", NewCtx4},
-  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
-  RT;
-
-fold(FType, Fun, Ctx, Lvl, {caseExpression, Value} = ST)
-  when is_list(Value) ->
-  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-  NewCtx = case FType of
-             top_down -> Fun(ST, Ctx);
-             bottom_up -> Ctx
-           end,
-  {ValueNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, {caseAlternatives, Value}),
-  NewCtx2 = case FType of
-              top_down -> NewCtx1;
-              bottom_up -> Fun(ST, NewCtx1)
-            end,
-  RT = {"case " ++ ValueNew ++ " end", NewCtx2},
-  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
-  RT;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % command
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
