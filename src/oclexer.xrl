@@ -4,11 +4,8 @@ Definitions.
 Rules.
 
 %% punctuation
-(!=|<>|<=|>=)                                             : {token, {'COMPARISON', TokenLine, list_to_atom(TokenChars)}}.        %% missing: = < >
-(¬|‐|‒|–|—|―|−|﹘|﹣|－)                                  : {token, {'DASH', TokenLine, list_to_atom(TokenChars)}}.              %% missing:   -
-(⟨|〈|﹤|＜)                                               : {token, {'LEFT_ARROW_HEAD', TokenLine, list_to_atom(TokenChars)}}.   %% missing: <
-(⟩|〉|﹥|＞)                                               : {token, {'RIGHT_ARROW_HEAD', TokenLine, list_to_atom(TokenChars)}}.  %% missing: >
-((\.\.)|(=~))                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
+(\.\.)                                                    : {token, {list_to_atom(TokenChars), TokenLine}}.
+(=~|<>|!=|<=|>=)                                          : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([\^\.\|\?\*\+\(\)\[\]\{\}\-])                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([=<>/%:,;!0])                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 
