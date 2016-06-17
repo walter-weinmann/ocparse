@@ -9,6 +9,20 @@
 % Terminals.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+fold(FType, Fun, Ctx, _Lvl, {Type, {Value, _}} = ST)
+  when Type == dash; Type == leftArrowHead; Type == rightArrowHead ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  NewCtx1 = case FType of
+              top_down -> NewCtx;
+              bottom_up -> Fun(ST, NewCtx)
+            end,
+  RT = {atom_to_list(Value), NewCtx1},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
 fold(FType, Fun, Ctx, _Lvl, {doubleLiteral, {DoubleType, Value}} = ST)
   when DoubleType == exponentDecimalReal; DoubleType == regularDecimalReal ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
@@ -162,7 +176,8 @@ fold(FType, Fun, Ctx, Lvl, {atom, Value, "]"} = ST)
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
 fold(FType, Fun, Ctx, Lvl, {atom, {Type, _, _} = Value} = ST)
-  when Type == caseExpression; Type == functionInvocation; Type == listComprehension ->
+  when Type == caseExpression; Type == functionInvocation; Type == listComprehension;
+  Type == relationshipsPattern ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -1063,11 +1078,11 @@ fold(FType, Fun, Ctx, Lvl, {mapLiteral, Value} = ST)
   RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% nodeLabel, where
+% nodeLabel, properties, unsignedIntegerLiteral, where
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
-  when Type == nodeLabel; Type == where ->
+  when Type == nodeLabel; Type == properties; Type == unsignedIntegerLiteral; Type == where ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -1080,7 +1095,8 @@ fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
             end,
   RT = {case Type of
           nodeLabel -> ":";
-          where -> "where "
+          where -> "where ";
+          _ -> []
         end ++ ValueNew, NewCtx2},
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
@@ -1111,6 +1127,133 @@ fold(FType, Fun, Ctx, Lvl, {nodeLabels, Values} = ST)
               bottom_up -> Fun(ST, NewCtx1)
             end,
   RT = {ValueNew, NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% nodePattern
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, _Lvl, {nodePattern, {}, [], {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  NewCtx1 = case FType of
+              top_down -> NewCtx;
+              bottom_up -> Fun(ST, NewCtx)
+            end,
+  RT = {"()", NewCtx1},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {nodePattern, {}, NodeLabels, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {NodeLabelsNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, NodeLabels),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {"(" ++ NodeLabelsNew ++ ")", NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {nodePattern, {}, NodeLabels, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {NodeLabelsNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, NodeLabels),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {PropertiesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Properties),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"(" ++ NodeLabelsNew ++ PropertiesNew ++ ")", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {nodePattern, Variable, [], {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {"(" ++ VariableNew ++ ")", NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {nodePattern, Variable, [], Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {PropertiesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Properties),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"(" ++ VariableNew ++ PropertiesNew ++ ")", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {NodeLabelsNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, NodeLabels),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"(" ++ VariableNew ++ NodeLabelsNew ++ ")", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {NodeLabelsNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, NodeLabels),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {PropertiesNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Properties),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {"(" ++ VariableNew ++ NodeLabelsNew ++ PropertiesNew ++ ")", NewCtx6},
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
 
@@ -1202,6 +1345,59 @@ fold(FType, Fun, Ctx, Lvl, {partialComparisonExpression, Value, Terminal} = ST) 
               bottom_up -> Fun(ST, NewCtx1)
             end,
   RT = {Terminal ++ ValueNew ++ " ", NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% patternElementChain
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {patternElementChain, RelationshipPattern, NodePattern} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RelationshipPatternNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, RelationshipPattern),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {NodePatternNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, NodePattern),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {RelationshipPatternNew ++ " " ++ NodePatternNew, NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% patternElementChainList
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {patternElementChainList, Values} = ST)
+  when is_list(Values) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
+    case F of
+      {patternElementChain, _, _} ->
+        ?debugFmt("wwe debugging fold/5 ===> ~n F: ~p~n", [F]),
+        {SubAcc, CtxAcc1} = fold(FType, Fun, CtxAcc, Lvl + 1, F),
+        {Acc ++ [SubAcc], CtxAcc1}
+    end
+                                    end,
+    {[], NewCtx},
+    Values),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {ValueNew, NewCtx2},
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
 
@@ -1357,6 +1553,103 @@ fold(FType, Fun, Ctx, Lvl, {queryOptions, Values} = ST)
   RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% range
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, _Lvl, {"*", {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  NewCtx1 = case FType of
+              top_down -> NewCtx;
+              bottom_up -> Fun(ST, NewCtx)
+            end,
+  RT = {"*", NewCtx1},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {"*", Value} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {ValueNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {"*" ++ ValueNew, NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% rangeLiteral
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, _Lvl, {rangeLiteral, {}, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  NewCtx1 = case FType of
+              top_down -> NewCtx;
+              bottom_up -> Fun(ST, NewCtx)
+            end,
+  RT = {" .. ", NewCtx1},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {rangeLiteral, {}, Right} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RightNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Right),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {" .. " ++ RightNew, NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {rangeLiteral, Left, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {LeftNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Left),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {LeftNew ++ " .. ", NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {rangeLiteral, Left, Right} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {LeftNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Left),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RightNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Right),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {LeftNew ++ " .. " ++ RightNew, NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % reduce
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1391,6 +1684,605 @@ fold(FType, Fun, Ctx, Lvl, {reduce, Variable_1, Expression_1, IdInColl, Expressi
   RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% relationshipDetail
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, _Lvl, {relationshipDetail, {}, CharQuestionMark, [], {}, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  NewCtx1 = case FType of
+              top_down -> NewCtx;
+              bottom_up -> Fun(ST, NewCtx)
+            end,
+  RT = {"[" ++ CharQuestionMark ++ "]", NewCtx1},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, {}, CharQuestionMark, [], {}, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {PropertiesNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Properties),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {"[" ++ CharQuestionMark ++ PropertiesNew ++ "]", NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, {}, CharQuestionMark, [], RangeLiteral, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RangeLiteralNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, RangeLiteral),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {"[" ++ CharQuestionMark ++ RangeLiteralNew ++ "]", NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, {}, CharQuestionMark, [], RangeLiteral, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RangeLiteralNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, RangeLiteral),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {PropertiesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Properties),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"[" ++ CharQuestionMark ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, {}, CharQuestionMark, RelationshipTypes, {}, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RelationshipTypesNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, RelationshipTypes),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {"[" ++ CharQuestionMark ++ RelationshipTypesNew ++ "]", NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, {}, CharQuestionMark, RelationshipTypes, {}, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RelationshipTypesNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, RelationshipTypes),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {PropertiesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Properties),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"[" ++ CharQuestionMark ++ RelationshipTypesNew ++ PropertiesNew ++ "]", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, {}, CharQuestionMark, RelationshipTypes, RangeLiteral, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RelationshipTypesNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, RelationshipTypes),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RangeLiteralNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RangeLiteral),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"[" ++ CharQuestionMark ++ RelationshipTypesNew ++ RangeLiteralNew ++ "]", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, {}, CharQuestionMark, RelationshipTypes, RangeLiteral, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RelationshipTypesNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, RelationshipTypes),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RangeLiteralNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RangeLiteral),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {PropertiesNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Properties),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {"[" ++ CharQuestionMark ++ RelationshipTypesNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx6},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, [], {}, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {"[" ++ VariableNew ++ CharQuestionMark ++ "]", NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, [], {}, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {PropertiesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Properties),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"[" ++ VariableNew ++ CharQuestionMark ++ PropertiesNew ++ "]", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, [], RangeLiteral, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RangeLiteralNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RangeLiteral),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RangeLiteralNew ++ "]", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, [], RangeLiteral, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RangeLiteralNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RangeLiteral),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {PropertiesNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Properties),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx6},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, RelationshipTypes, {}, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RelationshipTypesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RelationshipTypes),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RelationshipTypesNew ++ "]", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, RelationshipTypes, {}, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RelationshipTypesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RelationshipTypes),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {PropertiesNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Properties),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RelationshipTypesNew ++ PropertiesNew ++ "]", NewCtx6},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, RelationshipTypes, RangeLiteral, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RelationshipTypesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RelationshipTypes),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {RangeLiteralNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, RangeLiteral),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RelationshipTypesNew ++ RangeLiteralNew ++ "]", NewCtx6},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, RelationshipTypes, RangeLiteral, Properties} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RelationshipTypesNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RelationshipTypes),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {RangeLiteralNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, RangeLiteral),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  {PropertiesNew, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, Properties),
+  NewCtx8 = case FType of
+              top_down -> NewCtx7;
+              bottom_up -> Fun(ST, NewCtx7)
+            end,
+  RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RelationshipTypesNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx8},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% relationshipPattern
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {relationshipPattern, {}, Dash_1, {}, Dash_2, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {Dash_1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Dash_1),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {Dash_2New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Dash_2),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {Dash_1New ++ " " ++ Dash_2New, NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPattern, {}, Dash_1, {}, Dash_2, RightArrowHead} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {Dash_1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Dash_1),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {Dash_2New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Dash_2),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {RightArrowHeadNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, RightArrowHead),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {Dash_1New ++ " " ++ Dash_2New ++ RightArrowHeadNew, NewCtx6},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPattern, {}, Dash_1, RelationshipDetail, Dash_2, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {Dash_1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Dash_1),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RelationshipDetailNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RelationshipDetail),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {Dash_2New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Dash_2),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {Dash_1New ++ RelationshipDetailNew ++ Dash_2New, NewCtx6},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPattern, {}, Dash_1, RelationshipDetail, Dash_2, RightArrowHead} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {Dash_1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Dash_1),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {RelationshipDetailNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, RelationshipDetail),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {Dash_2New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Dash_2),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  {RightArrowHeadNew, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, RightArrowHead),
+  NewCtx8 = case FType of
+              top_down -> NewCtx7;
+              bottom_up -> Fun(ST, NewCtx7)
+            end,
+  RT = {Dash_1New ++ RelationshipDetailNew ++ Dash_2New ++ RightArrowHeadNew, NewCtx8},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPattern, LeftArrowHead, Dash_1, {}, Dash_2, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {LeftArrowHeadNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, LeftArrowHead),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {Dash_1New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Dash_1),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {Dash_2New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Dash_2),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {LeftArrowHeadNew ++ Dash_1New ++ " " ++ Dash_2New, NewCtx6},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPattern, LeftArrowHead, Dash_1, {}, Dash_2, RightArrowHead} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {LeftArrowHeadNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, LeftArrowHead),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {Dash_1New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Dash_1),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {Dash_2New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Dash_2),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  {RightArrowHeadNew, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, RightArrowHead),
+  NewCtx8 = case FType of
+              top_down -> NewCtx7;
+              bottom_up -> Fun(ST, NewCtx7)
+            end,
+  RT = {LeftArrowHeadNew ++ Dash_1New ++ " " ++ Dash_2New ++ RightArrowHeadNew, NewCtx8},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPattern, LeftArrowHead, Dash_1, RelationshipDetail, Dash_2, {}} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {LeftArrowHeadNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, LeftArrowHead),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {Dash_1New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Dash_1),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {RelationshipDetailNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, RelationshipDetail),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  {Dash_2New, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, Dash_2),
+  NewCtx8 = case FType of
+              top_down -> NewCtx7;
+              bottom_up -> Fun(ST, NewCtx7)
+            end,
+  RT = {LeftArrowHeadNew ++ Dash_1New ++ RelationshipDetailNew ++ Dash_2New, NewCtx8},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPattern, LeftArrowHead, Dash_1, RelationshipDetail, Dash_2, RightArrowHead} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {LeftArrowHeadNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, LeftArrowHead),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {Dash_1New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Dash_1),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {RelationshipDetailNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, RelationshipDetail),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  {Dash_2New, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, Dash_2),
+  NewCtx8 = case FType of
+              top_down -> NewCtx7;
+              bottom_up -> Fun(ST, NewCtx7)
+            end,
+  {RightArrowHeadNew, NewCtx9} = fold(FType, Fun, NewCtx8, Lvl + 1, RightArrowHead),
+  NewCtx10 = case FType of
+               top_down -> NewCtx9;
+               bottom_up -> Fun(ST, NewCtx9)
+             end,
+  RT = {LeftArrowHeadNew ++ Dash_1New ++ RelationshipDetailNew ++ Dash_2New ++ RightArrowHeadNew, NewCtx10},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% relationshipsPattern
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {relationshipsPattern, NodePattern, []} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {NodePatternNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, NodePattern),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {NodePatternNew, NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipsPattern, NodePattern, PatternElementChainList} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {NodePatternNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, NodePattern),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {PatternElementChainListNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, {patternElementChainList, PatternElementChainList}),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {NodePatternNew ++ PatternElementChainListNew, NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% relationshipTypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {relationshipTypes, Values} = ST)
+  when is_list(Values) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
+    case F of
+      {relTypeName, _} ->
+        ?debugFmt("wwe debugging fold/5 ===> ~n F: ~p~n", [F]),
+        {SubAcc, CtxAcc1} = fold(FType, Fun, CtxAcc, Lvl + 1, F),
+        {Acc ++ case length(Acc) of
+                  0 -> ":";
+                  _ -> "|:" end ++ [SubAcc], CtxAcc1}
+    end
+                                    end,
+    {[], NewCtx},
+    Values),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  RT = {ValueNew, NewCtx2},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % statement
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1414,7 +2306,7 @@ fold(FType, Fun, Ctx, Lvl, {statement, Value} = ST) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
-  when Type == functionName; Type == labelName; Type == variable ->
+  when Type == functionName; Type == labelName; Type == relTypeName; Type == variable ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
