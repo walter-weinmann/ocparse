@@ -68,9 +68,11 @@ Nonterminals
  parameter
  parenthesized_expression
  partial_comparison_expression
+ pattern_element
  pattern_element_chain
  pattern_element_chain_list
  pattern_element_chain_list_opt
+ pattern_element_chain_opt
  properties
  properties_opt
  property_key_name
@@ -95,6 +97,7 @@ Nonterminals
  relationship_types_opt
  relationships_pattern
  right_arrow_head_opt
+ shortest_path_pattern
  signed_integer_literal
  single_query
  statement
@@ -114,7 +117,7 @@ Nonterminals
 Terminals
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  ALL
-% ALLSHORTESTPATHS
+ ALLSHORTESTPATHS
  AND
  ANY
 % AS
@@ -179,7 +182,7 @@ Terminals
 % RETURN
 % SCAN
 % SET
-% SHORTESTPATH
+ SHORTESTPATH
  SIGNED_DECIMAL_INTEGER
  SIGNED_FLOAT
  SINGLE
@@ -321,6 +324,15 @@ drop_index -> DROP index                                                        
 index -> INDEX ON node_label '(' property_key_name ')'                                          : {index ,{'$3', '$5'}}.
 
 where -> WHERE expression                                                                       : {where, '$2'}.
+
+shortest_path_pattern -> SHORTESTPATH '(' pattern_element ')'                                   : {shortestPathPattern, '$1', '$3'}.
+shortest_path_pattern -> ALLSHORTESTPATHS '(' pattern_element ')'                               : {shortestPathPattern, '$1', '$3'}.
+
+pattern_element -> node_pattern pattern_element_chain_opt                                       : {patternElement, '$1', '$2'}.
+pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2'}.
+
+pattern_element_chain_opt -> '$empty'                                                           : {}.
+pattern_element_chain_opt -> pattern_element_chain                                              : '$1'.
 
 node_pattern -> '(' variable_opt node_labels_opt properties_opt ')'                             : {nodePattern, '$2', '$3', '$4'}.
 
@@ -472,6 +484,7 @@ atom -> ANY '(' filter_expression ')'                                           
 atom -> NONE '(' filter_expression ')'                                                          : {atom, {'none', '$3'}}.
 atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single', '$3'}}.
 atom -> relationships_pattern                                                                   : {atom, '$1'}.
+atom -> shortest_path_pattern                                                                   : {atom, '$1'}.
 atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> function_invocation                                                                     : {atom, '$1'}.
 %% wwe atom -> variable                                                                                : {atom, '$1'}.
