@@ -82,7 +82,7 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
             tests_gen(TestGroup, Tests, Logs, SelTests,
                 [{TestGroup, I,
                     fun() ->
-                        ?MODULE:test_cypher(TestGroup, T, Logs)
+                        {timeout, 60, ?MODULE:test_cypher(TestGroup, T, Logs)}
                     end} | Acc]);
         _ -> Acc
     end.
@@ -150,7 +150,7 @@ test_cypher(TestGroup, Test, Logs) ->
             ?D_("Failed lexer ~p", [Error]),
             ?assertEqual(ok, Error);
         {parse_error, {Error, _Tokens}} ->
-            ?debugFmt("wwe debugging test_cypher/3 ===> ~n Error parse: ~p~n", [Error]),
+            ?debugFmt("wwe debugging test_cypher/3 ===> ~n Error parse: ~p~n Tokens: ~p~n", [Error, _Tokens]),
             ?D_("Failed lexer ~p", [Error]),
             % ?D_("~nFailed: ~p~nTest: ~s~nTokens ~p", [Error, Test, Tokens]),
             ?assertEqual(ok, Error)

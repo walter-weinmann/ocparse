@@ -5,8 +5,8 @@ Header "%% Copyright (C) K2 Informatics GmbH"
 "%% @Email office@k2informatics.ch".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 Nonterminals
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  any_cypher_option
  atom
 % bulk_import_query
@@ -14,6 +14,7 @@ Nonterminals
  case_alternatives_list
  case_expression
  char_opt
+ char_question_mark_opt
  char_semicolon_opt
  char_vertical_bar_expression
  char_vertical_bar_expression_opt
@@ -26,6 +27,7 @@ Nonterminals
  create_index
  cypher
  cypher_option
+ dash
  distinct_opt
  double_literal
  drop_index
@@ -79,9 +81,9 @@ Nonterminals
  query
  query_options
  query_options_opt
- question_mark_opt
  range_literal
  range_literal_opt
+ range_opt
  reduce
  regular_decimal_real
  regular_query
@@ -109,8 +111,8 @@ Nonterminals
  .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 Terminals
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  ALL
 % ALLSHORTESTPATHS
  AND
@@ -128,7 +130,6 @@ Terminals
  CREATE
 % CSV
  CYPHER
- DASH
 % DELETE
 % DESC
 % DESCENDING
@@ -155,7 +156,6 @@ Terminals
 % JOIN
 % L_0X
 % L_SKIP
- LEFT_ARROW_HEAD
 % LIMIT
 % LOAD
  MATCH
@@ -177,7 +177,6 @@ Terminals
 % RELATIONSHIP
 % REMOVE
 % RETURN
- RIGHT_ARROW_HEAD
 % SCAN
 % SET
 % SHORTESTPATH
@@ -228,20 +227,31 @@ Terminals
  '!'
  '?'
  '0'
+ %% wwe '‑'                             %% dash
+ %% wwe '‒'                             %% dash
+ %% wwe '–'                             %% dash
+ %% wwe '—'                            %% dash
+ %% wwe '―'                            %% dash
+ %% wwe '−'                            %% dash
+ %% wwe '﹘'                            %% dash
+ %% wwe '﹣'                            %% dash
+ %% wwe '－'                            %% dash
+ '--'                                   %% dash
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 Rootsymbol 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  cypher.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 Endsymbol
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  '$end'.
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Operator precedences.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Left        110 'OR'.
 Left        120 'XOR'.
@@ -255,6 +265,7 @@ Left        500 '^'.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cypher -> query_options_opt statement char_semicolon_opt                                        : {cypher, '$1', {statement, '$2'}, '$3'}.
 
@@ -264,8 +275,8 @@ cypher -> atom ';'                                                              
 query_options_opt -> '$empty'                                                                   : {}.
 query_options_opt -> query_options                                                              : {queryOptions, '$1'}.
 
-char_semicolon_opt -> '$empty'                                                                   : {}.
-char_semicolon_opt -> ';'                                                                        : ";".
+char_semicolon_opt -> '$empty'                                                                  : {}.
+char_semicolon_opt -> ';'                                                                       : ";".
 
 query_options -> query_options any_cypher_option                                                : '$1' ++ ['$2'].
 query_options -> any_cypher_option                                                              : ['$1'].
@@ -324,27 +335,41 @@ properties_opt -> properties                                                    
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
-relationship_pattern -> left_arrow_head_opt DASH relationship_detail_opt DASH right_arrow_head_opt
+relationship_pattern -> left_arrow_head_opt dash relationship_detail_opt dash right_arrow_head_opt
                                                                                                 : {relationshipPattern, '$1', '$2', '$3', '$4', '$5'}.
-left_arrow_head_opt -> '$empty'                                                                 : [].
-left_arrow_head_opt -> LEFT_ARROW_HEAD                                                          : '$1'.
+
+left_arrow_head_opt -> '$empty'                                                                 : {}.
+left_arrow_head_opt -> '<'                                                                      : {leftArrowHead, '$1'}.
+
+dash -> '--'                                                                                    : {dash, '$1'}.
+%% wwe dash -> '‐'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '‑'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '‒'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '–'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '—'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '―'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '−'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '﹘'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '﹣'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '－'                                                                                     : {dash, '$1'}.
 
 relationship_detail_opt -> '$empty'                                                             : {}.
 relationship_detail_opt -> relationship_detail                                                  : '$1'.
 
-right_arrow_head_opt -> '$empty'                                                                : [].
-right_arrow_head_opt -> RIGHT_ARROW_HEAD                                                        : '$1'.
+right_arrow_head_opt -> '$empty'                                                                : {}.
+right_arrow_head_opt -> '>'                                                                     : {rightArrowHead, '$1'}.
 
-relationship_detail -> '[' variable_opt question_mark_opt relationship_types_opt '*' range_literal_opt properties_opt ']'     
-                                                                                                : {relationshipDetail, '$1', '$2', '$3', '$4', {'$5'}, '$6'}.
-relationship_detail -> '[' variable_opt question_mark_opt relationship_types_opt properties_opt ']'     
-                                                                                                : {relationshipDetail, '$1', '$2', '$3', '', {}, '$4'}.
+relationship_detail -> '[' variable_opt char_question_mark_opt relationship_types_opt range_opt properties_opt ']'     
+                                                                                                : {relationshipDetail, '$2', '$3', '$4', '$5', '$6'}.
 
-question_mark_opt -> '$empty'                                                                   : [].
-question_mark_opt -> '?'                                                                        : '$1'.
+char_question_mark_opt -> '$empty'                                                              : [].
+char_question_mark_opt -> '?'                                                                   : "?".
 
 relationship_types_opt -> '$empty'                                                              : [].
 relationship_types_opt -> relationship_types                                                    : {relationshipTypes, '$1'}.
+
+range_opt -> '$empty'                                                                           : {}.
+range_opt -> '*' range_literal_opt                                                              : {"*", '$2'}.
 
 range_literal_opt -> '$empty'                                                                   : {}.
 range_literal_opt -> range_literal                                                              : '$1'.
@@ -353,7 +378,7 @@ properties -> map_literal                                                       
 properties -> parameter                                                                         : {properties, '$1'}.
 
 relationship_types -> ':' rel_type_name                                                         : ['$2'].
-relationship_types -> ':' rel_type_name ',' relationship_types                                  : ['$2' | '$4'].
+relationship_types -> ':' rel_type_name '|' relationship_types                                  : ['$2' | '$4'].
 
 node_labels -> node_labels node_label                                                           : '$1' ++ ['$2'].
 node_labels -> node_label                                                                       : ['$1'].
@@ -558,11 +583,10 @@ symbolic_name -> NAME                                                           
 variable -> symbolic_name                                                                       : {variable, '$1'}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % Expect 2.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Erlang code.
 
 -behaviour(application).
