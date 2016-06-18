@@ -300,6 +300,34 @@
 "( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})".
 "( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})".
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Shortest Path Pattern
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"sHortestpath ( (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) )".
+"sHortestpath ( ( variable_1 : node_1 : node_2 { name_1 } ) )".
+"sHortestpath ( ( variable_1 : node_1 { name_1 } ) )".
+"sHortestpath ( ( variable_1 : node_1 : node_2 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )".
+"sHortestpath ( ( variable_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )".
+"sHortestpath ( ( variable_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )".
+"sHortestpath ( ( ( : node_1 : node_2 { name_1 } ) ) )".
+"sHortestpath ( ( (  ) ) )".
+"sHortestpath ( ( ( : node_1 : node_2 ) ) )".
+"sHortestpath ( ( ( { 4711 } ) <--  --> ( ) ) )".
+"sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )".
+"sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )".
+"aLlsHortestpaths ( ( : node_1 { 4711 } ) )".
+"aLlsHortestpaths ( ( { name_1 } ) )".
+"aLlsHortestpaths ( ( { name_1 } ) )".
+"aLlsHortestpaths ( ( { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )".
+"aLlsHortestpaths ( ( : node_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )".
+"aLlsHortestpaths ( ( : node_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )".
+"aLlsHortestpaths ( ( ( : node_1 : node_2 { 4711 } ) ) )".
+"aLlsHortestpaths ( ( ( variable_1 { 4711 } ) ) )".
+"aLlsHortestpaths ( ( ( variable_1 : node_1 ) ) )".
+"aLlsHortestpaths ( ( ( variable_1 : node_1 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )".
+"aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )".
+"aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% String Literal

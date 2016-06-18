@@ -51,6 +51,7 @@ groups() ->
       test_atom_parenthesized_expression,
       test_atom_reduce,
       test_atom_relationships_pattern,
+      test_atom_shortest_path_pattern,
       test_atom_string_literal,
       test_atom_variable
     ]},
@@ -390,6 +391,32 @@ test_atom_relationships_pattern(_Config) ->
   test_cypher("( ) <-- [ ? { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
   test_cypher("( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
   test_cypher("( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})").
+
+test_atom_shortest_path_pattern(_Config) ->
+  test_cypher("sHortestpath ( (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) )"),
+  test_cypher("sHortestpath ( ( variable_1 : node_1 : node_2 { name_1 } ) )"),
+  test_cypher("sHortestpath ( ( variable_1 : node_1 { name_1 } ) )"),
+  test_cypher("sHortestpath ( ( variable_1 : node_1 : node_2 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
+  test_cypher("sHortestpath ( ( variable_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
+  test_cypher("sHortestpath ( ( variable_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
+  test_cypher("sHortestpath ( ( ( : node_1 : node_2 { name_1 } ) ) )"),
+  test_cypher("sHortestpath ( ( (  ) ) )"),
+  test_cypher("sHortestpath ( ( ( : node_1 : node_2 ) ) )"),
+  test_cypher("sHortestpath ( ( ( { 4711 } ) <--  --> ( ) ) )"),
+  test_cypher("sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )"),
+  test_cypher("sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )"),
+  test_cypher("aLlsHortestpaths ( ( : node_1 { 4711 } ) )"),
+  test_cypher("aLlsHortestpaths ( ( { name_1 } ) )"),
+  test_cypher("aLlsHortestpaths ( ( { name_1 } ) )"),
+  test_cypher("aLlsHortestpaths ( ( { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
+  test_cypher("aLlsHortestpaths ( ( : node_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
+  test_cypher("aLlsHortestpaths ( ( : node_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
+  test_cypher("aLlsHortestpaths ( ( ( : node_1 : node_2 { 4711 } ) ) )"),
+  test_cypher("aLlsHortestpaths ( ( ( variable_1 { 4711 } ) ) )"),
+  test_cypher("aLlsHortestpaths ( ( ( variable_1 : node_1 ) ) )"),
+  test_cypher("aLlsHortestpaths ( ( ( variable_1 : node_1 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )"),
+  test_cypher("aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )"),
+  test_cypher("aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )").
 
 test_atom_string_literal(_Config) ->
   test_cypher("\"Dies ist ein String\""),
