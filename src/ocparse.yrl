@@ -9,7 +9,7 @@ Nonterminals
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  any_cypher_option
  atom
-% bulk_import_query
+ % bulk_import_query
  case_alternatives
  case_alternatives_list
  case_expression
@@ -25,12 +25,14 @@ Nonterminals
  configuration_option_list
  configuration_option_list_opt
  create_index
+ create_unique_constraint
  cypher
  cypher_option
  dash
  distinct_opt
  double_literal
  drop_index
+ drop_unique_constraint
  else_expression
  else_expression_opt
  expression
@@ -75,11 +77,14 @@ Nonterminals
  pattern_element_chain_opt
  properties
  properties_opt
+ property_expression
  property_key_name
  property_key_name_expression
  property_key_name_expression_commalist
  property_key_name_expression_commalist_opt
  property_lookup
+ property_lookup_list
+ property_lookup_list_opt
  query
  query_options
  query_options_opt
@@ -102,6 +107,9 @@ Nonterminals
  single_query
  statement
  symbolic_name
+ union
+ union_opt
+ unique_constraint
  unsigned_decimal_integer
  unsigned_integer_literal
  unsigned_integer_literal_opt
@@ -123,11 +131,11 @@ Terminals
 % AS
 % ASC
 % ASCENDING
-% ASSERT
+ ASSERT
 % BY
  CASE
 % COMMIT
-% CONSTRAINT
+ CONSTRAINT
  CONTAINS
  COUNT
  CREATE
@@ -191,8 +199,8 @@ Terminals
  STRING_LITERAL
  THEN
  TRUE
-% UNION
-% UNIQUE
+ UNION
+ UNIQUE
  UNSIGNED_DECIMAL_INTEGER
  UNSIGNED_FLOAT
 % UNWIND
@@ -273,7 +281,6 @@ Left        500 '^'.
 cypher -> query_options_opt statement char_semicolon_opt                                        : {cypher, '$1', {statement, '$2'}, '$3'}.
 
 cypher -> expression ';'                                                                        : '$1'.
-cypher -> atom ';'                                                                              : '$1'.
 
 query_options_opt -> '$empty'                                                                   : {}.
 query_options_opt -> query_options                                                              : {queryOptions, '$1'}.
@@ -307,21 +314,37 @@ statement -> command                                                            
 statement -> query                                                                              : '$1'.
 
 query -> regular_query                                                                          : {query, '$1'}.
+% wwe query -> bulk_import_query                                                                      : {query, '$1'}.
 
-regular_query -> single_query                                                                   : {regularQuery, '$1'}.
+regular_query -> single_query union_opt                                                         : {regularQuery, '$1', '$2'}.
+
+union_opt -> '$empty'                                                                           : {}.
+union_opt -> union                                                                              : '$1'.
 
 single_query -> clause                                                                          : {singleQuery, '$1'}.
+
+union -> UNION ALL clause                                                                       : {union, '$3', '$2'}.
+union -> UNION clause                                                                           : {union, '$2'}.
 
 clause -> MATCH                                                                                 : {clause, match}.
 
 command -> create_index                                                                         : {command, '$1'}.
 command -> drop_index                                                                           : {command, '$1'}.
+command -> create_unique_constraint                                                             : {command, '$1'}.
+command -> drop_unique_constraint                                                               : {command, '$1'}.
+
+create_unique_constraint -> CREATE unique_constraint                                            : {createUniqueConstraint, '$2'}.
 
 create_index -> CREATE index                                                                    : {createIndex, '$2'}.
+
+drop_unique_constraint -> DROP unique_constraint                                                : {dropUniqueConstraint, '$2'}.
 
 drop_index -> DROP index                                                                        : {dropIndex, '$2'}.
 
 index -> INDEX ON node_label '(' property_key_name ')'                                          : {index ,{'$3', '$5'}}.
+
+unique_constraint -> CONSTRAINT ON '(' variable node_label ')' ASSERT property_expression IS UNIQUE
+                                                                                                : {uniqueConstraint, '$4', '$5', '$8'}.
 
 where -> WHERE expression                                                                       : {where, '$2'}.
 
@@ -572,6 +595,14 @@ property_key_name_expression -> property_key_name ':' expression                
 
 parameter -> '{' symbolic_name '}'                                                              : {parameter, '$2'}.
 parameter -> '{' unsigned_decimal_integer '}'                                                   : {parameter, '$2'}.
+
+property_expression -> atom property_lookup_list_opt                                            : {propertyExpression, '$1', '$2'}.
+
+property_lookup_list_opt -> '$empty'                                                            : [].
+property_lookup_list_opt -> property_lookup_list                                                : '$1'.
+
+property_lookup_list -> property_lookup_list property_lookup                                    : '$1' ++ ['$2'].
+property_lookup_list -> property_lookup                                                         : ['$1'].
 
 property_key_name -> symbolic_name                                                              : {propertyKeyName, '$1'}.
 

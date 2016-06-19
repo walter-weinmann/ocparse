@@ -6,45 +6,33 @@ ToDo List
 
 ## Open Issues ##
 
-#### 2. CREATE / DROP UNIQUE CONSTRAINT ####
+#### 1. CREATE / DROP NODE PROPERTY EXISTENCE CONSTRAINT ####
 
-    Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
-    
-    Statement = Command | ... ;
-    
-    Command = ... | CreateUniqueConstraint | DropUniqueConstraint | ...;
-    
-    CreateUniqueConstraint = (C,R,E,A,T,E), WS, UniqueConstraint ;
-    
-    DropUniqueConstraint = (D,R,O,P), SP, UniqueConstraint ;
+#### 2. DELETE ####
 
-#### 3. CREATE / DROP NODE PROPERTY EXISTENCE CONSTRAINT ####
+#### 3. FOR EACH ####
 
-#### 4. DELETE ####
+#### 4. UNWIND ####
 
-#### 5. FOR EACH ####
+#### 5. LOAD CSV ####
 
-#### 6. UNWIND ####
+#### 6. CREATE ####
 
-#### 7. LOAD CSV ####
+#### 7. MATCH ####
 
-#### 8. CREATE ####
+#### 8. START ####
 
-#### 9. MATCH ####
+#### 9. MERGE ####
 
-#### 10. START ####
+#### 10. SET ####
 
-#### 11. MERGE ####
+#### 11. REMOVE ####
 
-#### 12. SET ####
+#### 12. WITH ####
 
-#### 13. REMOVE ####
+#### 13. RETURN ####
 
-#### 14. WITH ####
-
-#### 15. RETURN ####
-
-#### 16. Refinement SymbolicName ####
+#### 14. Refinement SymbolicName ####
 
     SymbolicName = UnescapedSymbolicName
                  | EscapedSymbolicName
@@ -73,19 +61,3 @@ ToDo List
     EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
     
 #### 17. Unary Operators ####
-
-## Closed Issues ##
-
-#### Done at: 02.06.2016 : 1. CREATE / DROP INDEX ####
-
-    Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
-    
-    Statement = Command | ... ;
-    
-    Command = CreateIndex | DropIndex | ...;
-    
-    CreateIndex = (C,R,E,A,T,E), SP, Index ;
-    
-    DropIndex = (D,R,O,P), SP, Index ;
-    
-
