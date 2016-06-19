@@ -131,309 +131,316 @@ all() ->
 %%--------------------------------------------------------------------
 
 test_atom_all_single(_Config) ->
-  test_cypher("fIlter ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("eXtract ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("eXtract ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("aLl ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("aNy ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("nOne ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("sIngle ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("fIlter(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("eXtract(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("eXtract(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("aLl(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("aNy(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("nOne(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("sIngle(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT fIlter ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT eXtract ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT eXtract ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLl ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aNy ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT nOne ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sIngle ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT fIlter(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT eXtract(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT eXtract(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLl(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aNy(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT nOne(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sIngle(variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique").
 
 test_atom_constant(_Config) ->
-  test_cypher("TRUE"),
-  test_cypher("FALSE"),
-  test_cypher("NULL").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT TRUE is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT FALSE is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT NULL is unique").
 
 test_atom_case_1(_Config) ->
-  test_cypher("cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd"),
-  test_cypher("cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd"),
-  test_cypher("cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd"),
-  test_cypher("cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique").
 
 test_atom_case_2(_Config) ->
-  test_cypher("cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd"),
-  test_cypher("cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd"),
-  test_cypher("cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd"),
-  test_cypher("cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique").
 
 test_atom_count(_Config) ->
-  test_cypher("count(*)"),
-  test_cypher("count ( * )"),
-  test_cypher("COUNT(*)").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT count(*) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT count ( * ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT COUNT(*) is unique").
 
 test_atom_expression_list(_Config) ->
-  test_cypher("[ nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
-  test_cypher("[nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]"),
-  test_cypher("[ nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
-  test_cypher("[nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [ nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [ nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null] is unique").
 
 test_atom_function_invocation(_Config) ->
-  test_cypher("function_1 ( )"),
-  test_cypher("function_1 ( dIstinct )"),
-  test_cypher("function_1 ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("function_1 ( dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("function_1 ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("function_1 ( dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("function_1()"),
-  test_cypher("function_1(dIstinct)"),
-  test_cypher("function_1(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("function_1(dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("function_1(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("function_1(dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1 ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1 ( dIstinct ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1 ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1 ( dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1 ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1 ( dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1() is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(dIstinct) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique").
 
 test_atom_list_comprehension(_Config) ->
-  test_cypher("[ variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
-  test_cypher("[ variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
-  test_cypher("[ variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
-  test_cypher("[ variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ]"),
-  test_cypher("[variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]"),
-  test_cypher("[variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]"),
-  test_cypher("[variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]"),
-  test_cypher("[variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [ variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [ variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [ variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [ variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null] is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT [variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null] is unique").
 
 test_atom_map_literal(_Config) ->
-  test_cypher("{ }"),
-  test_cypher("{ property_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null }"),
-  test_cypher("{ property_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null }"),
-  test_cypher("{}"),
-  test_cypher("{property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}"),
-  test_cypher("{property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,property_2:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT { } is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT { property_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT { property_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {} is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,property_2:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} is unique").
 
 test_atom_number_literal_decimal_integer(_Config) ->
-  test_cypher("1"),
-  test_cypher("4711"),
-  test_cypher("8").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 4711 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 8 is unique").
 
 test_atom_number_literal_decimal_integer_sign(_Config) ->
-  test_cypher("-1"),
-  test_cypher("-4711"),
-  test_cypher("-8").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -4711 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -8 is unique").
 
 test_atom_number_literal_exponential_decimal(_Config) ->
-  test_cypher("0E0"),
-  test_cypher("0E789"),
-  test_cypher("9E0"),
-  test_cypher("9E789"),
-  test_cypher("0E-0"),
-  test_cypher("0E-789"),
-  test_cypher("9E-0"),
-  test_cypher("9E-789").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0E0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0E789 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 9E0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 9E789 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0E-0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0E-789 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 9E-0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 9E-789 is unique").
 
 test_atom_number_literal_exponential_decimal_sign(_Config) ->
-  test_cypher("-0E0"),
-  test_cypher("-0E789"),
-  test_cypher("-9E0"),
-  test_cypher("-9E789"),
-  test_cypher("-0E-0"),
-  test_cypher("-0E-789"),
-  test_cypher("-9E-0"),
-  test_cypher("-9E-789").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0E0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0E789 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -9E0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -9E789 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0E-0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0E-789 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -9E-0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -9E-789 is unique").
 
 test_atom_number_literal_hex_integer(_Config) ->
-  test_cypher("0X0"),
-  test_cypher("0XA"),
-  test_cypher("0X0123456789ABCDEF").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0X0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0XA is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0X0123456789ABCDEF is unique").
 
 test_atom_number_literal_hex_integer_sign(_Config) ->
-  test_cypher("-0X0"),
-  test_cypher("-0XA"),
-  test_cypher("-0X0123456789ABCDEF").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0X0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0XA is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0X0123456789ABCDEF is unique").
 
 test_atom_number_literal_octal_integer(_Config) ->
-  test_cypher("00"),
-  test_cypher("001234567").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 00 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 001234567 is unique").
 
 test_atom_number_literal_octal_integer_sign(_Config) ->
-  test_cypher("-00"),
-  test_cypher("-001234567").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -00 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -001234567 is unique").
 
 test_atom_number_literal_regular_decimal(_Config) ->
-  test_cypher(".0"),
-  test_cypher(".00"),
-  test_cypher(".01"),
-  test_cypher(".08"),
-  test_cypher(".1"),
-  test_cypher(".12345"),
-  test_cypher(".8"),
-  test_cypher("0.0"),
-  test_cypher("0.1"),
-  test_cypher("0.12345"),
-  test_cypher("1.0"),
-  test_cypher("8.0"),
-  test_cypher("00.0"),
-  test_cypher("01.0"),
-  test_cypher("08.0"),
-  test_cypher("10.0"),
-  test_cypher("11.0"),
-  test_cypher("18.0"),
-  test_cypher("3210.0"),
-  test_cypher("3210.1"),
-  test_cypher("3210.12345"),
-  test_cypher("80.0"),
-  test_cypher("81.0"),
-  test_cypher("88.0").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT .0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT .00 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT .01 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT .08 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT .1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT .12345 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT .8 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0.1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 0.12345 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 1.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 8.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 00.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 01.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 08.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 10.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 11.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 18.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 3210.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 3210.1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 3210.12345 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 80.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 81.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 88.0 is unique").
 
 test_atom_number_literal_regular_decimal_sign(_Config) ->
-  test_cypher("-.0"),
-  test_cypher("-.00"),
-  test_cypher("-.01"),
-  test_cypher("-.08"),
-  test_cypher("-.1"),
-  test_cypher("-.12345"),
-  test_cypher("-.8"),
-  test_cypher("-0.0"),
-  test_cypher("-0.1"),
-  test_cypher("-0.12345"),
-  test_cypher("-1.0"),
-  test_cypher("-8.0"),
-  test_cypher("-00.0"),
-  test_cypher("-01.0"),
-  test_cypher("-08.0"),
-  test_cypher("-10.0"),
-  test_cypher("-11.0"),
-  test_cypher("-18.0"),
-  test_cypher("-3210.0"),
-  test_cypher("-3210.1"),
-  test_cypher("-3210.12345"),
-  test_cypher("-80.0"),
-  test_cypher("-81.0"),
-  test_cypher("-88.0").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -.00 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -.01 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -.08 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -.1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -.12345 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -.8 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0.1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -0.12345 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -1.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -8.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -00.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -01.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -08.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -10.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -11.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -18.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -3210.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -3210.1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -3210.12345 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -80.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -81.0 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT -88.0 is unique").
 
 test_atom_parameter(_Config) ->
-  test_cypher("{test}"),
-  test_cypher("{Test}"),
-  test_cypher("{0}"),
-  test_cypher("{1}"),
-  test_cypher("{10}"),
-  test_cypher("{19}").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {test} is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {Test} is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {0} is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {1} is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {10} is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT {19} is unique").
 
 test_atom_parenthesized_expression(_Config) ->
-  test_cypher("(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)"),
-  test_cypher("(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT (nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT (nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique").
 
 test_atom_reduce(_Config) ->
-  test_cypher("rEduce ( variable_1 = nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null )"),
-  test_cypher("rEduce(variable_1=nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null)").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT rEduce ( variable_1 = nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT rEduce(variable_1=nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique").
 
 test_atom_relationships_pattern(_Config) ->
-  test_cypher("(variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} )"),
-  test_cypher("( variable_1 : node_1 : node_2 { name_1 } )"),
-  test_cypher("( variable_1 : node_1 : node_2 { 4711 } )"),
-  test_cypher("( variable_1 : node_1 { name_1 } )"),
-  test_cypher("( variable_1 : node_1 { 4711 } )"),
-  test_cypher("( variable_1 : node_1 : node_2 )"),
-  test_cypher("( variable_1 : node_1 )"),
-  test_cypher("( variable_1 { name_1 } )"),
-  test_cypher("( variable_1 { 4711 } )"),
-  test_cypher("( variable_1 )"),
-  test_cypher("( : node_1 : node_2 { name_1 } )"),
-  test_cypher("( : node_1 : node_2 { 4711 } )"),
-  test_cypher("( : node_1 { name_1 } )"),
-  test_cypher("( : node_1 { 4711 } )"),
-  test_cypher("( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( { name_1 } )"),
-  test_cypher("( { 4711 } )"),
-  test_cypher("( : node_1 : node_2 )"),
-  test_cypher("( : node_1 )"),
-  test_cypher("(  )"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) -- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -- (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) -- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -- ( )"),
-  test_cypher("( ) <-- --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) -- --> ( )"),
-  test_cypher("( ) <-- -- (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) -- -- ( )"),
-  test_cypher("( ) <-- [ ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ variable_1 ] --> ( )"),
-  test_cypher("( ) <-- [ variable_1 ? ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 ] --> ( )"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 | :rel_2 * ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 * 1 ..] --> ( )"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 | :rel_2 * ..99]--> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 *] --> ( )"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 * 1 ..99] --> ( )"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( )"),
-  test_cypher("( ) <-- [ ? ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ ? :rel_1 ] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 | :rel_2 * ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ ? :rel_1 * 1 ..] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 | :rel_2 * ..99]--> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ ? :rel_1 * ] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 * 1 ..99] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 * ..] --> ( )"),
-  test_cypher("( ) <-- [ ? * ..] --> ( )"),
-  test_cypher("( ) <-- [ * ..] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 * {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ ? * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ ? {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( )"),
-  test_cypher("( ) <-- [ ? :rel_1 | :rel_2 * 1 ..99 { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( )"),
-  test_cypher("( ) <-- [ variable_1 ? {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ variable_1 ? * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ variable_1 ? :rel_1 | :rel_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( ) <-- [ ? { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})"),
-  test_cypher("( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null})").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? * 1 ..99 ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { name_1 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { 4711 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 { name_1 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 { 4711 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 { name_1 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 { 4711 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( : node_1 : node_2 { name_1 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( : node_1 : node_2 { 4711 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( : node_1 { name_1 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( : node_1 { 4711 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( { name_1 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( { 4711 } ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( : node_1 : node_2 ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( : node_1 ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT (  ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) -- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -- (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) -- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -- ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) -- --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- -- (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) -- -- ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 * 1 ..] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * ..99]--> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 *] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 * 1 ..99] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 | :rel_2 * ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * 1 ..] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 | :rel_2 * ..99]--> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * 1 ..99] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * ..] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? * ..] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ * ..] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 | :rel_2 * 1 ..99 { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique").
 
 test_atom_shortest_path_pattern(_Config) ->
-  test_cypher("sHortestpath ( (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) )"),
-  test_cypher("sHortestpath ( ( variable_1 : node_1 : node_2 { name_1 } ) )"),
-  test_cypher("sHortestpath ( ( variable_1 : node_1 { name_1 } ) )"),
-  test_cypher("sHortestpath ( ( variable_1 : node_1 : node_2 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
-  test_cypher("sHortestpath ( ( variable_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
-  test_cypher("sHortestpath ( ( variable_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
-  test_cypher("sHortestpath ( ( ( : node_1 : node_2 { name_1 } ) ) )"),
-  test_cypher("sHortestpath ( ( (  ) ) )"),
-  test_cypher("sHortestpath ( ( ( : node_1 : node_2 ) ) )"),
-  test_cypher("sHortestpath ( ( ( { 4711 } ) <--  --> ( ) ) )"),
-  test_cypher("sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )"),
-  test_cypher("sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )"),
-  test_cypher("aLlsHortestpaths ( ( : node_1 { 4711 } ) )"),
-  test_cypher("aLlsHortestpaths ( ( { name_1 } ) )"),
-  test_cypher("aLlsHortestpaths ( ( { name_1 } ) )"),
-  test_cypher("aLlsHortestpaths ( ( { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
-  test_cypher("aLlsHortestpaths ( ( : node_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
-  test_cypher("aLlsHortestpaths ( ( : node_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) )"),
-  test_cypher("aLlsHortestpaths ( ( ( : node_1 : node_2 { 4711 } ) ) )"),
-  test_cypher("aLlsHortestpaths ( ( ( variable_1 { 4711 } ) ) )"),
-  test_cypher("aLlsHortestpaths ( ( ( variable_1 : node_1 ) ) )"),
-  test_cypher("aLlsHortestpaths ( ( ( variable_1 : node_1 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )"),
-  test_cypher("aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )"),
-  test_cypher("aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) )").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 : node_1 : node_2 { name_1 } ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 : node_1 { name_1 } ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 : node_1 : node_2 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( : node_1 : node_2 { name_1 } ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( (  ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { 4711 } ) <--  --> ( ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 { 4711 } ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { name_1 } ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { name_1 } ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( : node_1 : node_2 { 4711 } ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 { 4711 } ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique").
 
 test_atom_string_literal(_Config) ->
-  test_cypher("\"Dies ist ein String\""),
-  test_cypher("\"Dies' ist 'ein String\""),
-  test_cypher("'Dies ist ein String'"),
-  test_cypher("'Dies\" ist \"ein String'").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT \"Dies ist ein String\" is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT \"Dies' ist 'ein String\" is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 'Dies ist ein String' is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT 'Dies\" ist \"ein String' is unique").
 
 test_atom_variable(_Config) ->
-  test_cypher("Name1"),
-  test_cypher("name2"),
-  test_cypher("NAME3").
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT Name1 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT name2 is unique"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT NAME3 is unique").
 
 %%--------------------------------------------------------------------
 %% Command Constraint.
 %%--------------------------------------------------------------------
 
 test_command_constraint_create(_Config) ->
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) IS UNIQUE"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) IS UNIQUE"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE"),
   test_cypher("CREATE CONSTRAINT ON (movie:Movie) ASSERT 4711 IS UNIQUE"),
   test_cypher("CREATE CONSTRAINT ON (movie:Movie) ASSERT movie.title IS UNIQUE"),
   test_cypher("CREATE CONSTRAINT ON ( n : Person ) ASSERT n . name IS UNIQUE;"),
@@ -442,9 +449,16 @@ test_command_constraint_create(_Config) ->
   test_cypher("CREATE CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)").
 
 test_command_constraint_drop(_Config) ->
-  test_cypher("DROP CONSTRAINT ON (person:Person) ASSERT person.id IS UNIQUE"),
-  test_cypher("DROP CONSTRAINT ON ( movie : Movie ) ASSERT movie . id IS UNIQUE"),
-  test_cypher("drop constraint on (person:Person) assert person.id is unique"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) IS UNIQUE"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) IS UNIQUE"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE"),
+  test_cypher("DROP CONSTRAINT ON (movie:Movie) ASSERT 4711 IS UNIQUE"),
+  test_cypher("DROP CONSTRAINT ON (movie:Movie) ASSERT movie.title IS UNIQUE"),
+  test_cypher("DROP CONSTRAINT ON ( n : Person ) ASSERT n . name IS UNIQUE;"),
+  test_cypher("drop constraint on (n:Person) assert n.role is unique;"),
   test_cypher("DROP CONSTRAINT ON (book:Book) ASSERT exists(book.isbn)"),
   test_cypher("DROP CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)").
 
