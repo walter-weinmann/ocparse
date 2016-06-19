@@ -345,7 +345,8 @@ fold(FType, Fun, Ctx, Lvl, {caseExpression, Expression_1, CaseAlternatives, Expr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, Lvl, {command, {Type, _} = Value} = ST)
-  when Type == createIndex; Type == createUniqueConstraint; Type == dropIndex; Type == dropUniqueConstraint ->
+  when Type == createIndex; Type == createNodePropertyExistenceConstraint; Type == createUniqueConstraint; 
+  Type == dropIndex; Type == dropNodePropertyExistenceConstraint; Type == dropUniqueConstraint ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -428,10 +429,12 @@ fold(FType, Fun, Ctx, Lvl, {dropIndex, {index, _} = Value} = ST) ->
   RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% createUniqueConstraint / dropUniqueConstraint
+% createNodePropertyExistenceConstraint / createUniqueConstraint 
+% dropNodePropertyExistenceConstraint / dropUniqueConstraint
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, Lvl, {createUniqueConstraint, {uniqueConstraint, _, _, _} = Value} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
+  when Type == createNodePropertyExistenceConstraint; Type == createUniqueConstraint ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -445,7 +448,8 @@ fold(FType, Fun, Ctx, Lvl, {createUniqueConstraint, {uniqueConstraint, _, _, _} 
   RT = {"create " ++ ValueNew, NewCtx2},
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
-fold(FType, Fun, Ctx, Lvl, {dropUniqueConstraint, {uniqueConstraint, _, _, _} = Value} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
+  when Type == dropNodePropertyExistenceConstraint; Type == dropUniqueConstraint ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -2493,10 +2497,11 @@ fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
   RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% uniqueConstraint
+% nodePropertyExistenceConstraint / uniqueConstraint
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, Lvl, {uniqueConstraint, Variable, NodeLabel, PropertyExpression} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {Type, Variable, NodeLabel, PropertyExpression} = ST)
+  when Type == nodePropertyExistenceConstraint; Type == uniqueConstraint ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -2517,7 +2522,15 @@ fold(FType, Fun, Ctx, Lvl, {uniqueConstraint, Variable, NodeLabel, PropertyExpre
               top_down -> NewCtx3;
               bottom_up -> Fun(ST, NewCtx3)
             end,
-  RT = {"constraint on (" ++ VariableNew ++ " " ++ NodeLabelNew ++ ") assert " ++ PropertyExpressionNew ++ " is unique", NewCtx4},
+  RT = {"constraint on (" ++ VariableNew ++ " " ++ NodeLabelNew ++ case Type of
+                                                                     nodePropertyExistenceConstraint ->
+                                                                       ") assert exists (";
+                                                                     uniqueConstraint ->
+                                                                       ") assert " end ++ PropertyExpressionNew ++ case Type of
+                                                                                                                     nodePropertyExistenceConstraint ->
+                                                                                                                       ")";
+                                                                                                                     uniqueConstraint ->
+                                                                                                                       " is unique" end, NewCtx4},
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
 

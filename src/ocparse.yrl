@@ -25,6 +25,7 @@ Nonterminals
  configuration_option_list
  configuration_option_list_opt
  create_index
+ create_node_property_existence_constraint
  create_unique_constraint
  cypher
  cypher_option
@@ -32,6 +33,7 @@ Nonterminals
  distinct_opt
  double_literal
  drop_index
+ drop_node_property_existence_constraint
  drop_unique_constraint
  else_expression
  else_expression_opt
@@ -66,6 +68,7 @@ Nonterminals
  node_labels
  node_labels_opt
  node_pattern
+ node_property_existence_constraint
  number_literal
  parameter
  parenthesized_expression
@@ -150,7 +153,7 @@ Terminals
  ELSE
  END
  ENDS
-% EXISTS
+ EXISTS
  EXPLAIN
  EXPONENT_DECIMAL_REAL
  EXTRACT
@@ -332,12 +335,18 @@ command -> create_index                                                         
 command -> drop_index                                                                           : {command, '$1'}.
 command -> create_unique_constraint                                                             : {command, '$1'}.
 command -> drop_unique_constraint                                                               : {command, '$1'}.
+command -> create_node_property_existence_constraint                                            : {command, '$1'}.
+command -> drop_node_property_existence_constraint                                              : {command, '$1'}.
 
 create_unique_constraint -> CREATE unique_constraint                                            : {createUniqueConstraint, '$2'}.
+
+create_node_property_existence_constraint -> CREATE node_property_existence_constraint          : {createNodePropertyExistenceConstraint, '$2'}.
 
 create_index -> CREATE index                                                                    : {createIndex, '$2'}.
 
 drop_unique_constraint -> DROP unique_constraint                                                : {dropUniqueConstraint, '$2'}.
+
+drop_node_property_existence_constraint -> DROP node_property_existence_constraint              : {dropNodePropertyExistenceConstraint, '$2'}.
 
 drop_index -> DROP index                                                                        : {dropIndex, '$2'}.
 
@@ -345,6 +354,9 @@ index -> INDEX ON node_label '(' property_key_name ')'                          
 
 unique_constraint -> CONSTRAINT ON '(' variable node_label ')' ASSERT property_expression IS UNIQUE
                                                                                                 : {uniqueConstraint, '$4', '$5', '$8'}.
+
+node_property_existence_constraint -> CONSTRAINT ON '(' variable node_label ')' ASSERT EXISTS '(' property_expression ')'
+                                                                                                : {nodePropertyExistenceConstraint, '$4', '$5', '$10'}.
 
 where -> WHERE expression                                                                       : {where, '$2'}.
 

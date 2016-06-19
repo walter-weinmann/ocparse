@@ -75,7 +75,9 @@ groups() ->
     ]},
     {command_constraint, [], [
       test_command_constraint_create,
-      test_command_constraint_drop
+      test_command_constraint_drop,
+      test_command_constraint_node_create,
+      test_command_constraint_node_drop
     ]},
     {expression, [], [
       test_expression_2,
@@ -444,9 +446,7 @@ test_command_constraint_create(_Config) ->
   test_cypher("CREATE CONSTRAINT ON (movie:Movie) ASSERT 4711 IS UNIQUE"),
   test_cypher("CREATE CONSTRAINT ON (movie:Movie) ASSERT movie.title IS UNIQUE"),
   test_cypher("CREATE CONSTRAINT ON ( n : Person ) ASSERT n . name IS UNIQUE;"),
-  test_cypher("create constraint on (n:Person) assert n.role is unique;"),
-  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT exists(book.isbn)"),
-  test_cypher("CREATE CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)").
+  test_cypher("create constraint on (n:Person) assert n.role is unique;").
 
 test_command_constraint_drop(_Config) ->
   test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) IS UNIQUE"),
@@ -458,7 +458,33 @@ test_command_constraint_drop(_Config) ->
   test_cypher("DROP CONSTRAINT ON (movie:Movie) ASSERT 4711 IS UNIQUE"),
   test_cypher("DROP CONSTRAINT ON (movie:Movie) ASSERT movie.title IS UNIQUE"),
   test_cypher("DROP CONSTRAINT ON ( n : Person ) ASSERT n . name IS UNIQUE;"),
-  test_cypher("drop constraint on (n:Person) assert n.role is unique;"),
+  test_cypher("drop constraint on (n:Person) assert n.role is unique;").
+
+test_command_constraint_node_create(_Config) ->
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON (movie:Movie) ASSERT exists ( 4711 IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON (movie:Movie) ASSERT exists ( movie.title IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON ( n : Person ) ASSERT exists ( n . name IS UNIQUE);"),
+  test_cypher("create constraint on (n:Person) assert EXISTS (n.role is unique);"),
+  test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT exists(book.isbn)"),
+  test_cypher("CREATE CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)").
+
+test_command_constraint_node_drop(_Config) ->
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON ( variable_1 : node_1) ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON (movie:Movie) ASSERT exists ( 4711 IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON (movie:Movie) ASSERT exists ( movie.title IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON ( n : Person ) ASSERT exists ( n . name IS UNIQUE);"),
+  test_cypher("drop constraint on (n:Person) assert EXISTS (n.role is unique);"),
   test_cypher("DROP CONSTRAINT ON (book:Book) ASSERT exists(book.isbn)"),
   test_cypher("DROP CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)").
 
