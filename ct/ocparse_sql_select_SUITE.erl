@@ -77,7 +77,9 @@ groups() ->
       test_command_constraint_create,
       test_command_constraint_drop,
       test_command_constraint_node_create,
-      test_command_constraint_node_drop
+      test_command_constraint_node_drop,
+      test_command_constraint_relationship_create,
+      test_command_constraint_relationship_drop
     ]},
     {expression, [], [
       test_expression_2,
@@ -487,6 +489,34 @@ test_command_constraint_node_drop(_Config) ->
   test_cypher("drop constraint on (n:Person) assert EXISTS (n.role is unique);"),
   test_cypher("DROP CONSTRAINT ON (book:Book) ASSERT exists(book.isbn)"),
   test_cypher("DROP CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)").
+
+test_command_constraint_relationship_create(_Config) ->
+  test_cypher("CREATE CONSTRAINT ON () -- variable_1 : relation_1 -- () ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON () <-- variable_1 : relation_1 -- () ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON () -- variable_1 : relation_1 --> () ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON () -- variable_1 : relation_1 -- () ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON () <-- variable_1 : relation_1 -- () ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON () -- variable_1 : relation_1 --> () ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON () -- variable_1 : relation_1 -- () ASSERT exists ( 4711 IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON () <-- variable_1 : relation_1 -- () ASSERT exists ( movie.title IS UNIQUE)"),
+  test_cypher("CREATE CONSTRAINT ON () -- variable_1 : relation_1 --> () ASSERT exists ( n . name IS UNIQUE);)"),
+  test_cypher("create constraint on () -- variable_1 : relation_1 -- () assert EXISTS (n.role is unique);)"),
+  test_cypher("CREATE CONSTRAINT ON () <-- variable_1 : relation_1 -- () ASSERT exists(book.isbn)"),
+  test_cypher("CREATE CONSTRAINT ON () -- variable_1 : relation_1 --> () ASSERT exists(like.day)").
+
+test_command_constraint_relationship_drop(_Config) ->
+  test_cypher("DROP CONSTRAINT ON () -- variable_1 : relation_1 -- () ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON () <-- variable_1 : relation_1 -- () ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON () -- variable_1 : relation_1 --> () ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON () -- variable_1 : relation_1 -- () ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON () <-- variable_1 : relation_1 -- () ASSERT exists ( ( {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_1 IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON () -- variable_1 : relation_1 --> () ASSERT exists ( sHortestpath ( ( ( : node_1 : node_2 ) ) ) .property_1 .property2! .property3? IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON () -- variable_1 : relation_1 -- () ASSERT exists ( 4711 IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON () <-- variable_1 : relation_1 -- () ASSERT exists ( movie.title IS UNIQUE)"),
+  test_cypher("DROP CONSTRAINT ON () -- variable_1 : relation_1 --> () ASSERT exists ( n . name IS UNIQUE);)"),
+  test_cypher("drop constraint on () -- variable_1 : relation_1 -- () assert EXISTS (n.role is unique);)"),
+  test_cypher("DROP CONSTRAINT ON () <-- variable_1 : relation_1 -- () ASSERT exists(book.isbn)"),
+  test_cypher("DROP CONSTRAINT ON () -- variable_1 : relation_1 --> () ASSERT exists(like.day)").
 
 %%--------------------------------------------------------------------
 %% Command Index.
