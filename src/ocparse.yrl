@@ -26,6 +26,7 @@ Nonterminals
  configuration_option_list_opt
  create_index
  create_node_property_existence_constraint
+ create_relationship_property_existence_constraint
  create_unique_constraint
  cypher
  cypher_option
@@ -34,6 +35,7 @@ Nonterminals
  double_literal
  drop_index
  drop_node_property_existence_constraint
+ drop_relationship_property_existence_constraint
  drop_unique_constraint
  else_expression
  else_expression_opt
@@ -97,10 +99,13 @@ Nonterminals
  reduce
  regular_decimal_real
  regular_query
+ rel_type
  rel_type_name
  relationship_detail
  relationship_detail_opt
  relationship_pattern
+ relationship_pattern_syntax
+ relationship_property_existence_constraint
  relationship_types
  relationship_types_opt
  relationships_pattern
@@ -337,16 +342,24 @@ command -> create_unique_constraint                                             
 command -> drop_unique_constraint                                                               : {command, '$1'}.
 command -> create_node_property_existence_constraint                                            : {command, '$1'}.
 command -> drop_node_property_existence_constraint                                              : {command, '$1'}.
+command -> create_relationship_property_existence_constraint                                    : {command, '$1'}.
+command -> drop_relationship_property_existence_constraint                                      : {command, '$1'}.
 
 create_unique_constraint -> CREATE unique_constraint                                            : {createUniqueConstraint, '$2'}.
 
 create_node_property_existence_constraint -> CREATE node_property_existence_constraint          : {createNodePropertyExistenceConstraint, '$2'}.
+
+create_relationship_property_existence_constraint -> CREATE relationship_property_existence_constraint
+                                                                                                : {createRelationshipPropertyExistenceConstraint, '$2'}.
 
 create_index -> CREATE index                                                                    : {createIndex, '$2'}.
 
 drop_unique_constraint -> DROP unique_constraint                                                : {dropUniqueConstraint, '$2'}.
 
 drop_node_property_existence_constraint -> DROP node_property_existence_constraint              : {dropNodePropertyExistenceConstraint, '$2'}.
+
+drop_relationship_property_existence_constraint -> DROP relationship_property_existence_constraint
+                                                                                                : {dropRelationshipPropertyExistenceConstraint, '$2'}.
 
 drop_index -> DROP index                                                                        : {dropIndex, '$2'}.
 
@@ -357,6 +370,32 @@ unique_constraint -> CONSTRAINT ON '(' variable node_label ')' ASSERT property_e
 
 node_property_existence_constraint -> CONSTRAINT ON '(' variable node_label ')' ASSERT EXISTS '(' property_expression ')'
                                                                                                 : {nodePropertyExistenceConstraint, '$4', '$5', '$10'}.
+
+relationship_property_existence_constraint -> CONSTRAINT ON relationship_pattern_syntax ASSERT EXISTS '(' property_expression ')'
+                                                                                                : {relationshipPropertyExistenceConstraint, '$3', '$7'}.
+
+relationship_pattern_syntax -> '(' ')' left_arrow_head_opt dash '[' variable rel_type ']' dash '(' ')'
+                                                                                                : {relationshipPatternSyntax, '$3', '$4', '$6', '$7', '$9'}.
+relationship_pattern_syntax -> '(' ')' dash '[' variable rel_type ']' dash left_arrow_head_opt '(' ')'
+                                                                                                : {relationshipPatternSyntax, '$3', '$5', '$6', '$8', '$9'}.
+
+left_arrow_head_opt -> '$empty'                                                                 : {}.
+left_arrow_head_opt -> '<'                                                                      : {leftArrowHead, '$1'}.
+
+dash -> '--'                                                                                    : {dash, '$1'}.
+%% wwe dash -> '‐'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '‑'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '‒'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '–'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '—'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '―'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '−'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '﹘'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '﹣'                                                                                     : {dash, '$1'}.
+%% wwe dash -> '－'                                                                                     : {dash, '$1'}.
+
+right_arrow_head_opt -> '$empty'                                                                : {}.
+right_arrow_head_opt -> '>'                                                                     : {rightArrowHead, '$1'}.
 
 where -> WHERE expression                                                                       : {where, '$2'}.
 
@@ -385,26 +424,8 @@ pattern_element_chain -> relationship_pattern node_pattern                      
 relationship_pattern -> left_arrow_head_opt dash relationship_detail_opt dash right_arrow_head_opt
                                                                                                 : {relationshipPattern, '$1', '$2', '$3', '$4', '$5'}.
 
-left_arrow_head_opt -> '$empty'                                                                 : {}.
-left_arrow_head_opt -> '<'                                                                      : {leftArrowHead, '$1'}.
-
-dash -> '--'                                                                                    : {dash, '$1'}.
-%% wwe dash -> '‐'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '‑'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '‒'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '–'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '—'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '―'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '−'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '﹘'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '﹣'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '－'                                                                                     : {dash, '$1'}.
-
 relationship_detail_opt -> '$empty'                                                             : {}.
 relationship_detail_opt -> relationship_detail                                                  : '$1'.
-
-right_arrow_head_opt -> '$empty'                                                                : {}.
-right_arrow_head_opt -> '>'                                                                     : {rightArrowHead, '$1'}.
 
 relationship_detail -> '[' variable_opt char_question_mark_opt relationship_types_opt range_opt properties_opt ']'     
                                                                                                 : {relationshipDetail, '$2', '$3', '$4', '$5', '$6'}.
@@ -420,6 +441,8 @@ range_opt -> '*' range_literal_opt                                              
 
 range_literal_opt -> '$empty'                                                                   : {}.
 range_literal_opt -> range_literal                                                              : '$1'.
+
+rel_type -> ':' rel_type_name                                                                   : {relType, '$2'}.
 
 properties -> map_literal                                                                       : {properties, '$1'}.
 properties -> parameter                                                                         : {properties, '$1'}.

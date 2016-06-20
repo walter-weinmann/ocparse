@@ -345,8 +345,10 @@ fold(FType, Fun, Ctx, Lvl, {caseExpression, Expression_1, CaseAlternatives, Expr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, Lvl, {command, {Type, _} = Value} = ST)
-  when Type == createIndex; Type == createNodePropertyExistenceConstraint; Type == createUniqueConstraint; 
-  Type == dropIndex; Type == dropNodePropertyExistenceConstraint; Type == dropUniqueConstraint ->
+  when Type == createIndex; Type == createNodePropertyExistenceConstraint;
+  Type == createRelationshipPropertyExistenceConstraint; Type == createUniqueConstraint;
+  Type == dropIndex; Type == dropNodePropertyExistenceConstraint;
+  Type == dropRelationshipPropertyExistenceConstraint; Type == dropUniqueConstraint ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -429,12 +431,13 @@ fold(FType, Fun, Ctx, Lvl, {dropIndex, {index, _} = Value} = ST) ->
   RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% createNodePropertyExistenceConstraint / createUniqueConstraint 
-% dropNodePropertyExistenceConstraint / dropUniqueConstraint
+% createNodePropertyExistenceConstraint / createRelationshipPropertyExistenceConstraint / createUniqueConstraint 
+% dropNodePropertyExistenceConstraint / dropRelationshipPropertyExistenceConstraint / dropUniqueConstraint
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
-  when Type == createNodePropertyExistenceConstraint; Type == createUniqueConstraint ->
+  when Type == createNodePropertyExistenceConstraint; Type == createRelationshipPropertyExistenceConstraint;
+  Type == createUniqueConstraint ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -449,7 +452,8 @@ fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
 fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
-  when Type == dropNodePropertyExistenceConstraint; Type == dropUniqueConstraint ->
+  when Type == dropNodePropertyExistenceConstraint; Type == dropRelationshipPropertyExistenceConstraint;
+  Type == dropUniqueConstraint ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -1105,7 +1109,7 @@ fold(FType, Fun, Ctx, Lvl, {mapLiteral, Value} = ST)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
-  when Type == nodeLabel; Type == properties; Type == unsignedIntegerLiteral; Type == where ->
+  when Type == nodeLabel; Type == properties; Type == relType; Type == unsignedIntegerLiteral; Type == where ->
   ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
   NewCtx = case FType of
              top_down -> Fun(ST, Ctx);
@@ -1118,6 +1122,7 @@ fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
             end,
   RT = {case Type of
           nodeLabel -> ":";
+          relType -> ":";
           where -> "where ";
           _ -> []
         end ++ ValueNew, NewCtx2},
@@ -1291,6 +1296,44 @@ fold(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, Properties} = ST)
               bottom_up -> Fun(ST, NewCtx5)
             end,
   RT = {"(" ++ VariableNew ++ NodeLabelsNew ++ PropertiesNew ++ ")", NewCtx6},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% nodePropertyExistenceConstraint / uniqueConstraint
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {Type, Variable, NodeLabel, PropertyExpression} = ST)
+  when Type == nodePropertyExistenceConstraint; Type == uniqueConstraint ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {NodeLabelNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, NodeLabel),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {PropertyExpressionNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, PropertyExpression),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  RT = {"constraint on (" ++ VariableNew ++ " " ++ NodeLabelNew ++ case Type of
+                                                                     nodePropertyExistenceConstraint ->
+                                                                       ") assert exists (";
+                                                                     uniqueConstraint ->
+                                                                       ") assert " end ++ PropertyExpressionNew ++ case Type of
+                                                                                                                     nodePropertyExistenceConstraint ->
+                                                                                                                       ")";
+                                                                                                                     uniqueConstraint ->
+                                                                                                                       " is unique" end, NewCtx6},
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
 
@@ -2370,6 +2413,132 @@ fold(FType, Fun, Ctx, Lvl, {relationshipPattern, LeftArrowHead, Dash_1, Relation
   RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% relationshipPatternSyntax
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, Dash_1, Variable, RelType, Dash_2} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {Dash_1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Dash_1),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {VariableNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Variable),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {RelTypeNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, RelType),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  {Dash_2New, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, Dash_2),
+  NewCtx8 = case FType of
+              top_down -> NewCtx7;
+              bottom_up -> Fun(ST, NewCtx7)
+            end,
+  RT = {"()" ++ Dash_1New ++ VariableNew ++ RelTypeNew ++ Dash_2New ++ "()", NewCtx8},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, {leftArrowHead, _} = LeftArrowHead, Dash_1, Variable, RelType, Dash_2} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {LeftArrowHeadNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, LeftArrowHead),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {Dash_1New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Dash_1),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {VariableNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Variable),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  {RelTypeNew, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, RelType),
+  NewCtx8 = case FType of
+              top_down -> NewCtx7;
+              bottom_up -> Fun(ST, NewCtx7)
+            end,
+  {Dash_2New, NewCtx9} = fold(FType, Fun, NewCtx8, Lvl + 1, Dash_2),
+  NewCtx10 = case FType of
+               top_down -> NewCtx9;
+               bottom_up -> Fun(ST, NewCtx9)
+             end,
+  RT = {"()" ++ LeftArrowHeadNew ++ Dash_1New ++ VariableNew ++ RelTypeNew ++ Dash_2New ++ "()", NewCtx10},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, Dash_1, Variable, RelType, Dash_2, {rightArrowHead, _} = RightArrowHead} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {Dash_1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Dash_1),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {VariableNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Variable),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  {RelTypeNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, RelType),
+  NewCtx6 = case FType of
+              top_down -> NewCtx5;
+              bottom_up -> Fun(ST, NewCtx5)
+            end,
+  {Dash_2New, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, Dash_2),
+  NewCtx8 = case FType of
+              top_down -> NewCtx7;
+              bottom_up -> Fun(ST, NewCtx7)
+            end,
+  {RightArrowHeadNew, NewCtx9} = fold(FType, Fun, NewCtx8, Lvl + 1, RightArrowHead),
+  NewCtx10 = case FType of
+               top_down -> NewCtx9;
+               bottom_up -> Fun(ST, NewCtx9)
+             end,
+  RT = {"()" ++ Dash_1New ++ VariableNew ++ RelTypeNew ++ Dash_2New ++ RightArrowHeadNew ++ "()", NewCtx10},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% relationshipPropertyExistenceConstraint
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {relationshipPropertyExistenceConstraint, RelationshipPropertySyntax, PropertyExpression} = ST) ->
+  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+  NewCtx = case FType of
+             top_down -> Fun(ST, Ctx);
+             bottom_up -> Ctx
+           end,
+  {RelationshipPropertySyntaxNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, RelationshipPropertySyntax),
+  NewCtx2 = case FType of
+              top_down -> NewCtx1;
+              bottom_up -> Fun(ST, NewCtx1)
+            end,
+  {PropertyExpressionNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, PropertyExpression),
+  NewCtx4 = case FType of
+              top_down -> NewCtx3;
+              bottom_up -> Fun(ST, NewCtx3)
+            end,
+  RT = {"constraint on " ++ RelationshipPropertySyntaxNew ++ ") assert exists (" ++ PropertyExpressionNew ++ ")", NewCtx4},
+  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+  RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % relationshipsPattern
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2493,44 +2662,6 @@ fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
               bottom_up -> Fun(ST, NewCtx1)
             end,
   RT = {ValueNew, NewCtx2},
-  ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
-  RT;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% nodePropertyExistenceConstraint / uniqueConstraint
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-fold(FType, Fun, Ctx, Lvl, {Type, Variable, NodeLabel, PropertyExpression} = ST)
-  when Type == nodePropertyExistenceConstraint; Type == uniqueConstraint ->
-  ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-  NewCtx = case FType of
-             top_down -> Fun(ST, Ctx);
-             bottom_up -> Ctx
-           end,
-  {VariableNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Variable),
-  NewCtx2 = case FType of
-              top_down -> NewCtx1;
-              bottom_up -> Fun(ST, NewCtx1)
-            end,
-  {NodeLabelNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, NodeLabel),
-  NewCtx4 = case FType of
-              top_down -> NewCtx3;
-              bottom_up -> Fun(ST, NewCtx3)
-            end,
-  {PropertyExpressionNew, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, PropertyExpression),
-  NewCtx4 = case FType of
-              top_down -> NewCtx3;
-              bottom_up -> Fun(ST, NewCtx3)
-            end,
-  RT = {"constraint on (" ++ VariableNew ++ " " ++ NodeLabelNew ++ case Type of
-                                                                     nodePropertyExistenceConstraint ->
-                                                                       ") assert exists (";
-                                                                     uniqueConstraint ->
-                                                                       ") assert " end ++ PropertyExpressionNew ++ case Type of
-                                                                                                                     nodePropertyExistenceConstraint ->
-                                                                                                                       ")";
-                                                                                                                     uniqueConstraint ->
-                                                                                                                       " is unique" end, NewCtx4},
   ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
   RT;
 

@@ -6,33 +6,31 @@ ToDo List
 
 ## Open Issues ##
 
-#### 1. CREATE / DROP RELATIONSHIP PROPERTY EXISTENCE CONSTRAINT ####
+#### 1. DELETE ####
 
-#### 2. DELETE ####
+#### 2. FOR EACH ####
 
-#### 3. FOR EACH ####
+#### 3. UNWIND ####
 
-#### 4. UNWIND ####
+#### 4. LOAD CSV ####
 
-#### 5. LOAD CSV ####
+#### 5. CREATE ####
 
-#### 6. CREATE ####
+#### 6. MATCH ####
 
-#### 7. MATCH ####
+#### 7. START ####
 
-#### 8. START ####
+#### 8. MERGE ####
 
-#### 9. MERGE ####
+#### 9. SET ####
 
-#### 10. SET ####
+#### 10. REMOVE ####
 
-#### 11. REMOVE ####
+#### 11. WITH ####
 
-#### 12. WITH ####
+#### 12. RETURN ####
 
-#### 13. RETURN ####
-
-#### 14. Refinement SymbolicName ####
+#### 13. Refinement SymbolicName ####
 
     SymbolicName = UnescapedSymbolicName
                  | EscapedSymbolicName
@@ -60,4 +58,4 @@ ToDo List
     
     EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
     
-#### 17. Unary Operators ####
+#### 14. Unary Operators ####
