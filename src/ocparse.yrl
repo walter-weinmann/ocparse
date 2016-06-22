@@ -7,6 +7,8 @@ Header "%% Copyright (C) K2 Informatics GmbH"
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Nonterminals
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ all_opt
+ anonymous_pattern_part
  any_cypher_option
  atom
  % bulk_import_query
@@ -19,6 +21,7 @@ Nonterminals
  char_vertical_bar_expression
  char_vertical_bar_expression_opt
  clause
+ clause_list
  command
  comparison
  configuration_option
@@ -31,6 +34,8 @@ Nonterminals
  cypher
  cypher_option
  dash
+ delete
+ detach_opt
  distinct_opt
  double_literal
  drop_index
@@ -60,26 +65,34 @@ Nonterminals
  filter_expression
  function_invocation
  function_name
+ hint
+ hint_list
+ hint_list_opt
  id_in_coll
  index
  label_name
  left_arrow_head_opt
  list_comprehension
  map_literal
+ match
  node_label
  node_labels
  node_labels_opt
  node_pattern
  node_property_existence_constraint
  number_literal
+ optional_opt
  parameter
  parenthesized_expression
  partial_comparison_expression
+ pattern
  pattern_element
  pattern_element_chain
  pattern_element_chain_list
  pattern_element_chain_list_opt
  pattern_element_chain_opt
+ pattern_part
+ pattern_part_commalist
  properties
  properties_opt
  property_expression
@@ -116,12 +129,14 @@ Nonterminals
  statement
  symbolic_name
  union
+ union_list
  union_opt
  unique_constraint
  unsigned_decimal_integer
  unsigned_integer_literal
  unsigned_integer_literal_opt
  variable
+ variable_commalist
  variable_opt
  version_number
  version_number_opt
@@ -149,10 +164,10 @@ Terminals
  CREATE
 % CSV
  CYPHER
-% DELETE
+ DELETE
 % DESC
 % DESCENDING
-% DETACH
+ DETACH
  DISTINCT
  DROP
  ELSE
@@ -172,7 +187,7 @@ Terminals
  IN
  INDEX
  IS
-% JOIN
+ JOIN
 % L_0X
 % L_SKIP
 % LIMIT
@@ -186,7 +201,7 @@ Terminals
  NULL
  OCTAL_INTEGER
  ON
-% OPTIONAL
+ OPTIONAL
  OR
 % ORDER
 % PERIODIC
@@ -196,7 +211,7 @@ Terminals
 % RELATIONSHIP
 % REMOVE
 % RETURN
-% SCAN
+ SCAN
 % SET
  SHORTESTPATH
  SIGNED_DECIMAL_INTEGER
@@ -212,7 +227,7 @@ Terminals
  UNSIGNED_DECIMAL_INTEGER
  UNSIGNED_FLOAT
 % UNWIND
-% USING
+ USING
  WHEN
  WHERE
  WITH
@@ -288,7 +303,8 @@ Left        500 '^'.
 
 cypher -> query_options_opt statement char_semicolon_opt                                        : {cypher, '$1', {statement, '$2'}, '$3'}.
 
-cypher -> expression ';'                                                                        : '$1'.
+cypher -> pattern                                                                               : '$1'.
+cypher -> pattern ';'                                                                           : '$1'.
 
 query_options_opt -> '$empty'                                                                   : {}.
 query_options_opt -> query_options                                                              : {queryOptions, '$1'}.
@@ -326,15 +342,24 @@ query -> regular_query                                                          
 
 regular_query -> single_query union_opt                                                         : {regularQuery, '$1', '$2'}.
 
-union_opt -> '$empty'                                                                           : {}.
-union_opt -> union                                                                              : '$1'.
+union_opt -> '$empty'                                                                           : [].
+union_opt -> union_list                                                                         : '$1'.
 
-single_query -> clause                                                                          : {singleQuery, '$1'}.
+union_list -> union_list union                                                                  : '$1' ++ ['$2'].
+union_list -> union                                                                             : ['$1'].
 
-union -> UNION ALL clause                                                                       : {union, '$3', '$2'}.
-union -> UNION clause                                                                           : {union, '$2'}.
+single_query -> clause_list                                                                     : {singleQuery, '$1'}.
 
-clause -> MATCH                                                                                 : {clause, match}.
+clause_list -> clause_list clause                                                               : '$1' ++ ['$2'].
+clause_list -> clause                                                                           : ['$1'].
+
+union -> UNION all_opt clause                                                                   : {union, '$2', '$3'}.
+
+all_opt -> '$empty'                                                                             : [].
+all_opt -> ALL                                                                                  : "all".
+
+clause -> match                                                                                 : {clause, '$1'}.
+clause -> delete                                                                                : {clause, '$1'}.
 
 command -> create_index                                                                         : {command, '$1'}.
 command -> drop_index                                                                           : {command, '$1'}.
@@ -397,7 +422,47 @@ dash -> '--'                                                                    
 right_arrow_head_opt -> '$empty'                                                                : {}.
 right_arrow_head_opt -> '>'                                                                     : {rightArrowHead, '$1'}.
 
+match -> optional_opt MATCH pattern hint_list_opt where_opt                                     : {match, '$1', '$3', '$4', '$5'}.
+
+optional_opt -> '$empty'                                                                        : [].
+optional_opt -> OPTIONAL                                                                        : "optional".
+
+hint_list_opt -> '$empty'                                                                       : [].
+hint_list_opt -> hint_list                                                                      : '$1'.
+
+hint_list -> hint_list hint                                                                     : '$1' ++ ['$2'].
+hint_list -> hint                                                                               : ['$1'].
+
+where_opt -> '$empty'                                                                           : {}.
+where_opt -> where                                                                              : '$1'.
+
+delete -> detach_opt DELETE expression_commalist                                                : {delete, '$1', '$3'}.
+
+detach_opt -> '$empty'                                                                          : [].
+detach_opt -> DETACH                                                                            : "detach".
+
+expression_commalist -> expression                                                              : ['$1'].
+expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
+
+hint -> USING INDEX variable node_label '(' property_key_name ')'                               : {hint, '$3', '$4', '$6'}.
+hint -> USING JOIN ON variable_commalist                                                        : {hint, '$4'}.
+hint -> USING SCAN variable node_label                                                          : {hint, '$3', '$4'}.
+
+variable_commalist -> variable                                                                  : ['$1'].
+variable_commalist -> variable ',' variable_commalist                                           : ['$1' | '$3'].
+
 where -> WHERE expression                                                                       : {where, '$2'}.
+
+pattern -> pattern_part_commalist                                                               : {pattern, '$1'}.
+
+pattern_part_commalist -> pattern_part                                                          : ['$1'].
+pattern_part_commalist -> pattern_part ',' pattern_part_commalist                               : ['$1' | '$3'].
+
+pattern_part -> variable '=' anonymous_pattern_part                                             : {patternPart, '$1', '$3'}.
+pattern_part -> anonymous_pattern_part                                                          : {patternPart, '$1'}.
+
+anonymous_pattern_part -> shortest_path_pattern                                                 : {anonymousPatternPart, '$1'}.
+anonymous_pattern_part -> pattern_element                                                       : {anonymousPatternPart, '$1'}.
 
 shortest_path_pattern -> SHORTESTPATH '(' pattern_element ')'                                   : {shortestPathPattern, '$1', '$3'}.
 shortest_path_pattern -> ALLSHORTESTPATHS '(' pattern_element ')'                               : {shortestPathPattern, '$1', '$3'}.
@@ -519,9 +584,6 @@ expression_2_addon_list -> expression_2_addon                                   
 expression_2_addon -> node_labels                                                               : {nodeLabels, '$1'}.
 expression_2_addon -> property_lookup                                                           : '$1'.
 
-expression_commalist -> expression                                                              : ['$1'].
-expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
-
 atom -> number_literal                                                                          : {atom, '$1'}.
 atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
 atom -> parameter                                                                               : {atom, '$1'}.
@@ -570,9 +632,6 @@ pattern_element_chain_list -> pattern_element_chain_list pattern_element_chain  
 pattern_element_chain_list -> pattern_element_chain                                             : ['$1'].
 
 filter_expression -> id_in_coll where_opt                                                       : {filterExpression, '$1', '$2'}.
-
-where_opt -> '$empty'                                                                           : {}.
-where_opt -> where                                                                              : '$1'.
 
 id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
 

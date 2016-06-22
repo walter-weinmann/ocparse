@@ -51,8 +51,11 @@ Test Cases
 ---
 * [Atoms](https://github.com/walter-weinmann/ocparse/blob/master/test/atoms.tst)
 * [Command CONSTRAINT](https://github.com/walter-weinmann/ocparse/blob/master/test/command_constraint.tst)
+* [Command DELETE](https://github.com/walter-weinmann/ocparse/blob/master/test/command_delete.tst)
 * [Command INDEX](https://github.com/walter-weinmann/ocparse/blob/master/test/command_index.tst)
+* [Command MATCH](https://github.com/walter-weinmann/ocparse/blob/master/test/command_match.tst)
 * [Expressions](https://github.com/walter-weinmann/ocparse/blob/master/test/expressions.tst)
+* [Patterns](https://github.com/walter-weinmann/ocparse/blob/master/test/patterns.tst)
 * [Query Options](https://github.com/walter-weinmann/ocparse/blob/master/test/query_options.tst)
 
 These test cases are also documentation of the current support.
