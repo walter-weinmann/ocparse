@@ -334,10 +334,10 @@
 %% String Literal
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"CREATE CONSTRAINT ON (book:Book) ASSERT \"CREATE CONSTRAINT ON (book:Book) ASSERT Dies ist ein String\"CREATE CONSTRAINT ON (book:Book) ASSERT  is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT \"CREATE CONSTRAINT ON (book:Book) ASSERT Dies' ist 'ein String\"CREATE CONSTRAINT ON (book:Book) ASSERT  is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT \"Dies ist ein String\" is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT \"Dies' ist 'ein String\" is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT 'Dies ist ein String' is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT 'Dies\"CREATE CONSTRAINT ON (book:Book) ASSERT  ist \"CREATE CONSTRAINT ON (book:Book) ASSERT ein String' is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT 'Dies\" ist \"ein String' is unique".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Variable

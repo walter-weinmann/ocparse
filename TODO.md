@@ -6,31 +6,27 @@ ToDo List
 
 ## Open Issues ##
 
-#### 1. DELETE ####
+#### 1. FOR EACH ####
 
-#### 2. FOR EACH ####
+#### 2. UNWIND ####
 
-#### 3. UNWIND ####
+#### 3. LOAD CSV ####
 
-#### 4. LOAD CSV ####
+#### 4. CREATE ####
 
-#### 5. CREATE ####
+#### 5. START ####
 
-#### 6. MATCH ####
+#### 6. MERGE ####
 
-#### 7. START ####
+#### 7. SET ####
 
-#### 8. MERGE ####
+#### 8. REMOVE ####
 
-#### 9. SET ####
+#### 9. WITH ####
 
-#### 10. REMOVE ####
+#### 10. RETURN ####
 
-#### 11. WITH ####
-
-#### 12. RETURN ####
-
-#### 13. Refinement SymbolicName ####
+#### 11. Refinement SymbolicName ####
 
     SymbolicName = UnescapedSymbolicName
                  | EscapedSymbolicName
@@ -58,4 +54,8 @@ ToDo List
     
     EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
     
-#### 14. Unary Operators ####
+#### 12. Unary Operators ####
+    
+#### 13. Reduce-Reduce & Reduce-Shift Conflicts ####
+    
+#### 14. Dash -- ####
