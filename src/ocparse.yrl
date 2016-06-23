@@ -10,8 +10,9 @@ Nonterminals
  all_opt
  anonymous_pattern_part
  any_cypher_option
+ any_cypher_option_list
  atom
- % bulk_import_query
+ bulk_import_query
  case_alternatives
  case_alternatives_list
  case_expression
@@ -22,6 +23,7 @@ Nonterminals
  char_vertical_bar_expression_opt
  clause
  clause_list
+ clause_list_opt
  command
  comparison
  configuration_option
@@ -62,7 +64,9 @@ Nonterminals
  expression_7
  expression_8
  expression_9
+ field_terminator_opt
  filter_expression
+ for_each
  function_invocation
  function_name
  hint
@@ -73,6 +77,8 @@ Nonterminals
  label_name
  left_arrow_head_opt
  list_comprehension
+ load_csv
+ load_csv_query
  map_literal
  match
  node_label
@@ -93,6 +99,7 @@ Nonterminals
  pattern_element_chain_opt
  pattern_part
  pattern_part_commalist
+ periodic_commit_hint
  properties
  properties_opt
  property_expression
@@ -130,7 +137,7 @@ Nonterminals
  symbolic_name
  union
  union_list
- union_opt
+ union_list_opt
  unique_constraint
  unsigned_decimal_integer
  unsigned_integer_literal
@@ -142,6 +149,7 @@ Nonterminals
  version_number_opt
  where
  where_opt
+ with_headers_opt
  .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,18 +159,18 @@ Terminals
  ALLSHORTESTPATHS
  AND
  ANY
-% AS
+ AS
 % ASC
 % ASCENDING
  ASSERT
 % BY
  CASE
-% COMMIT
+ COMMIT
  CONSTRAINT
  CONTAINS
  COUNT
  CREATE
-% CSV
+ CSV
  CYPHER
  DELETE
 % DESC
@@ -178,11 +186,11 @@ Terminals
  EXPONENT_DECIMAL_REAL
  EXTRACT
  FALSE
-% FIELDTERMINATOR
+ FIELDTERMINATOR
  FILTER
-% FOREACH
-% FROM
-% HEADERS
+ FOREACH
+ FROM
+ HEADERS
  HEX_INTEGER
  IN
  INDEX
@@ -191,7 +199,7 @@ Terminals
 % L_0X
 % L_SKIP
 % LIMIT
-% LOAD
+ LOAD
  MATCH
 % MERGE
  NAME
@@ -204,7 +212,7 @@ Terminals
  OPTIONAL
  OR
 % ORDER
-% PERIODIC
+ PERIODIC
  PROFILE
  REDUCE
 % REL
@@ -301,19 +309,23 @@ Left        500 '^'.
 %% Grammar rules.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cypher -> query_options_opt statement char_semicolon_opt                                        : {cypher, '$1', {statement, '$2'}, '$3'}.
+cypher -> query_options statement char_semicolon_opt                                            : {cypher, '$1', {statement, '$2'}, '$3'}.
 
+query_options -> '$empty'                                                                       : {}.
+query_options -> any_cypher_option_list                                                         : {queryOptions, '$1'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 cypher -> pattern                                                                               : '$1'.
 cypher -> pattern ';'                                                                           : '$1'.
-
-query_options_opt -> '$empty'                                                                   : {}.
-query_options_opt -> query_options                                                              : {queryOptions, '$1'}.
 
 char_semicolon_opt -> '$empty'                                                                  : {}.
 char_semicolon_opt -> ';'                                                                       : ";".
 
-query_options -> query_options any_cypher_option                                                : '$1' ++ ['$2'].
-query_options -> any_cypher_option                                                              : ['$1'].
+any_cypher_option_list -> any_cypher_option_list any_cypher_option                              : '$1' ++ ['$2'].
+any_cypher_option_list -> any_cypher_option                                                     : ['$1'].
+%% =====================================================================================================================
 
 any_cypher_option -> EXPLAIN                                                                    : {anyCypherOption, explain, []}.
 any_cypher_option -> PROFILE                                                                    : {anyCypherOption, profile, []}.
@@ -321,16 +333,20 @@ any_cypher_option -> cypher_option                                              
 
 cypher_option -> CYPHER version_number_opt configuration_option_list_opt                        : {cypherOption, '$2', '$3'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 version_number_opt -> '$empty'                                                                  : {}.
 version_number_opt -> version_number                                                            : '$1'.
 
 configuration_option_list_opt -> '$empty'                                                       : [].
 configuration_option_list_opt -> configuration_option_list                                      : '$1'.
 
-version_number -> UNSIGNED_FLOAT                                                                : {versionNumber, unwrap('$1')}.
-
 configuration_option_list -> configuration_option_list configuration_option                     : '$1' ++ ['$2'].
 configuration_option_list -> configuration_option                                               : ['$1'].
+%% =====================================================================================================================
+
+version_number -> UNSIGNED_FLOAT                                                                : {versionNumber, unwrap('$1')}.
 
 configuration_option -> symbolic_name '=' symbolic_name                                         : {configurationOption, '$1', '$3'}.
 
@@ -338,28 +354,55 @@ statement -> command                                                            
 statement -> query                                                                              : '$1'.
 
 query -> regular_query                                                                          : {query, '$1'}.
-% wwe query -> bulk_import_query                                                                      : {query, '$1'}.
+query -> bulk_import_query                                                                      : {query, '$1'}.
 
-regular_query -> single_query union_opt                                                         : {regularQuery, '$1', '$2'}.
+regular_query -> single_query union_list_opt                                                    : {regularQuery, '$1', '$2'}.
 
-union_opt -> '$empty'                                                                           : [].
-union_opt -> union_list                                                                         : '$1'.
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+union_list_opt -> '$empty'                                                                      : [].
+union_list_opt -> union_list                                                                    : '$1'.
 
 union_list -> union_list union                                                                  : '$1' ++ ['$2'].
 union_list -> union                                                                             : ['$1'].
+%% =====================================================================================================================
+
+bulk_import_query -> periodic_commit_hint load_csv_query                                        : {bulkImportQuery, '$1', '$2'}.
 
 single_query -> clause_list                                                                     : {singleQuery, '$1'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 clause_list -> clause_list clause                                                               : '$1' ++ ['$2'].
 clause_list -> clause                                                                           : ['$1'].
+%% =====================================================================================================================
+
+periodic_commit_hint -> USING PERIODIC COMMIT signed_integer_literal                            : {periodicCommitHint, '$4'}.
+
+load_csv_query -> load_csv clause_list_opt                                                      : {loadCSVQuery, '$1', '$2'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+clause_list_opt -> '$empty'                                                                     : [].
+clause_list_opt -> clause_list                                                                  : '$1'.
+%% =====================================================================================================================
 
 union -> UNION all_opt clause                                                                   : {union, '$2', '$3'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 all_opt -> '$empty'                                                                             : [].
 all_opt -> ALL                                                                                  : "all".
+%% =====================================================================================================================
 
+clause -> load_csv                                                                              : {clause, '$1'}.
 clause -> match                                                                                 : {clause, '$1'}.
 clause -> delete                                                                                : {clause, '$1'}.
+clause -> for_each                                                                              : {clause, '$1'}.
 
 command -> create_index                                                                         : {command, '$1'}.
 command -> drop_index                                                                           : {command, '$1'}.
@@ -404,6 +447,9 @@ relationship_pattern_syntax -> '(' ')' left_arrow_head_opt dash '[' variable rel
 relationship_pattern_syntax -> '(' ')' dash '[' variable rel_type ']' dash left_arrow_head_opt '(' ')'
                                                                                                 : {relationshipPatternSyntax, '$3', '$5', '$6', '$8', '$9'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 left_arrow_head_opt -> '$empty'                                                                 : {}.
 left_arrow_head_opt -> '<'                                                                      : {leftArrowHead, '$1'}.
 
@@ -421,9 +467,25 @@ dash -> '--'                                                                    
 
 right_arrow_head_opt -> '$empty'                                                                : {}.
 right_arrow_head_opt -> '>'                                                                     : {rightArrowHead, '$1'}.
+%% =====================================================================================================================
+
+load_csv -> LOAD CSV with_headers_opt FROM expression AS variable field_terminator_opt          : {loadCSV, '$3', '$5', '$7', '$8'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+with_headers_opt -> '$empty'                                                                    : [].
+with_headers_opt -> WITH HEADERS                                                                : "with headers".
+
+field_terminator_opt -> '$empty'                                                                : {}.
+field_terminator_opt -> FIELDTERMINATOR STRING_LITERAL                                          : unwrap('$2').
+%% =====================================================================================================================
 
 match -> optional_opt MATCH pattern hint_list_opt where_opt                                     : {match, '$1', '$3', '$4', '$5'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 optional_opt -> '$empty'                                                                        : [].
 optional_opt -> OPTIONAL                                                                        : "optional".
 
@@ -435,28 +497,43 @@ hint_list -> hint                                                               
 
 where_opt -> '$empty'                                                                           : {}.
 where_opt -> where                                                                              : '$1'.
+%% =====================================================================================================================
 
 delete -> detach_opt DELETE expression_commalist                                                : {delete, '$1', '$3'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 detach_opt -> '$empty'                                                                          : [].
 detach_opt -> DETACH                                                                            : "detach".
 
 expression_commalist -> expression                                                              : ['$1'].
 expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
+%% ---------------------------------------------------------------------------------------------------------------------
+
+for_each -> FOREACH '(' variable IN expression '|' clause_list_opt ')'                          : {forEach, '$3', '$5', '$7'}.
 
 hint -> USING INDEX variable node_label '(' property_key_name ')'                               : {hint, '$3', '$4', '$6'}.
 hint -> USING JOIN ON variable_commalist                                                        : {hint, '$4'}.
 hint -> USING SCAN variable node_label                                                          : {hint, '$3', '$4'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 variable_commalist -> variable                                                                  : ['$1'].
 variable_commalist -> variable ',' variable_commalist                                           : ['$1' | '$3'].
+%% =====================================================================================================================
 
 where -> WHERE expression                                                                       : {where, '$2'}.
 
 pattern -> pattern_part_commalist                                                               : {pattern, '$1'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 pattern_part_commalist -> pattern_part                                                          : ['$1'].
 pattern_part_commalist -> pattern_part ',' pattern_part_commalist                               : ['$1' | '$3'].
+%% =====================================================================================================================
 
 pattern_part -> variable '=' anonymous_pattern_part                                             : {patternPart, '$1', '$3'}.
 pattern_part -> anonymous_pattern_part                                                          : {patternPart, '$1'}.
@@ -470,11 +547,18 @@ shortest_path_pattern -> ALLSHORTESTPATHS '(' pattern_element ')'               
 pattern_element -> node_pattern pattern_element_chain_opt                                       : {patternElement, '$1', '$2'}.
 pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 pattern_element_chain_opt -> '$empty'                                                           : {}.
 pattern_element_chain_opt -> pattern_element_chain                                              : '$1'.
+%% =====================================================================================================================
 
 node_pattern -> '(' variable_opt node_labels_opt properties_opt ')'                             : {nodePattern, '$2', '$3', '$4'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 variable_opt -> '$empty'                                                                        : {}.
 variable_opt -> variable                                                                        : '$1'.
 
@@ -483,18 +567,26 @@ node_labels_opt -> node_labels                                                  
 
 properties_opt -> '$empty'                                                                      : {}.
 properties_opt -> properties                                                                    : '$1'.
+%% =====================================================================================================================
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
 relationship_pattern -> left_arrow_head_opt dash relationship_detail_opt dash right_arrow_head_opt
                                                                                                 : {relationshipPattern, '$1', '$2', '$3', '$4', '$5'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 relationship_detail_opt -> '$empty'                                                             : {}.
 relationship_detail_opt -> relationship_detail                                                  : '$1'.
+%% =====================================================================================================================
 
 relationship_detail -> '[' variable_opt char_question_mark_opt relationship_types_opt range_opt properties_opt ']'     
                                                                                                 : {relationshipDetail, '$2', '$3', '$4', '$5', '$6'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 char_question_mark_opt -> '$empty'                                                              : [].
 char_question_mark_opt -> '?'                                                                   : "?".
 
@@ -506,11 +598,12 @@ range_opt -> '*' range_literal_opt                                              
 
 range_literal_opt -> '$empty'                                                                   : {}.
 range_literal_opt -> range_literal                                                              : '$1'.
-
-rel_type -> ':' rel_type_name                                                                   : {relType, '$2'}.
+%% =====================================================================================================================
 
 properties -> map_literal                                                                       : {properties, '$1'}.
 properties -> parameter                                                                         : {properties, '$1'}.
+
+rel_type -> ':' rel_type_name                                                                   : {relType, '$2'}.
 
 relationship_types -> ':' rel_type_name                                                         : ['$2'].
 relationship_types -> ':' rel_type_name '|' relationship_types                                  : ['$2' | '$4'].
@@ -522,8 +615,12 @@ node_label -> ':' label_name                                                    
 
 range_literal -> unsigned_integer_literal_opt '..' unsigned_integer_literal_opt                 : {rangeLiteral, '$1', '$3'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 unsigned_integer_literal_opt -> '$empty'                                                        : {}.
 unsigned_integer_literal_opt -> unsigned_integer_literal                                        : '$1'.
+%% =====================================================================================================================
 
 label_name -> symbolic_name                                                                     : {labelName, '$1'}.
 
@@ -613,6 +710,9 @@ reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'  
 
 partial_comparison_expression -> comparison expression_7                                        : {partialComparisonExpression, '$2', '$1'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 comparison -> '='                                                                               : "=".
 comparison -> '<>'                                                                              : "<>".
 comparison -> '!='                                                                              : "!=".
@@ -620,16 +720,21 @@ comparison -> '<'                                                               
 comparison -> '>'                                                                               : ">".
 comparison -> '<='                                                                              : "<=".
 comparison -> '>='                                                                              : ">=".
+%% =====================================================================================================================
 
 parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
 
 relationships_pattern -> node_pattern pattern_element_chain_list_opt                            : {relationshipsPattern, '$1', '$2'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 pattern_element_chain_list_opt -> '$empty'                                                      : [].
 pattern_element_chain_list_opt -> pattern_element_chain_list                                    : '$1'.
 
 pattern_element_chain_list -> pattern_element_chain_list pattern_element_chain                  : '$1' ++ ['$2'].
 pattern_element_chain_list -> pattern_element_chain                                             : ['$1'].
+%% =====================================================================================================================
 
 filter_expression -> id_in_coll where_opt                                                       : {filterExpression, '$1', '$2'}.
 
@@ -637,29 +742,44 @@ id_in_coll -> variable IN expression                                            
 
 function_invocation -> function_name '(' distinct_opt expression_commalist_opt ')'              : {functionInvocation, '$1', '$4', '$3'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 distinct_opt -> '$empty'                                                                        : [].
 distinct_opt -> DISTINCT                                                                        : "distinct".
 
 expression_commalist_opt -> '$empty'                                                            : [].
 expression_commalist_opt -> expression_commalist                                                : '$1'.
+%% =====================================================================================================================
 
 function_name -> symbolic_name                                                                  : {functionName, '$1'}.
 
 list_comprehension -> '[' filter_expression char_vertical_bar_expression_opt ']'                : {listComprehension, '$2', '$3'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 char_vertical_bar_expression_opt -> '$empty'                                                    : {}.
 char_vertical_bar_expression_opt -> char_vertical_bar_expression                                : '$1'.
 
 char_vertical_bar_expression -> '|' expression                                                  : '$2'.
+%% =====================================================================================================================
 
 property_lookup -> '.' property_key_name char_opt                                               : {propertyLookup, '$2', '$3'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 char_opt -> '$empty'                                                                            : [].
 char_opt -> '?'                                                                                 : "?".
 char_opt -> '!'                                                                                 : "!".
+%% =====================================================================================================================
 
 case_expression -> CASE expression_opt case_alternatives_list else_expression_opt END           : {caseExpression, '$2', '$3', '$4'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 expression_opt -> '$empty'                                                                      : {}.
 expression_opt -> expression                                                                    : '$1'.
 
@@ -670,14 +790,20 @@ else_expression -> ELSE expression                                              
 
 case_alternatives_list -> case_alternatives_list case_alternatives                              : '$1' ++ ['$2'].
 case_alternatives_list -> case_alternatives                                                     : ['$1'].
+%% =====================================================================================================================
 
 case_alternatives -> WHEN expression THEN expression                                            : {caseAlternatives, '$2', '$4'}.
+
+variable -> symbolic_name                                                                       : {variable, '$1'}.
 
 number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
 number_literal -> signed_integer_literal                                                        : {numberLiteral, '$1'}.
 
 map_literal -> '{' property_key_name_expression_commalist_opt '}'                               : {mapLiteral, '$2'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 property_key_name_expression_commalist_opt -> '$empty'                                          : [].
 property_key_name_expression_commalist_opt -> property_key_name_expression_commalist            : '$1'.
 
@@ -686,17 +812,22 @@ property_key_name_expression_commalist -> property_key_name_expression ',' prope
                                                                                                 : ['$1' | '$3'].
 
 property_key_name_expression -> property_key_name ':' expression                                : {propertyKeyNameExpression, '$1', '$3'}.
+%% =====================================================================================================================
 
 parameter -> '{' symbolic_name '}'                                                              : {parameter, '$2'}.
 parameter -> '{' unsigned_decimal_integer '}'                                                   : {parameter, '$2'}.
 
 property_expression -> atom property_lookup_list_opt                                            : {propertyExpression, '$1', '$2'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
 property_lookup_list_opt -> '$empty'                                                            : [].
 property_lookup_list_opt -> property_lookup_list                                                : '$1'.
 
 property_lookup_list -> property_lookup_list property_lookup                                    : '$1' ++ ['$2'].
 property_lookup_list -> property_lookup                                                         : ['$1'].
+%% =====================================================================================================================
 
 property_key_name -> symbolic_name                                                              : {propertyKeyName, '$1'}.
 
@@ -717,8 +848,6 @@ regular_decimal_real -> SIGNED_FLOAT                                            
 regular_decimal_real -> UNSIGNED_FLOAT                                                          : {doubleLiteral, {regularDecimalReal, unwrap('$1')}}.
 
 symbolic_name -> NAME                                                                           : {symbolicName, unwrap('$1')}.
-
-variable -> symbolic_name                                                                       : {variable, '$1'}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Expect 2.
