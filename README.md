@@ -50,10 +50,12 @@ Compiling
 Test Cases
 ---
 * [Atoms](https://github.com/walter-weinmann/ocparse/blob/master/test/atoms.tst)
+* [Clause DELETE](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_delete.tst)
+* [Clause FOREACH](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_for_each.tst)
+* [Clause LOAD CSV](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_load_csv.tst)
+* [Clause MATCH](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_match.tst)
 * [Command CONSTRAINT](https://github.com/walter-weinmann/ocparse/blob/master/test/command_constraint.tst)
-* [Command DELETE](https://github.com/walter-weinmann/ocparse/blob/master/test/command_delete.tst)
 * [Command INDEX](https://github.com/walter-weinmann/ocparse/blob/master/test/command_index.tst)
-* [Command MATCH](https://github.com/walter-weinmann/ocparse/blob/master/test/command_match.tst)
 * [Expressions](https://github.com/walter-weinmann/ocparse/blob/master/test/expressions.tst)
 * [Patterns](https://github.com/walter-weinmann/ocparse/blob/master/test/patterns.tst)
 * [Query Options](https://github.com/walter-weinmann/ocparse/blob/master/test/query_options.tst)
