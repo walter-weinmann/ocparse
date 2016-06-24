@@ -74,17 +74,23 @@ Nonterminals
  hint_list
  hint_list_opt
  id_in_coll
+ id_lookup
+ identified_index_lookup
  index
+ index_query
  label_name
  left_arrow_head_opt
  list_comprehension
+ literal_ids
  load_csv
  load_csv_query
+ lookup
  map_literal
  match
  node_label
  node_labels
  node_labels_opt
+ node_lookup
  node_pattern
  node_property_existence_constraint
  number_literal
@@ -124,6 +130,7 @@ Nonterminals
  rel_type_name
  relationship_detail
  relationship_detail_opt
+ relationship_lookup
  relationship_pattern
  relationship_pattern_syntax
  relationship_property_existence_constraint
@@ -134,6 +141,9 @@ Nonterminals
  shortest_path_pattern
  signed_integer_literal
  single_query
+ start
+ start_point
+ start_point_commalist
  statement
  symbolic_name
  union
@@ -143,6 +153,7 @@ Nonterminals
  unique_opt
  unsigned_decimal_integer
  unsigned_integer_literal
+ unsigned_integer_literal_commalist
  unsigned_integer_literal_opt
  unwind
  variable
@@ -206,7 +217,7 @@ Terminals
  MATCH
 % MERGE
  NAME
-% NODE
+ NODE
  NONE
  NOT
  NULL
@@ -218,8 +229,8 @@ Terminals
  PERIODIC
  PROFILE
  REDUCE
-% REL
-% RELATIONSHIP
+ REL
+ RELATIONSHIP
 % REMOVE
 % RETURN
  SCAN
@@ -228,7 +239,7 @@ Terminals
  SIGNED_DECIMAL_INTEGER
  SIGNED_FLOAT
  SINGLE
-% START
+ START
  STARTS
  STRING_LITERAL
  THEN
@@ -403,6 +414,7 @@ all_opt -> ALL                                                                  
 %% =====================================================================================================================
 
 clause -> load_csv                                                                              : {clause, '$1'}.
+clause -> start                                                                                 : {clause, '$1'}.
 clause -> match                                                                                 : {clause, '$1'}.
 clause -> unwind                                                                                : {clause, '$1'}.
 clause -> create                                                                                : {clause, '$1'}.
@@ -538,6 +550,51 @@ hint -> USING SCAN variable node_label                                          
 %% ---------------------------------------------------------------------------------------------------------------------
 variable_commalist -> variable                                                                  : ['$1'].
 variable_commalist -> variable ',' variable_commalist                                           : ['$1' | '$3'].
+%% =====================================================================================================================
+
+start -> START start_point_commalist where_opt                                                  : {start, '$2', '$3'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+start_point_commalist -> start_point                                                            : ['$1'].
+start_point_commalist -> start_point ',' start_point_commalist                                  : ['$1' | '$3'].
+%% =====================================================================================================================
+
+start_point -> variable '=' lookup                                                              : {startPoint, '$1', '$3'}.
+
+lookup -> node_lookup                                                                           : {lookup, '$1'}.
+lookup -> relationship_lookup                                                                   : {lookup, '$1'}.
+
+node_lookup -> NODE identified_index_lookup                                                     : {nodeLookup, '$2'}.
+node_lookup -> NODE index_query                                                                 : {nodeLookup, '$2'}.
+node_lookup -> NODE id_lookup                                                                   : {nodeLookup, '$2'}.
+
+relationship_lookup -> REL identified_index_lookup                                              : {relationshipLookup, "rel", '$2'}.
+relationship_lookup -> REL index_query                                                          : {relationshipLookup, "rel", '$2'}.
+relationship_lookup -> REL id_lookup                                                            : {relationshipLookup, "rel", '$2'}.
+relationship_lookup -> RELATIONSHIP identified_index_lookup                                     : {relationshipLookup, "relationship", '$2'}.
+relationship_lookup -> RELATIONSHIP index_query                                                 : {relationshipLookup, "relationship", '$2'}.
+relationship_lookup -> RELATIONSHIP id_lookup                                                   : {relationshipLookup, "relationship", '$2'}.
+
+identified_index_lookup -> ':' symbolic_name '(' symbolic_name '=' STRING_LITERAL ')'           : {identifiedIndexLookup, '$2', '$4', unwrap('$6')}.
+identified_index_lookup -> ':' symbolic_name '(' symbolic_name '=' parameter ')'                : {identifiedIndexLookup, '$2', '$4', '$6'}.
+
+index_query -> ':' symbolic_name '(' STRING_LITERAL ')'                                         : {indexQuery, '$2', unwrap('$4')}.
+index_query -> ':' symbolic_name '(' parameter ')'                                              : {indexQuery, '$2', '$4'}.
+
+id_lookup -> '(' literal_ids ')'                                                                : {idLookup, '$2'}.
+id_lookup -> '(' parameter ')'                                                                  : {idLookup, '$2'}.
+id_lookup -> '(' '*' ')'                                                                        : {idLookup, "*"}.
+
+literal_ids -> unsigned_integer_literal_commalist                                               : {literalIds, '$1'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+unsigned_integer_literal_commalist -> unsigned_integer_literal                                  : ['$1'].
+unsigned_integer_literal_commalist -> unsigned_integer_literal ',' unsigned_integer_literal_commalist
+                                                                                                : ['$1' | '$3'].
 %% =====================================================================================================================
 
 where -> WHERE expression                                                                       : {where, '$2'}.

@@ -6,19 +6,17 @@ ToDo List
 
 ## Open Issues ##
 
-#### 1. START ####
+#### 1. MERGE ####
 
-#### 2. MERGE ####
+#### 2. SET ####
 
-#### 3. SET ####
+#### 3. REMOVE ####
 
-#### 4. REMOVE ####
+#### 4. WITH ####
 
-#### 5. WITH ####
+#### 5. RETURN ####
 
-#### 6. RETURN ####
-
-#### 7. Refinement SymbolicName ####
+#### 6. Refinement SymbolicName ####
 
     SymbolicName = UnescapedSymbolicName
                  | EscapedSymbolicName
@@ -46,8 +44,10 @@ ToDo List
     
     EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
     
-#### 8. Unary Operators ####
+#### 7. Unary Operators ####
     
-#### 9. Reduce-Reduce & Reduce-Shift Conflicts ####
+#### 8. Reduce-Reduce & Reduce-Shift Conflicts ####
     
-#### 10. Dash -- ####
+#### 9. Dash -- ####
+    
+#### 10. Unicode support for atoms

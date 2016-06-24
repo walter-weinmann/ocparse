@@ -55,6 +55,7 @@ Test Cases
 * [Clause FOREACH](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_for_each.tst)
 * [Clause LOAD CSV](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_load_csv.tst)
 * [Clause MATCH](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_match.tst)
+* [Clause START](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_start.tst)
 * [Clause UNWIND](https://github.com/walter-weinmann/ocparse/blob/master/test/clause_unwind.tst)
 * [Command CONSTRAINT](https://github.com/walter-weinmann/ocparse/blob/master/test/command_constraint.tst)
 * [Command INDEX](https://github.com/walter-weinmann/ocparse/blob/master/test/command_index.tst)
