@@ -29,6 +29,7 @@ Nonterminals
  configuration_option
  configuration_option_list
  configuration_option_list_opt
+ create
  create_index
  create_node_property_existence_constraint
  create_relationship_property_existence_constraint
@@ -139,9 +140,11 @@ Nonterminals
  union_list
  union_list_opt
  unique_constraint
+ unique_opt
  unsigned_decimal_integer
  unsigned_integer_literal
  unsigned_integer_literal_opt
+ unwind
  variable
  variable_commalist
  variable_opt
@@ -234,7 +237,7 @@ Terminals
  UNIQUE
  UNSIGNED_DECIMAL_INTEGER
  UNSIGNED_FLOAT
-% UNWIND
+ UNWIND
  USING
  WHEN
  WHERE
@@ -401,6 +404,8 @@ all_opt -> ALL                                                                  
 
 clause -> load_csv                                                                              : {clause, '$1'}.
 clause -> match                                                                                 : {clause, '$1'}.
+clause -> unwind                                                                                : {clause, '$1'}.
+clause -> create                                                                                : {clause, '$1'}.
 clause -> delete                                                                                : {clause, '$1'}.
 clause -> for_each                                                                              : {clause, '$1'}.
 
@@ -498,6 +503,17 @@ hint_list -> hint                                                               
 where_opt -> '$empty'                                                                           : {}.
 where_opt -> where                                                                              : '$1'.
 %% =====================================================================================================================
+
+unwind -> UNWIND expression AS variable                                                         : {unwind, '$2', '$4'}.
+
+create -> CREATE unique_opt pattern                                                             : {create, '$2', '$3'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+unique_opt -> '$empty'                                                                          : [].
+unique_opt -> UNIQUE                                                                            : "unique".
+%% ---------------------------------------------------------------------------------------------------------------------
 
 delete -> detach_opt DELETE expression_commalist                                                : {delete, '$1', '$3'}.
 
