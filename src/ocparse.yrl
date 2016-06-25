@@ -80,6 +80,8 @@ Nonterminals
  index_query
  label_name
  left_arrow_head_opt
+ limit
+ limit_opt
  list_comprehension
  literal_ids
  load_csv
@@ -99,6 +101,8 @@ Nonterminals
  node_property_existence_constraint
  number_literal
  optional_opt
+ order
+ order_opt
  parameter
  parenthesized_expression
  partial_comparison_expression
@@ -123,7 +127,6 @@ Nonterminals
  property_lookup_list_opt
  query
  query_options
- query_options_opt
  range_literal
  range_literal_opt
  range_opt
@@ -141,6 +144,14 @@ Nonterminals
  relationship_types
  relationship_types_opt
  relationships_pattern
+ remove
+ remove_item
+ remove_item_commalist
+ return
+ return_body
+ return_item
+ return_item_commalist
+ return_items
  right_arrow_head_opt
  set
  set_item
@@ -148,6 +159,10 @@ Nonterminals
  shortest_path_pattern
  signed_integer_literal
  single_query
+ skip
+ skip_opt
+ sort_item
+ sort_item_commalist
  start
  start_point
  start_point_commalist
@@ -170,6 +185,7 @@ Nonterminals
  version_number_opt
  where
  where_opt
+ with
  with_headers_opt
  .
 
@@ -181,10 +197,10 @@ Terminals
  AND
  ANY
  AS
-% ASC
-% ASCENDING
+ ASC
+ ASCENDING
  ASSERT
-% BY
+ BY
  CASE
  COMMIT
  CONSTRAINT
@@ -194,8 +210,8 @@ Terminals
  CSV
  CYPHER
  DELETE
-% DESC
-% DESCENDING
+ DESC
+ DESCENDING
  DETACH
  DISTINCT
  DROP
@@ -219,7 +235,7 @@ Terminals
  JOIN
 % L_0X
 % L_SKIP
-% LIMIT
+ LIMIT
  LOAD
  MATCH
  MERGE
@@ -232,20 +248,21 @@ Terminals
  ON
  OPTIONAL
  OR
-% ORDER
+ ORDER
  PERIODIC
  PROFILE
  REDUCE
  REL
  RELATIONSHIP
-% REMOVE
-% RETURN
+ REMOVE
+ RETURN
  SCAN
  SET
  SHORTESTPATH
  SIGNED_DECIMAL_INTEGER
  SIGNED_FLOAT
  SINGLE
+ SKIP
  START
  STARTS
  STRING_LITERAL
@@ -427,12 +444,12 @@ clause -> match                                                                 
 clause -> unwind                                                                                : {clause, '$1'}.
 clause -> merge                                                                                 : {clause, '$1'}.
 clause -> create                                                                                : {clause, '$1'}.
-% clause -> set                                                                                   : {clause, '$1'}.
+clause -> set                                                                                   : {clause, '$1'}.
 clause -> delete                                                                                : {clause, '$1'}.
-% clause -> remove                                                                                : {clause, '$1'}.
+clause -> remove                                                                                : {clause, '$1'}.
 clause -> for_each                                                                              : {clause, '$1'}.
-% clause -> with                                                                                  : {clause, '$1'}.
-% clause -> return                                                                                : {clause, '$1'}.
+clause -> with                                                                                  : {clause, '$1'}.
+clause -> return                                                                                : {clause, '$1'}.
 
 command -> create_index                                                                         : {command, '$1'}.
 command -> drop_index                                                                           : {command, '$1'}.
@@ -581,7 +598,78 @@ expression_commalist -> expression                                              
 expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
 %% ---------------------------------------------------------------------------------------------------------------------
 
+remove -> REMOVE remove_item_commalist                                                          : {remove, '$2'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+remove_item_commalist -> remove_item                                                            : ['$1'].
+remove_item_commalist -> remove_item ',' remove_item_commalist                                  : ['$1' | '$3'].
+%% ---------------------------------------------------------------------------------------------------------------------
+
+remove_item -> variable node_labels                                                             : {removeItem, '$1', {nodeLabels, '$2'}}.
+remove_item -> property_expression                                                              : {removeItem, '$1'}.
+
 for_each -> FOREACH '(' variable IN expression '|' clause_list_opt ')'                          : {forEach, '$3', '$5', '$7'}.
+
+with -> WITH distinct_opt return_body where_opt                                                 : {with, '$2', '$3', '$4'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+distinct_opt -> '$empty'                                                                        : [].
+distinct_opt -> DISTINCT                                                                        : "distinct".
+%% =====================================================================================================================
+
+return -> RETURN distinct_opt return_body                                                       : {return, '$2', '$3'}.
+
+return_body -> return_items order_opt skip_opt limit_opt                                        : {returnBody, '$1', '$2', '$3', '$4'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+order_opt -> '$empty'                                                                           : {}.
+order_opt -> order                                                                              : '$1'.
+
+skip_opt -> '$empty'                                                                            : {}.
+skip_opt -> skip                                                                                : '$1'.
+
+limit_opt -> '$empty'                                                                           : {}.
+limit_opt -> limit                                                                              : '$1'.
+%% =====================================================================================================================
+
+return_items -> '*'                                                                             : {returnItems, "*", []}.
+return_items -> '*' ',' return_item_commalist                                                   : {returnItems, "*", '$3'}.
+return_items -> return_item_commalist                                                           : {returnItems, [], '$1'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+return_item_commalist -> return_item                                                            : ['$1'].
+return_item_commalist -> return_item ',' return_item_commalist                                  : ['$1' | '$3'].
+%% ---------------------------------------------------------------------------------------------------------------------
+
+return_item -> expression AS variable                                                           : {returnItem, '$1', '$3'}.
+return_item -> expression                                                                       : {returnItem, '$1'}.
+
+order -> ORDER BY sort_item_commalist                                                           : {order, '$3'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+sort_item_commalist -> sort_item                                                                : ['$1'].
+sort_item_commalist -> sort_item ',' sort_item_commalist                                        : ['$1' | '$3'].
+%% ---------------------------------------------------------------------------------------------------------------------
+
+skip -> SKIP expression                                                                         : {skip, '$2'}.
+
+limit -> LIMIT expression                                                                       : {limit, '$2'}.
+
+sort_item -> expression DESCENDING                                                              : {sortItem, '$1', "descending"}.
+sort_item -> expression DESC                                                                    : {sortItem, '$1', "desc"}.
+sort_item -> expression ASCENDING                                                               : {sortItem, '$1', "ascending"}.
+sort_item -> expression ASC                                                                     : {sortItem, '$1', "asc"}.
+sort_item -> expression                                                                         : {sortItem, '$1'}.
 
 hint -> USING INDEX variable node_label '(' property_key_name ')'                               : {hint, '$3', '$4', '$6'}.
 hint -> USING JOIN ON variable_commalist                                                        : {hint, '$4'}.
@@ -656,8 +744,8 @@ pattern_part -> anonymous_pattern_part                                          
 anonymous_pattern_part -> shortest_path_pattern                                                 : {anonymousPatternPart, '$1'}.
 anonymous_pattern_part -> pattern_element                                                       : {anonymousPatternPart, '$1'}.
 
-shortest_path_pattern -> SHORTESTPATH '(' pattern_element ')'                                   : {shortestPathPattern, '$1', '$3'}.
-shortest_path_pattern -> ALLSHORTESTPATHS '(' pattern_element ')'                               : {shortestPathPattern, '$1', '$3'}.
+shortest_path_pattern -> SHORTESTPATH '(' pattern_element ')'                                   : {shortestPathPattern, "shortestpath", '$3'}.
+shortest_path_pattern -> ALLSHORTESTPATHS '(' pattern_element ')'                               : {shortestPathPattern, "allshortestpaths", '$3'}.
 
 pattern_element -> node_pattern pattern_element_chain_opt                                       : {patternElement, '$1', '$2'}.
 pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2'}.
@@ -860,9 +948,6 @@ function_invocation -> function_name '(' distinct_opt expression_commalist_opt '
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-distinct_opt -> '$empty'                                                                        : [].
-distinct_opt -> DISTINCT                                                                        : "distinct".
-
 expression_commalist_opt -> '$empty'                                                            : [].
 expression_commalist_opt -> expression_commalist                                                : '$1'.
 %% =====================================================================================================================

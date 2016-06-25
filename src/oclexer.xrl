@@ -97,6 +97,7 @@ Erlang code.
     {"^(?i)(SET)$",              'SET'},
     {"^(?i)(SHORTESTPATH)$",     'SHORTESTPATH'},
     {"^(?i)(SINGLE)$",           'SINGLE'},
+    {"^(?i)(SKIP)$",             'SKIP'},
     {"^(?i)(START)$",            'START'},
     {"^(?i)(STARTS)$",           'STARTS'},
     {"^(?i)(THEN)$",             'THEN'},
