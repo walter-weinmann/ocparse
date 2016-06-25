@@ -87,6 +87,10 @@ Nonterminals
  lookup
  map_literal
  match
+ merge
+ merge_action
+ merge_action_list
+ merge_action_list_opt
  node_label
  node_labels
  node_labels_opt
@@ -138,6 +142,9 @@ Nonterminals
  relationship_types_opt
  relationships_pattern
  right_arrow_head_opt
+ set
+ set_item
+ set_item_commalist
  shortest_path_pattern
  signed_integer_literal
  single_query
@@ -215,7 +222,7 @@ Terminals
 % LIMIT
  LOAD
  MATCH
-% MERGE
+ MERGE
  NAME
  NODE
  NONE
@@ -234,7 +241,7 @@ Terminals
 % REMOVE
 % RETURN
  SCAN
-% SET
+ SET
  SHORTESTPATH
  SIGNED_DECIMAL_INTEGER
  SIGNED_FLOAT
@@ -264,6 +271,7 @@ Terminals
  '<>'
  '-'
  '+'
+ '+='
  '*'
  '/'
  '%'
@@ -417,9 +425,14 @@ clause -> load_csv                                                              
 clause -> start                                                                                 : {clause, '$1'}.
 clause -> match                                                                                 : {clause, '$1'}.
 clause -> unwind                                                                                : {clause, '$1'}.
+clause -> merge                                                                                 : {clause, '$1'}.
 clause -> create                                                                                : {clause, '$1'}.
+% clause -> set                                                                                   : {clause, '$1'}.
 clause -> delete                                                                                : {clause, '$1'}.
+% clause -> remove                                                                                : {clause, '$1'}.
 clause -> for_each                                                                              : {clause, '$1'}.
+% clause -> with                                                                                  : {clause, '$1'}.
+% clause -> return                                                                                : {clause, '$1'}.
 
 command -> create_index                                                                         : {command, '$1'}.
 command -> drop_index                                                                           : {command, '$1'}.
@@ -518,6 +531,21 @@ where_opt -> where                                                              
 
 unwind -> UNWIND expression AS variable                                                         : {unwind, '$2', '$4'}.
 
+merge -> MERGE pattern_part merge_action_list_opt                                               : {merge, '$2', '$3'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+merge_action_list_opt -> '$empty'                                                               : {}.
+merge_action_list_opt -> merge_action_list                                                      : '$1'.
+
+merge_action_list -> merge_action_list merge_action                                             : '$1' ++ ['$2'].
+merge_action_list -> merge_action                                                               : ['$1'].
+%% ---------------------------------------------------------------------------------------------------------------------
+
+merge_action -> ON MATCH set                                                                    : {mergeAction, "match", '$3'}.
+merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
+
 create -> CREATE unique_opt pattern                                                             : {create, '$2', '$3'}.
 
 %% =====================================================================================================================
@@ -526,6 +554,20 @@ create -> CREATE unique_opt pattern                                             
 unique_opt -> '$empty'                                                                          : [].
 unique_opt -> UNIQUE                                                                            : "unique".
 %% ---------------------------------------------------------------------------------------------------------------------
+
+set -> SET set_item_commalist                                                                   : {set, '$2'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+set_item_commalist -> set_item                                                                  : ['$1'].
+set_item_commalist -> set_item ',' set_item_commalist                                           : ['$1' | '$3'].
+%% ---------------------------------------------------------------------------------------------------------------------
+
+set_item -> property_expression '=' expression                                                  : {setItem, '$1', "=", '$3'}.
+set_item -> variable '=' expression                                                             : {setItem, '$1', "=", '$3'}.
+set_item -> variable '+=' expression                                                            : {setItem, '$1', "+=", '$3'}.
+set_item -> variable node_labels                                                                : {setItem, '$1', {nodeLabels, '$2'}}.
 
 delete -> detach_opt DELETE expression_commalist                                                : {delete, '$1', '$3'}.
 
