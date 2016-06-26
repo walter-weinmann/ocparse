@@ -316,9 +316,7 @@
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { 4711 } ) <--  --> ( ) ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 { 4711 } ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { name_1 } ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { name_1 } ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique".

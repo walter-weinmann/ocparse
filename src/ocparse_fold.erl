@@ -137,7 +137,7 @@ fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
 
 fold(FType, Fun, Ctx, Lvl, {atom, {Type, _} = Value} = ST)
     when Type == caseExpression; Type == functionInvocation; Type == listComprehension;
-    Type == mapLiteral; Type == numberLiteral; Type == parameter; Type == parenthesizedExpression;
+    Type == numberLiteral; Type == parenthesizedExpression; Type == properties;
     Type == stringLiteral; Type == terminal; Type == variable ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
@@ -3367,7 +3367,7 @@ fold(FType, Fun, Ctx, Lvl, {relationshipPattern, LeftArrowHead, Dash_1, Relation
 % relationshipPatternSyntax
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, Dash_1, Variable, RelType, Dash_2} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, {}, Dash_1, Variable, RelType, Dash_2, {}} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -3393,10 +3393,10 @@ fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, Dash_1, Variable, RelType
                   top_down -> NewCtx7;
                   bottom_up -> Fun(ST, NewCtx7)
               end,
-    RT = {"()" ++ Dash_1New ++ VariableNew ++ RelTypeNew ++ Dash_2New ++ "()", NewCtx8},
+    RT = {"()" ++ Dash_1New ++ "[" ++ VariableNew ++ RelTypeNew ++ "]" ++ Dash_2New ++ "()", NewCtx8},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, {leftArrowHead, _} = LeftArrowHead, Dash_1, Variable, RelType, Dash_2} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, {leftArrowHead, _} = LeftArrowHead, Dash_1, Variable, RelType, Dash_2, {}} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -3427,10 +3427,10 @@ fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, {leftArrowHead, _} = Left
                    top_down -> NewCtx9;
                    bottom_up -> Fun(ST, NewCtx9)
                end,
-    RT = {"()" ++ LeftArrowHeadNew ++ Dash_1New ++ VariableNew ++ RelTypeNew ++ Dash_2New ++ "()", NewCtx10},
+    RT = {"()" ++ LeftArrowHeadNew ++ Dash_1New ++ "[" ++ VariableNew ++ RelTypeNew ++ "]" ++ Dash_2New ++ "()", NewCtx10},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, Dash_1, Variable, RelType, Dash_2, {rightArrowHead, _} = RightArrowHead} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, {}, Dash_1, Variable, RelType, Dash_2, {rightArrowHead, _} = RightArrowHead} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -3461,7 +3461,46 @@ fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, Dash_1, Variable, RelType
                    top_down -> NewCtx9;
                    bottom_up -> Fun(ST, NewCtx9)
                end,
-    RT = {"()" ++ Dash_1New ++ VariableNew ++ RelTypeNew ++ Dash_2New ++ RightArrowHeadNew ++ "()", NewCtx10},
+    RT = {"()" ++ Dash_1New ++ "[" ++ VariableNew ++ RelTypeNew ++ "]" ++ Dash_2New ++ RightArrowHeadNew ++ "()", NewCtx10},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {relationshipPatternSyntax, {leftArrowHead, _} = LeftArrowHead, Dash_1, Variable, RelType, Dash_2, {rightArrowHead, _} = RightArrowHead} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {LeftArrowHeadNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, LeftArrowHead),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Dash_1New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Dash_1),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    {VariableNew, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Variable),
+    NewCtx6 = case FType of
+                  top_down -> NewCtx5;
+                  bottom_up -> Fun(ST, NewCtx5)
+              end,
+    {RelTypeNew, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, RelType),
+    NewCtx8 = case FType of
+                  top_down -> NewCtx7;
+                  bottom_up -> Fun(ST, NewCtx7)
+              end,
+    {Dash_2New, NewCtx9} = fold(FType, Fun, NewCtx8, Lvl + 1, Dash_2),
+    NewCtx10 = case FType of
+                   top_down -> NewCtx9;
+                   bottom_up -> Fun(ST, NewCtx9)
+               end,
+    {RightArrowHeadNew, NewCtx11} = fold(FType, Fun, NewCtx10, Lvl + 1, RightArrowHead),
+    NewCtx12 = case FType of
+                   top_down -> NewCtx11;
+                   bottom_up -> Fun(ST, NewCtx11)
+               end,
+    RT = {"()" ++ LeftArrowHeadNew ++ Dash_1New ++ "[" ++ VariableNew ++ RelTypeNew ++ "]" ++ Dash_2New ++ RightArrowHeadNew ++ "()", NewCtx12},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -3485,7 +3524,7 @@ fold(FType, Fun, Ctx, Lvl, {relationshipPropertyExistenceConstraint, Relationshi
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"constraint on " ++ RelationshipPropertySyntaxNew ++ ") assert exists (" ++ PropertyExpressionNew ++ ")", NewCtx4},
+    RT = {"constraint on " ++ RelationshipPropertySyntaxNew ++ " assert exists (" ++ PropertyExpressionNew ++ ")", NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 

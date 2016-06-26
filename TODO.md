@@ -6,7 +6,11 @@ ToDo List
 
 ## Open Issues ##
 
-#### 1. Refinement SymbolicName ####
+#### 1. Dash -- ####
+    
+#### 2. Minimising code of ocparse_fold.erl ####
+    
+#### 3. Refinement SymbolicName ####
 
     SymbolicName = UnescapedSymbolicName
                  | EscapedSymbolicName
@@ -34,10 +38,6 @@ ToDo List
     
     EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
     
-#### 2. Unary Operators ####
-    
-#### 3. Reduce-Reduce & Reduce-Shift Conflicts ####
-    
-#### 4. Dash -- ####
+#### 4. Unary Operators ####
     
 #### 5. Unicode support for atoms

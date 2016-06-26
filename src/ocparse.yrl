@@ -95,7 +95,6 @@ Nonterminals
  merge_action_list_opt
  node_label
  node_labels
- node_labels_opt
  node_lookup
  node_pattern
  node_property_existence_constraint
@@ -116,7 +115,6 @@ Nonterminals
  pattern_part_commalist
  periodic_commit_hint
  properties
- properties_opt
  property_expression
  property_key_name
  property_key_name_expression
@@ -180,7 +178,6 @@ Nonterminals
  unwind
  variable
  variable_commalist
- variable_opt
  version_number
  version_number_opt
  where
@@ -489,10 +486,8 @@ node_property_existence_constraint -> CONSTRAINT ON '(' variable node_label ')' 
 relationship_property_existence_constraint -> CONSTRAINT ON relationship_pattern_syntax ASSERT EXISTS '(' property_expression ')'
                                                                                                 : {relationshipPropertyExistenceConstraint, '$3', '$7'}.
 
-relationship_pattern_syntax -> '(' ')' left_arrow_head_opt dash '[' variable rel_type ']' dash '(' ')'
-                                                                                                : {relationshipPatternSyntax, '$3', '$4', '$6', '$7', '$9'}.
-relationship_pattern_syntax -> '(' ')' dash '[' variable rel_type ']' dash left_arrow_head_opt '(' ')'
-                                                                                                : {relationshipPatternSyntax, '$3', '$5', '$6', '$8', '$9'}.
+relationship_pattern_syntax -> '(' ')' left_arrow_head_opt dash '[' variable rel_type ']' dash right_arrow_head_opt '(' ')'
+                                                                                                : {relationshipPatternSyntax, '$3', '$4', '$6', '$7', '$9', '$10'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -757,20 +752,14 @@ pattern_element_chain_opt -> '$empty'                                           
 pattern_element_chain_opt -> pattern_element_chain                                              : '$1'.
 %% =====================================================================================================================
 
-node_pattern -> '(' variable_opt node_labels_opt properties_opt ')'                             : {nodePattern, '$2', '$3', '$4'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-variable_opt -> '$empty'                                                                        : {}.
-variable_opt -> variable                                                                        : '$1'.
-
-node_labels_opt -> '$empty'                                                                     : [].
-node_labels_opt -> node_labels                                                                  : {nodeLabels, '$1'}.
-
-properties_opt -> '$empty'                                                                      : {}.
-properties_opt -> properties                                                                    : '$1'.
-%% =====================================================================================================================
+node_pattern -> '(' variable node_labels properties ')'                                         : {nodePattern, '$2', {nodeLabels, '$3'}, '$4'}.
+node_pattern -> '(' variable node_labels ')'                                                    : {nodePattern, '$2', {nodeLabels, '$3'}, {}}.
+node_pattern -> '(' variable properties ')'                                                     : {nodePattern, '$2', [], '$3'}.
+node_pattern -> '(' variable ')'                                                                : {nodePattern, '$2', [], {}}.
+node_pattern -> '(' node_labels properties ')'                                                  : {nodePattern, {}, {nodeLabels, '$2'}, '$3'}.
+node_pattern -> '(' node_labels ')'                                                             : {nodePattern, {}, {nodeLabels, '$2'}, {}}.
+node_pattern -> '(' properties ')'                                                              : {nodePattern, {}, [], '$2'}.
+node_pattern -> '('  ')'                                                                        : {nodePattern, {}, [], {}}.
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
@@ -784,8 +773,14 @@ relationship_detail_opt -> '$empty'                                             
 relationship_detail_opt -> relationship_detail                                                  : '$1'.
 %% =====================================================================================================================
 
-relationship_detail -> '[' variable_opt char_question_mark_opt relationship_types_opt range_opt properties_opt ']'     
+relationship_detail -> '[' variable char_question_mark_opt relationship_types_opt range_opt properties ']'     
                                                                                                 : {relationshipDetail, '$2', '$3', '$4', '$5', '$6'}.
+
+relationship_detail -> '[' variable char_question_mark_opt relationship_types_opt range_opt ']'     
+                                                                                                : {relationshipDetail, '$2', '$3', '$4', '$5', {}}.
+relationship_detail -> '[' char_question_mark_opt relationship_types_opt range_opt properties ']'     
+                                                                                                : {relationshipDetail, {}, '$2', '$3', '$4', '$5'}.
+relationship_detail -> '[' char_question_mark_opt relationship_types_opt range_opt ']'          : {relationshipDetail, {}, '$2', '$3', '$4', {}}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -886,13 +881,22 @@ expression_2_addon -> property_lookup                                           
 
 atom -> number_literal                                                                          : {atom, '$1'}.
 atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
-atom -> parameter                                                                               : {atom, '$1'}.
+
+%% =====================================================================================================================
+%% Helper definitions: reduce / recuce conflict with 
+%%        atom -> parameter
+%%        atom -> map_literal
+%% ---------------------------------------------------------------------------------------------------------------------
+atom -> properties                                                                              : {atom, '$1'}.
+%% =====================================================================================================================
+
+%% wwe atom -> parameter                                                                               : {atom, '$1'}.
 atom -> TRUE                                                                                    : {atom, {terminal, 'true'}}.
 atom -> FALSE                                                                                   : {atom, {terminal, 'false'}}.
 atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
 atom -> case_expression                                                                         : {atom, '$1'}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
-atom -> map_literal                                                                             : {atom, '$1'}.
+%% wwe atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
 atom -> FILTER '(' filter_expression ')'                                                        : {atom, {'filter', '$3'}}.
@@ -907,7 +911,7 @@ atom -> relationships_pattern                                                   
 atom -> shortest_path_pattern                                                                   : {atom, '$1'}.
 atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> function_invocation                                                                     : {atom, '$1'}.
-%% wwe atom -> variable                                                                                : {atom, '$1'}.
+atom -> variable                                                                                : {atom, '$1'}.
 
 reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'                  : {reduce, '$3', '$5', '$7', '$9'}.
 
