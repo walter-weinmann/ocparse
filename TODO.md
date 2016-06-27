@@ -8,9 +8,7 @@ ToDo List
 
 #### 1. Dash -- ####
     
-#### 2. Minimising code of ocparse_fold.erl ####
-    
-#### 3. Refinement SymbolicName ####
+#### 2. Refinement SymbolicName ####
 
     SymbolicName = UnescapedSymbolicName
                  | EscapedSymbolicName
@@ -38,6 +36,22 @@ ToDo List
     
     EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
     
-#### 4. Unary Operators ####
+#### 3. Test cases: complex versions ####
     
-#### 5. Unicode support for atoms
+#### 4. Test cases: based on NEO4j documentation ####
+    
+#### 5. Test cases: based on book "Graph Databases" ####
+    
+#### 6. Test cases: based on book "NEO4j in Action" ####
+    
+#### 7. Test cases: based on book "Learning Cypher" ####
+    
+#### 8. Unary Operators ####
+
+#### 9. Minimising code of ocparse_fold.erl ####
+
+#### 10. Finishing ocparse wiki ####
+    
+#### 11. Unicode support for atoms
+    
+

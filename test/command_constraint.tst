@@ -60,24 +60,26 @@
 %% Relationship Property Existence Constraint
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"CREATE CONSTRAINT ON () -- [ variable_1 : relation_1 ] -- () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1? .Property_key_1! )".
-"CREATE CONSTRAINT ON () <-- [ variable_1 : relation_1 ] -- () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1 )".
-"CREATE CONSTRAINT ON () -- [ variable_1 : relation_1 ] --> () ASSERT exists ( 'Dies\" ist \"ein String' )".
-"CREATE CONSTRAINT ON () -- [ variable_1 : relation_1 ] -- () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1 )".
-"CREATE CONSTRAINT ON () -- [ variable_1 : relation_1 ] -- () ASSERT exists ( 4711)".
-"CREATE CONSTRAINT ON () <-- [ variable_1 : relation_1 ] -- () ASSERT exists ( movie.title)".
-"CREATE CONSTRAINT ON () -- [ variable_1 : relation_1 ] --> () ASSERT exists ( n . name);".
-"create constraint on () -- [ variable_1 : relation_1 ] -- () assert EXISTS (n.role);".
-"CREATE CONSTRAINT ON () <-- [ variable_1 : relation_1 ] -- () ASSERT exists(book.isbn)".
-"CREATE CONSTRAINT ON () -- [ variable_1 : relation_1 ] --> () ASSERT exists(like.day)".
+"CREATE CONSTRAINT ON () <- [ variable_1 : relation_1 ] -> () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1? .Property_key_1! )".
+"CREATE CONSTRAINT ON () - [ variable_1 : relation_1 ] - () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1? .Property_key_1! )".
+"CREATE CONSTRAINT ON () <- [ variable_1 : relation_1 ] - () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1 )".
+"CREATE CONSTRAINT ON () - [ variable_1 : relation_1 ] -> () ASSERT exists ( 'Dies\" ist \"ein String' )".
+"CREATE CONSTRAINT ON () - [ variable_1 : relation_1 ] - () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1 )".
+"CREATE CONSTRAINT ON () - [ variable_1 : relation_1 ] - () ASSERT exists ( 4711)".
+"CREATE CONSTRAINT ON () <- [ variable_1 : relation_1 ] - () ASSERT exists ( movie.title)".
+"CREATE CONSTRAINT ON () - [ variable_1 : relation_1 ] -> () ASSERT exists ( n . name);".
+"create constraint on () - [ variable_1 : relation_1 ] - () assert EXISTS (n.role);".
+"CREATE CONSTRAINT ON () <- [ variable_1 : relation_1 ] - () ASSERT exists(book.isbn)".
+"CREATE CONSTRAINT ON () - [ variable_1 : relation_1 ] -> () ASSERT exists(like.day)".
 
-"DROP CONSTRAINT ON () -- [ variable_1 : relation_1 ] -- () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1? .Property_key_1! )".
-"DROP CONSTRAINT ON () <-- [ variable_1 : relation_1 ] -- () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1 )".
-"DROP CONSTRAINT ON () -- [ variable_1 : relation_1 ] --> () ASSERT exists ( 'Dies\" ist \"ein String' )".
-"DROP CONSTRAINT ON () -- [ variable_1 : relation_1 ] -- () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1 )".
-"DROP CONSTRAINT ON () -- [ variable_1 : relation_1 ] -- () ASSERT exists ( 4711)".
-"DROP CONSTRAINT ON () <-- [ variable_1 : relation_1 ] -- () ASSERT exists ( movie.title)".
-"DROP CONSTRAINT ON () -- [ variable_1 : relation_1 ] --> () ASSERT exists ( n . name);".
-"drop constraint on () -- [ variable_1 : relation_1 ] -- () assert EXISTS (n.role);".
-"DROP CONSTRAINT ON () <-- [ variable_1 : relation_1 ] -- () ASSERT exists(book.isbn)".
-"DROP CONSTRAINT ON () -- [ variable_1 : relation_1 ] --> () ASSERT exists(like.day)".
+"DROP CONSTRAINT ON () <- [ variable_1 : relation_1 ] -> () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1? .Property_key_1! )".
+"DROP CONSTRAINT ON () - [ variable_1 : relation_1 ] - () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1? .Property_key_1! )".
+"DROP CONSTRAINT ON () <- [ variable_1 : relation_1 ] - () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1 )".
+"DROP CONSTRAINT ON () - [ variable_1 : relation_1 ] -> () ASSERT exists ( 'Dies\" ist \"ein String' )".
+"DROP CONSTRAINT ON () - [ variable_1 : relation_1 ] - () ASSERT exists ( 'Dies\" ist \"ein String' .Property_key_1 )".
+"DROP CONSTRAINT ON () - [ variable_1 : relation_1 ] - () ASSERT exists ( 4711)".
+"DROP CONSTRAINT ON () <- [ variable_1 : relation_1 ] - () ASSERT exists ( movie.title)".
+"DROP CONSTRAINT ON () - [ variable_1 : relation_1 ] -> () ASSERT exists ( n . name);".
+"drop constraint on () - [ variable_1 : relation_1 ] - () assert EXISTS (n.role);".
+"DROP CONSTRAINT ON () <- [ variable_1 : relation_1 ] - () ASSERT exists(book.isbn)".
+"DROP CONSTRAINT ON () - [ variable_1 : relation_1 ] -> () ASSERT exists(like.day)".
