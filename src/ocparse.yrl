@@ -213,6 +213,7 @@ Terminals
  ELSE
  END
  ENDS
+ ESCAPED_SYMBOLIC_NAME
  EXISTS
  EXPLAIN
  EXPONENT_DECIMAL_REAL
@@ -235,7 +236,6 @@ Terminals
  LOAD
  MATCH
  MERGE
- NAME
  NODE
  NONE
  NOT
@@ -265,6 +265,7 @@ Terminals
  STRING_LITERAL
  THEN
  TRUE
+ UNESCAPED_SYMBOLIC_NAME
  UNION
  UNIQUE
  UNSIGNED_DECIMAL_INTEGER
@@ -343,6 +344,9 @@ query_options -> any_cypher_option_list                                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+cypher -> variable                                                                              : '$1'. 
+cypher -> variable ';'                                                                          : '$1'. 
+
 char_semicolon_opt -> '$empty'                                                                  : {}.
 char_semicolon_opt -> ';'                                                                       : ";".
 
@@ -1038,7 +1042,8 @@ double_literal -> regular_decimal_real                                          
 regular_decimal_real -> SIGNED_FLOAT                                                            : {doubleLiteral, {regularDecimalReal, unwrap('$1')}}.
 regular_decimal_real -> UNSIGNED_FLOAT                                                          : {doubleLiteral, {regularDecimalReal, unwrap('$1')}}.
 
-symbolic_name -> NAME                                                                           : {symbolicName, unwrap('$1')}.
+symbolic_name -> ESCAPED_SYMBOLIC_NAME                                                          : {symbolicName, unwrap('$1')}.
+symbolic_name -> UNESCAPED_SYMBOLIC_NAME                                                        : {symbolicName, unwrap('$1')}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Expect 2.
@@ -1057,10 +1062,14 @@ Erlang code.
 -export([init/1]).
 
 % parser and compiler interface
--export([pt_to_string/1, foldtd/3, foldbu/3
-         , parsetree/1
-         , parsetree_with_tokens/1
-         , is_reserved/1]).
+-export([foldbu/3,
+         foldtd/3, 
+         is_reserved/1,
+         parsetree/1,
+         parsetree_with_tokens/1,
+         pt_to_string_bu/1,
+         pt_to_string_td/1
+        ]).
 
 %-define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
@@ -1141,8 +1150,11 @@ is_reserved(Word) when is_list(Word) ->
 %%                                  COMPILER
 %%-----------------------------------------------------------------------------
 
--spec pt_to_string(tuple()| list()) -> {error, term()} | binary().
-pt_to_string(PTree) -> foldtd(fun(_,_) -> null_fun end, null_fun, PTree).
+-spec pt_to_string_bu(tuple()| list()) -> {error, term()} | binary().
+pt_to_string_bu(PTree) -> foldbu(fun(_,_) -> null_fun end, null_fun, PTree).
+
+-spec pt_to_string_td(tuple()| list()) -> {error, term()} | binary().
+pt_to_string_td(PTree) -> foldtd(fun(_,_) -> null_fun end, null_fun, PTree).
 
 -spec foldtd(fun(), term(), tuple() | list()) -> {error, term()} | binary().
 foldtd(Fun, Ctx, PTree) when is_function(Fun, 2) ->
