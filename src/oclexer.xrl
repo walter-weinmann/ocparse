@@ -18,8 +18,9 @@ Rules.
 ([\^\.\|\?\*\+\(\)\[\]\{\}\-])                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([=<>/%:,;!0])                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 
-%% names
-[A-Za-z][A-Za-z0-9_@#\$]*                                 : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
+%% symbolic names
+(`([^`]*)*`)                                              : {token, {'ESCAPED_SYMBOLIC_NAME', TokenLine, TokenChars}}.
+([A-Za-z_@#\$][A-Za-z0-9_@#\$]*)                          : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
 
 %% numbers
 ([1-9][0-9]*)                                             : {token, {'UNSIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
@@ -131,13 +132,11 @@ Erlang code.
 reserved_keywords() -> [T || {_, T} <- ?TokenPatters].
 
 match_any(TokenChars, TokenLen, _TokenLine, []) ->
-    {token, {'NAME', TokenLen, TokenChars}};
+    {token, {'UNESCAPED_SYMBOLIC_NAME', TokenLen, TokenChars}};
 match_any(TokenChars, TokenLen, TokenLine, [{P,T}|TPs]) ->
     case re:run(TokenChars, P, [{capture, first, list}]) of
-        {match,[_]} ->
-            if (T =:= 'FUNS') orelse
-               (T =:= 'UFUN') -> {token, {T, TokenLine, list_to_atom(TokenChars)}};
-            true              -> {token, {T, TokenLine}}
-        end;
-        nomatch     -> match_any(TokenChars, TokenLen, TokenLine, TPs)
+        {match,[_]} -> 
+            {token, {T, TokenLine}};
+        nomatch -> 
+            match_any(TokenChars, TokenLen, TokenLine, TPs)
     end.

@@ -6,52 +6,32 @@ ToDo List
 
 ## Open Issues ##
 
-#### 1. Dash -- ####
+#### 1. Whitespace: SP vs. WS ####
     
-#### 2. Refinement SymbolicName ####
+#### 2. Unary Operators ####
 
-    SymbolicName = UnescapedSymbolicName
-                 | EscapedSymbolicName
-                 ;
-    
-    UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
-    
-    IdentifierStart = ID_Start
-                    | Sc
-                    | '_'
-                    | '‿'
-                    | '⁀'
-                    | '⁔'
-                    | '︳'
-                    | '︴'
-                    | '﹍'
-                    | '﹎'
-                    | '﹏'
-                    | '＿'
-                    ;
-    
-    IdentifierPart = ID_Continue
-                   | Sc
-                   ;
-    
-    EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
-    
-#### 3. Test cases: complex versions ####
-    
-#### 4. Test cases: based on NEO4j documentation ####
-    
-#### 5. Test cases: based on book "Graph Databases" ####
-    
-#### 6. Test cases: based on book "NEO4j in Action" ####
-    
-#### 7. Test cases: based on book "Learning Cypher" ####
-    
-#### 8. Unary Operators ####
+#### 3. Quality check with openCypher ####
 
-#### 9. Minimising code of ocparse_fold.erl ####
+- {} vs. ()
+- {}-
 
-#### 10. Finishing ocparse wiki ####
+#### 4. Minimising code of ocparse_fold.erl ####
+
+#### 5. Finishing ocparse wiki ####
     
-#### 11. Unicode support for atoms
+#### 6. Test cases: complex versions ####
+    
+#### 7. Test cases: based on NEO4j documentation ####
+    
+#### 8. Test cases: based on book "Graph Databases" ####
+    
+#### 9. Test cases: based on book "NEO4j in Action" ####
+    
+#### 10. Test cases: based on book "Learning Cypher" ####
+    
+#### 11. Restricted Unicode support ####
+
+- atoms (dash, left_arrow_head, right_arrow_head)
+- symbolic names
     
 
