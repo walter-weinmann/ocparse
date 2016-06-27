@@ -3,6 +3,15 @@ Definitions.
 
 Rules.
 
+%% dash
+(\-)                                                      : {token, {'DASH', TokenLine, TokenChars}}.
+
+%% left arrow head
+(<)                                                       : {token, {'LEFT_ARROW_HEAD', TokenLine, TokenChars}}.
+
+%% right arrow head
+(>)                                                       : {token, {'RIGHT_ARROW_HEAD', TokenLine, TokenChars}}.
+
 %% punctuation
 (\.\.|\-\-|\+=)                                           : {token, {list_to_atom(TokenChars), TokenLine}}.
 (=~|<>|!=|<=|>=)                                          : {token, {list_to_atom(TokenChars), TokenLine}}.

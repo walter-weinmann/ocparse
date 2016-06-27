@@ -36,7 +36,6 @@ Nonterminals
  create_unique_constraint
  cypher
  cypher_option
- dash
  delete
  detach_opt
  distinct_opt
@@ -79,7 +78,6 @@ Nonterminals
  index
  index_query
  label_name
- left_arrow_head_opt
  limit
  limit_opt
  list_comprehension
@@ -150,7 +148,6 @@ Nonterminals
  return_item
  return_item_commalist
  return_items
- right_arrow_head_opt
  set
  set_item
  set_item_commalist
@@ -206,6 +203,7 @@ Terminals
  CREATE
  CSV
  CYPHER
+ DASH
  DELETE
  DESC
  DESCENDING
@@ -232,6 +230,7 @@ Terminals
  JOIN
 % L_0X
 % L_SKIP
+ LEFT_ARROW_HEAD
  LIMIT
  LOAD
  MATCH
@@ -253,6 +252,7 @@ Terminals
  RELATIONSHIP
  REMOVE
  RETURN
+ RIGHT_ARROW_HEAD
  SCAN
  SET
  SHORTESTPATH
@@ -305,16 +305,6 @@ Terminals
  '!'
  '?'
  '0'
- %% wwe '‑'                             %% dash
- %% wwe '‒'                             %% dash
- %% wwe '–'                             %% dash
- %% wwe '—'                            %% dash
- %% wwe '―'                            %% dash
- %% wwe '−'                            %% dash
- %% wwe '﹘'                            %% dash
- %% wwe '﹣'                            %% dash
- %% wwe '－'                            %% dash
- '--'                                   %% dash
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -353,9 +343,6 @@ query_options -> any_cypher_option_list                                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-cypher -> pattern                                                                               : '$1'.
-cypher -> pattern ';'                                                                           : '$1'.
-
 char_semicolon_opt -> '$empty'                                                                  : {}.
 char_semicolon_opt -> ';'                                                                       : ";".
 
@@ -426,7 +413,7 @@ clause_list_opt -> '$empty'                                                     
 clause_list_opt -> clause_list                                                                  : '$1'.
 %% =====================================================================================================================
 
-union -> UNION all_opt clause                                                                   : {union, '$2', '$3'}.
+union -> UNION all_opt single_query                                                             : {union, '$2', '$3'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -486,30 +473,13 @@ node_property_existence_constraint -> CONSTRAINT ON '(' variable node_label ')' 
 relationship_property_existence_constraint -> CONSTRAINT ON relationship_pattern_syntax ASSERT EXISTS '(' property_expression ')'
                                                                                                 : {relationshipPropertyExistenceConstraint, '$3', '$7'}.
 
-relationship_pattern_syntax -> '(' ')' left_arrow_head_opt dash '[' variable rel_type ']' dash right_arrow_head_opt '(' ')'
-                                                                                                : {relationshipPatternSyntax, '$3', '$4', '$6', '$7', '$9', '$10'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-left_arrow_head_opt -> '$empty'                                                                 : {}.
-left_arrow_head_opt -> '<'                                                                      : {leftArrowHead, '$1'}.
-
-dash -> '--'                                                                                    : {dash, '$1'}.
-%% wwe dash -> '‐'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '‑'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '‒'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '–'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '—'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '―'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '−'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '﹘'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '﹣'                                                                                     : {dash, '$1'}.
-%% wwe dash -> '－'                                                                                     : {dash, '$1'}.
-
-right_arrow_head_opt -> '$empty'                                                                : {}.
-right_arrow_head_opt -> '>'                                                                     : {rightArrowHead, '$1'}.
-%% =====================================================================================================================
+relationship_pattern_syntax -> '(' ')' LEFT_ARROW_HEAD DASH '[' variable rel_type ']' DASH RIGHT_ARROW_HEAD '(' ')'
+                                                                                                : {relationshipPatternSyntax, unwrap('$3'), unwrap('$4'), '$6', '$7', unwrap('$9'), unwrap('$10')}.
+relationship_pattern_syntax -> '(' ')' LEFT_ARROW_HEAD DASH '[' variable rel_type ']' DASH '(' ')'
+                                                                                                : {relationshipPatternSyntax, unwrap('$3'), unwrap('$4'), '$6', '$7', unwrap('$9'), {}}.
+relationship_pattern_syntax -> '(' ')' DASH '[' variable rel_type ']' DASH RIGHT_ARROW_HEAD '(' ')'
+                                                                                                : {relationshipPatternSyntax, {}, unwrap('$3'), '$5', '$6', unwrap('$8'), unwrap('$9')}.
+relationship_pattern_syntax -> '(' ')' DASH '[' variable rel_type ']' DASH '(' ')'              : {relationshipPatternSyntax, {}, unwrap('$3'), '$5', '$6', unwrap('$8'), {}}.
 
 load_csv -> LOAD CSV with_headers_opt FROM expression AS variable field_terminator_opt          : {loadCSV, '$3', '$5', '$7', '$8'}.
 
@@ -763,8 +733,10 @@ node_pattern -> '('  ')'                                                        
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
-relationship_pattern -> left_arrow_head_opt dash relationship_detail_opt dash right_arrow_head_opt
-                                                                                                : {relationshipPattern, '$1', '$2', '$3', '$4', '$5'}.
+relationship_pattern -> LEFT_ARROW_HEAD DASH relationship_detail_opt DASH RIGHT_ARROW_HEAD      : {relationshipPattern, unwrap('$1'), unwrap('$2'), '$3', unwrap('$4'), unwrap('$5')}.
+relationship_pattern -> LEFT_ARROW_HEAD DASH relationship_detail_opt DASH                       : {relationshipPattern, unwrap('$1'), unwrap('$2'), '$3', unwrap('$4'), {}}.
+relationship_pattern -> DASH relationship_detail_opt DASH RIGHT_ARROW_HEAD                      : {relationshipPattern, {}, unwrap('$1'), '$2', unwrap('$3'), unwrap('$4')}.
+relationship_pattern -> DASH relationship_detail_opt DASH                                       : {relationshipPattern, {}, unwrap('$1'), '$2', unwrap('$3'), {}}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -826,13 +798,13 @@ rel_type_name -> symbolic_name                                                  
 
 expression -> expression_12                                                                     : {expression, '$1'}.
 
-expression_12 -> expression_11 'OR' expression_11                                               : {expression12, '$1', '$2', '$3'}.
+expression_12 -> expression_11 OR expression_11                                                 : {expression12, '$1', '$2', '$3'}.
 expression_12 -> expression_11                                                                  : {expression12, '$1'}.
 
-expression_11 -> expression_10 'XOR' expression_10                                              : {expression11, '$1', '$2', '$3'}.
+expression_11 -> expression_10 XOR expression_10                                                : {expression11, '$1', '$2', '$3'}.
 expression_11 -> expression_10                                                                  : {expression11, '$1'}.
 
-expression_10 -> expression_9 'AND' expression_9                                                : {expression10, '$1', '$2', '$3'}.
+expression_10 -> expression_9 AND expression_9                                                  : {expression10, '$1', '$2', '$3'}.
 expression_10 -> expression_9                                                                   : {expression10, '$1'}.
 
 expression_9 -> NOT expression_8                                                                : {expression9, '$2', '$1'}.
@@ -845,6 +817,12 @@ expression_7 -> expression_6 '+' expression_6                                   
 expression_7 -> expression_6 '-' expression_6                                                   : {expression7, '$1', "-", '$3'}.
 expression_7 -> expression_6                                                                    : {expression7, '$1'}.
 
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+expression_7 -> expression_6 DASH expression_6                                                  : {expression7, '$1', unwrap('$2'), '$3'}.
+%% =====================================================================================================================
+
 expression_6 -> expression_5 '*' expression_5                                                   : {expression6, '$1', "*", '$3'}.
 expression_6 -> expression_5 '/' expression_5                                                   : {expression6, '$1', "/", '$3'}.
 expression_6 -> expression_5 '%' expression_5                                                   : {expression6, '$1', "%", '$3'}.
@@ -856,6 +834,12 @@ expression_5 -> expression_4                                                    
 expression_4 -> '+' expression_3                                                                : {expression4, '$2', "+"}.
 expression_4 -> '-' expression_3                                                                : {expression4, '$2', "-"}.
 expression_4 -> expression_3                                                                    : {expression4, '$1'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+expression_4 -> DASH expression_3                                                               : {expression4, '$2', unwrap('$1')}.
+%% =====================================================================================================================
 
 expression_3 -> expression_2 '[' expression '..' expression ']'                                 : {expression3, '$1', "[", '$3', '$5'}.
 expression_3 -> expression_2 '[' expression ']'                                                 : {expression3, '$1', "[", '$3'}.
@@ -920,6 +904,9 @@ partial_comparison_expression -> comparison expression_7                        
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+partial_comparison_expression -> LEFT_ARROW_HEAD expression_7                                   : {partialComparisonExpression, '$2', unwrap('$1')}.
+partial_comparison_expression -> RIGHT_ARROW_HEAD expression_7                                  : {partialComparisonExpression, '$2', unwrap('$1')}.
+
 comparison -> '='                                                                               : "=".
 comparison -> '<>'                                                                              : "<>".
 comparison -> '!='                                                                              : "!=".

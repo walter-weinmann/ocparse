@@ -233,7 +233,7 @@
 %% Relationships Pattern
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? * 1 ..99 ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? * 1 ..99 ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { name_1 } ) is unique".
@@ -255,51 +255,51 @@
 "CREATE CONSTRAINT ON (book:Book) ASSERT ( : node_1 : node_2 ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT ( : node_1 ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT (  ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) -- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -- (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) -- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -- ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) -- --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- -- (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) -- -- ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 * 1 ..] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * ..99]--> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 *] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 * 1 ..99] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 | :rel_2 * ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * 1 ..] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 | :rel_2 * ..99]--> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * 1 ..99] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * ..] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? * ..] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ * ..] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 | :rel_2 * 1 ..99 { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ variable_1 ? :rel_1 | :rel_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <-- [ ? { name_1 }] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { name_1 } ) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) <-- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] --> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) - [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] - (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) - [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] - ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) - -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- - (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) - - ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 | :rel_2 * ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 * 1 ..] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 | :rel_2 * ..99]-> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 *] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 * 1 ..99] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 { name_1 }] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 | :rel_2 * ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * 1 ..] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 | :rel_2 * ..99]-> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * 1 ..99] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * ..] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? * ..] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ * ..] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 | :rel_2 * 1 ..99 { name_1 }] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ variable_1 ? :rel_1 | :rel_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? { name_1 }] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { name_1 } ) <- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT ( variable_1 : node_1 : node_2 { name_1 } ) <- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) <- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) is unique".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Shortest Path Pattern
@@ -308,25 +308,25 @@
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 : node_1 : node_2 { name_1 } ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 : node_1 { name_1 } ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 : node_1 : node_2 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 : node_1 : node_2 ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 { name_1 } ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( variable_1 ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( : node_1 : node_2 { name_1 } ) ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( (  ) ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( : node_1 : node_2 ) ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { 4711 } ) <--  --> ( ) ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { 4711 } ) <-  -> ( ) ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT sHortestpath ( ( ( { name_1 } ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 { 4711 } ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { name_1 } ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 { name_1 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( { 4711 } ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( : node_1 { name_1 } ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( : node_1 : node_2 { 4711 } ) ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 { 4711 } ) ) ) is unique".
 "CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 ) ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 { 4711 } ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique".
-"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ) <-- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] --> ( ) ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 { 4711 } ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 { 4711 } ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) ) is unique".
+"CREATE CONSTRAINT ON (book:Book) ASSERT aLlsHortestpaths ( ( ( variable_1 : node_1 : node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ) <- [ variable_1 ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}] -> ( ) ) ) is unique".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% String Literal
