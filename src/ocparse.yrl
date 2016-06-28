@@ -265,6 +265,7 @@ Terminals
  STRING_LITERAL
  THEN
  TRUE
+ UNARY
  UNESCAPED_SYMBOLIC_NAME
  UNION
  UNIQUE
@@ -330,7 +331,7 @@ Nonassoc    200 '=' '<>' '!=' '<' '>' '<=' '>='.        %% comparison.
 Left        300 '+' '-'.
 Left        400 '*' '/' '%'.
 Left        500 '^'.
-%Left        600 UMINUS.
+Left        600 UNARY.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
@@ -802,13 +803,13 @@ rel_type_name -> symbolic_name                                                  
 
 expression -> expression_12                                                                     : {expression, '$1'}.
 
-expression_12 -> expression_11 OR expression_11                                                 : {expression12, '$1', '$2', '$3'}.
+expression_12 -> expression_11 OR expression_11                                                 : {expression12, '$1', "or", '$3'}.
 expression_12 -> expression_11                                                                  : {expression12, '$1'}.
 
-expression_11 -> expression_10 XOR expression_10                                                : {expression11, '$1', '$2', '$3'}.
+expression_11 -> expression_10 XOR expression_10                                                : {expression11, '$1', "xor", '$3'}.
 expression_11 -> expression_10                                                                  : {expression11, '$1'}.
 
-expression_10 -> expression_9 AND expression_9                                                  : {expression10, '$1', '$2', '$3'}.
+expression_10 -> expression_9 AND expression_9                                                  : {expression10, '$1', "and", '$3'}.
 expression_10 -> expression_9                                                                   : {expression10, '$1'}.
 
 expression_9 -> NOT expression_8                                                                : {expression9, '$2', '$1'}.
@@ -835,6 +836,7 @@ expression_6 -> expression_5                                                    
 expression_5 -> expression_4 '^' expression_4                                                   : {expression5, '$1', "^", '$3'}.
 expression_5 -> expression_4                                                                    : {expression5, '$1'}.
 
+expression_4 -> UNARY expression_3                                                              : {expression4, '$2', unwrap('$1')}.
 expression_4 -> '+' expression_3                                                                : {expression4, '$2', "+"}.
 expression_4 -> '-' expression_3                                                                : {expression4, '$2', "-"}.
 expression_4 -> expression_3                                                                    : {expression4, '$1'}.
@@ -852,8 +854,8 @@ expression_3 -> expression_2 IN expression_2                                    
 expression_3 -> expression_2 STARTS WITH expression_2                                           : {expression3, '$1', 'starts with', '$4'}.
 expression_3 -> expression_2 ENDS WITH expression_2                                             : {expression3, '$1', 'ends with', '$4'}.
 expression_3 -> expression_2 CONTAINS expression_2                                              : {expression3, '$1', contains, '$3'}.
-expression_3 -> expression_2 IS NOT NULL                                                        : {expression3, '$1', 'is not null'}.
-expression_3 -> expression_2 IS NULL                                                            : {expression3, '$1', 'is null'}.
+expression_3 -> expression_2 IS NOT NULL                                                        : {expression3, '$1', "is not null"}.
+expression_3 -> expression_2 IS NULL                                                            : {expression3, '$1', "is null"}.
 expression_3 -> expression_2                                                                    : {expression3, '$1'}.
 
 expression_2 -> atom expression_2_addon_list_opt                                                : {expression2, '$1', '$2'}.
