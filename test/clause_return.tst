@@ -11,10 +11,13 @@
 "RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1".
 "RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1".
 "RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ASC , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC".
+"RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC".
+"RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC".
 "RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 SKIP + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 contains 'test_2' .property_1 :label_1".
 "RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ASC , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC".
 "RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ASC , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC LIMIT + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 contains 'test_2' .property_1 :label_1".
 "RETURN *".
+"RETURN * LIMIT - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1".
 "RETURN * , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1".
 "RETURN * , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1".
 "RETURN * , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1".

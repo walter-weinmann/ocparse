@@ -11,9 +11,12 @@
 "MATCH variable_9 = ( ) <- -> ( )".
 "MATCH variable_9 = ( variable_1 ) - -> ( ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )".
 "MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ) <- -> ( ) USING INDEX variable_1 : node_1 ( property_1 )".
+"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ) <- -> ( ) USING INDEX variable_1 : node_1 ( property_1 ) USING INDEX variable_1 : node_1 ( property_1 )".
 "MATCH variable_9 = ( variable_1 ) - -> ( ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) USING JOIN ON variable_1".
+"MATCH variable_9 = ( variable_1 ) - -> ( ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) USING JOIN ON variable_1 USING JOIN ON variable_1".
 "MATCH ( ) <- -> ( ) , variable_9 = ( : node_1 ) <- - ( ) USING JOIN ON variable_1 , variable_2".
 "MATCH variable_9 = ( : node_1 : node_2 ) - - ( ) , ( ) <- -> ( ) USING SCAN variable_1 : node_1".
+"MATCH variable_9 = ( : node_1 : node_2 ) - - ( ) , ( ) <- -> ( ) USING SCAN variable_1 : node_1 USING SCAN variable_1 : node_1".
 "MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , variable_9 = ( variable_1 : node_1 ) <- [ ] -> ( ) USING INDEX variable_1 : node_1 ( property_1 ) USING JOIN ON variable_1 , variable_2".
 "MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) USING JOIN ON variable_1 USING JOIN ON variable_1 , variable_2".
 "MATCH variable_9 = ( { } ) <- [ ] - ( ) , ( { } ) <- [ ] - ( ) USING JOIN ON variable_1 , variable_2 USING JOIN ON variable_1 , variable_2".

@@ -6,12 +6,12 @@ ToDo List
 
 ## Open Issues ##
 
-#### 1. Unary Operators ####
-
-#### 2. Quality check with openCypher ####
+#### 1. Quality check with openCypher ####
 
 - {} vs. ()
 - {}-
+
+#### 2. Checking and processing current version of openCypher ####
 
 #### 3. Minimising code of ocparse_fold.erl ####
 

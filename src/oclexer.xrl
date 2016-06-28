@@ -12,6 +12,9 @@ Rules.
 %% right arrow head
 (>)                                                       : {token, {'RIGHT_ARROW_HEAD', TokenLine, TokenChars}}.
 
+%% unary operators
+(\+\-)                                                    : {token, {'UNARY', TokenLine, TokenChars}}.
+
 %% punctuation
 (\.\.|\-\-|\+=)                                           : {token, {list_to_atom(TokenChars), TokenLine}}.
 (=~|<>|!=|<=|>=)                                          : {token, {list_to_atom(TokenChars), TokenLine}}.

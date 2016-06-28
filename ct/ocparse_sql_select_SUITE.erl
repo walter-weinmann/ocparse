@@ -8,7 +8,6 @@
 
 -compile(export_all).
 
--define(NODEBUG, true).
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
@@ -156,6 +155,8 @@ all() ->
 
 test_atoms_all_single(_Config) ->
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT fIlter ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT fIlter ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT fIlter ( variable_1 iN 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT eXtract ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT eXtract ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT aLl ( variable_1 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHere nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
@@ -177,13 +178,18 @@ test_atoms_constant(_Config) ->
 
 test_atoms_case_1(_Config) ->
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
-    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique").
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique").
 
 test_atoms_case_2(_Config) ->
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT cAse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null wHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null tHen nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eLse nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null eNd is unique").
 
@@ -209,6 +215,7 @@ test_atoms_function_invocation(_Config) ->
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(dIstinct) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(dIstinct 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT function_1(dIstinct nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique").
 
@@ -345,6 +352,7 @@ test_atoms_parenthesized_expression(_Config) ->
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique").
 
 test_atoms_reduce(_Config) ->
+    test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT rEduce ( variable_1 = 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT rEduce ( variable_1 = nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null | nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) is unique"),
     test_cypher("CREATE CONSTRAINT ON (book:Book) ASSERT rEduce(variable_1=nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null,variable_2 iN nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null|nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null) is unique").
 
@@ -540,9 +548,12 @@ test_clause_match(_Config) ->
     test_cypher("MATCH variable_9 = ( : node_1 ) <- - ( )"),
     test_cypher("MATCH variable_9 = ( : node_1 : node_2 ) - - ( ) , ( ) <- -> ( )"),
     test_cypher("MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ) <- -> ( ) USING INDEX variable_1 : node_1 ( property_1 )"),
+    test_cypher("MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ) <- -> ( ) USING INDEX variable_1 : node_1 ( property_1 ) USING INDEX variable_1 : node_1 ( property_1 )"),
     test_cypher("MATCH variable_9 = ( variable_1 ) - -> ( ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) USING JOIN ON variable_1"),
+    test_cypher("MATCH variable_9 = ( variable_1 ) - -> ( ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) USING JOIN ON variable_1 USING JOIN ON variable_1"),
     test_cypher("MATCH ( ) <- -> ( ) , variable_9 = ( : node_1 ) <- - ( ) USING JOIN ON variable_1 , variable_2"),
     test_cypher("MATCH variable_9 = ( : node_1 : node_2 ) - - ( ) , ( ) <- -> ( ) USING SCAN variable_1 : node_1"),
+    test_cypher("MATCH variable_9 = ( : node_1 : node_2 ) - - ( ) , ( ) <- -> ( ) USING SCAN variable_1 : node_1 USING SCAN variable_1 : node_1"),
     test_cypher("MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , variable_9 = ( variable_1 : node_1 ) <- [ ] -> ( ) USING INDEX variable_1 : node_1 ( property_1 ) USING JOIN ON variable_1 , variable_2"),
     test_cypher("MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) USING JOIN ON variable_1 USING JOIN ON variable_1 , variable_2"),
     test_cypher("MATCH variable_9 = ( { } ) <- [ ] - ( ) , ( { } ) <- [ ] - ( ) USING JOIN ON variable_1 , variable_2 USING JOIN ON variable_1 , variable_2"),
@@ -646,10 +657,13 @@ test_clause_return(_Config) ->
     test_cypher("RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
     test_cypher("RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1"),
     test_cypher("RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ASC , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC"),
+    test_cypher("RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC"),
+    test_cypher("RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC"),
     test_cypher("RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 SKIP + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 contains 'test_2' .property_1 :label_1"),
     test_cypher("RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ASC , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC"),
     test_cypher("RETURN -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ORDER BY - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ASC , 'test' .property_1 .property2? :label_1 :label_2 .property_3 .property4? ASC LIMIT + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 contains 'test_2' .property_1 :label_1"),
     test_cypher("RETURN *"),
+    test_cypher("RETURN * LIMIT - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
     test_cypher("RETURN * , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
     test_cypher("RETURN * , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1"),
     test_cypher("RETURN * , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 , - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1"),
@@ -1005,6 +1019,7 @@ test_command_index_drop(_Config) ->
 %%--------------------------------------------------------------------
 
 test_complex_bulk_import_query(_Config) ->
+    test_cypher("USING PERIODIC COMMIT -5000 LOAD CSV FROM 4711 .property_1 .property2? :label_1 :label_2 .property_3 .property4? AS variable_1"),
     test_cypher("USING PERIODIC COMMIT -5000 LOAD CSV FROM 4711 .property_1 .property2? :label_1 :label_2 .property_3 .property4? AS variable_1 OPTIONAL MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) USING JOIN ON variable_1 USING JOIN ON variable_1 , variable_2"),
     test_cypher("USING PERIODIC COMMIT 5000 LOAD CSV FROM - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) USING JOIN ON variable_1 USING JOIN ON variable_1 , variable_2"),
     test_cypher("USING PERIODIC COMMIT -4711 LOAD CSV FROM + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 % + 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 ^ - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 MATCH variable_9 = ( variable_1 ) - -> ( ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) WITH -'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1"),
@@ -1508,8 +1523,8 @@ test_query_options(_Config) ->
 test_cypher(Test) ->
     % ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test: ~p~n", [Test]),
     case ocparse:parsetree_with_tokens(Test) of
-        {ok, {ParseTree, Tokens}} ->
-            % ?debugFmt("wwe debugging test_cypher/1 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
+        {ok, {ParseTree, _Tokens}} ->
+            % ?debugFmt("wwe debugging test_cypher/1 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, _Tokens]),
             %% --------------------------------------------------------
             %% Test TopDown
             %% --------------------------------------------------------
@@ -1520,7 +1535,7 @@ test_cypher(Test) ->
                                 % ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test TopDown: ~p~n NS: ~p~n", [NSTD]),
                                 NSTD
                         end,
-            {ok, {NPTreeTD, NToksTD}}
+            {ok, {NPTreeTD, _NToksTD}}
                 = try
                       {ok, {NPTTD, NTTD}} = ocparse:parsetree_with_tokens(NCypherTD),
                       {ok, {NPTTD, NTTD}}
@@ -1531,7 +1546,7 @@ test_cypher(Test) ->
                 ParseTree = NPTreeTD
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test TopDown: ~p~n ParseTree: ~p~n NPTree: ~p~n Tokens: ~p~n NToks: ~p~n", [Test, ParseTree, NPTreeTD, Tokens, NToksTD])
+                    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test TopDown: ~p~n ParseTree: ~p~n NPTree: ~p~n Tokens: ~p~n NToks: ~p~n", [Test, ParseTree, NPTreeTD, _Tokens, _NToksTD])
             end,
             ?assertEqual(ParseTree, NPTreeTD),
             StringNCypherTD = binary:bin_to_list(NCypherTD),
@@ -1552,7 +1567,7 @@ test_cypher(Test) ->
                                 % ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test BottomUp: ~p~n NS: ~p~n", [NSBU]),
                                 NSBU
                         end,
-            {ok, {NPTreeBU, NToksBU}}
+            {ok, {NPTreeBU, _NToksBU}}
                 = try
                       {ok, {NPTBU, NTBU}} = ocparse:parsetree_with_tokens(NCypherBU),
                       {ok, {NPTBU, NTBU}}
@@ -1563,7 +1578,7 @@ test_cypher(Test) ->
                 ParseTree = NPTreeBU
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test BottomUp: ~p~n ParseTree: ~p~n NPTree: ~p~n Tokens: ~p~n NToks: ~p~n", [Test, ParseTree, NPTreeBU, Tokens, NToksBU])
+                    ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test BottomUp: ~p~n ParseTree: ~p~n NPTree: ~p~n Tokens: ~p~n NToks: ~p~n", [Test, ParseTree, NPTreeBU, _Tokens, _NToksBU])
             end,
             StringNCypherBU = binary:bin_to_list(NCypherBU),
             StringNCypherBUMultipleSpace = string:str(StringNCypherBU, "  "),
@@ -1573,10 +1588,10 @@ test_cypher(Test) ->
                         ?debugFmt("wwe debugging test_cypher/1 ===> ~n Test BottomUp: ~p~n NCypher: ~p~n Position space problem: ~p~n", [Test, StringNCypherBU, StringNCypherBUMultipleSpace]),
                         not_ok
                 end;
-        {lex_error, Error} ->
-            ?debugFmt("wwe debugging test_cypher/1 ===> Failed lexer~n Test: ~p~n Error: ~p~n", [Test, Error]),
-            ?assertEqual(ok, Error);
-        {parse_error, {Error, Tokens}} ->
-            ?debugFmt("wwe debugging test_cypher/1 ===> Failed parser~n Test: ~p~n Error: ~p~n Tokens: ~p~n", [Test, Error, Tokens]),
-            ?assertEqual(ok, Error)
+        {lex_error, _Error} ->
+            ?debugFmt("wwe debugging test_cypher/1 ===> Failed lexer~n Test: ~p~n Error: ~p~n", [Test, _Error]),
+            ?assertEqual(ok, _Error);
+        {parse_error, {_Error, _Tokens}} ->
+            ?debugFmt("wwe debugging test_cypher/1 ===> Failed parser~n Test: ~p~n Error: ~p~n Tokens: ~p~n", [Test, _Error, _Tokens]),
+            ?assertEqual(ok, _Error)
     end.
