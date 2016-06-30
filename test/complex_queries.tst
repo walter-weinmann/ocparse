@@ -25,6 +25,7 @@
 %% BulkImportQuery
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+"USING PERIODIC COMMIT LOAD CSV FROM 4711 .property_1 .property2? :label_1 :label_2 .property_3 .property4? AS variable_1".
 "USING PERIODIC COMMIT -5000 LOAD CSV FROM 4711 .property_1 .property2? :label_1 :label_2 .property_3 .property4? AS variable_1".
 "USING PERIODIC COMMIT -5000 LOAD CSV FROM 4711 .property_1 .property2? :label_1 :label_2 .property_3 .property4? AS variable_1 OPTIONAL MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) USING JOIN ON variable_1 USING JOIN ON variable_1 , variable_2".
 "USING PERIODIC COMMIT 5000 LOAD CSV FROM - 'test_1' .property_1 :label_1 conTains 'test_2' .property_1 :label_1 AS variable_1 MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) USING JOIN ON variable_1 USING JOIN ON variable_1 , variable_2".
