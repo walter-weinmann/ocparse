@@ -718,7 +718,7 @@ index_query -> ':' symbolic_name '(' parameter ')'                              
 
 id_lookup -> '(' literal_ids ')'                                                                : {idLookup, '$2'}.
 id_lookup -> '(' parameter ')'                                                                  : {idLookup, '$2'}.
-id_lookup -> '(' '*' ')'                                                                        : {idLookup, "*"}.
+id_lookup -> '(' '*' ')'                                                                        : {idLookup, "(*)"}.
 
 literal_ids -> unsigned_integer_literal_commalist                                               : {literalIds, '$1'}.
 
@@ -812,7 +812,7 @@ relationship_types_opt -> relationship_types                                    
 range_opt -> '$empty'                                                                           : {}.
 range_opt -> '*' range_literal_opt                                                              : {"*", '$2'}.
 
-range_literal_opt -> '$empty'                                                                   : {}.
+range_literal_opt -> '$empty'                                                                   : "*".
 range_literal_opt -> range_literal                                                              : '$1'.
 %% =====================================================================================================================
 
@@ -1133,7 +1133,7 @@ map_literal -> '{' property_key_name_expression_commalist_opt '}'               
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-property_key_name_expression_commalist_opt -> '$empty'                                          : [].
+property_key_name_expression_commalist_opt -> '$empty'                                          : "{}".
 property_key_name_expression_commalist_opt -> property_key_name_expression_commalist            : '$1'.
 
 property_key_name_expression_commalist -> property_key_name_expression                          : ['$1'].
