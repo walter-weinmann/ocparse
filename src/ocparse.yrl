@@ -1026,11 +1026,11 @@ atom -> properties                                                              
 %% =====================================================================================================================
 
 %% wwe atom -> parameter                                                                               : {atom, '$1'}.
-atom -> TRUE                                                                                    : {atom, {terminal, 'true'}}.
-atom -> FALSE                                                                                   : {atom, {terminal, 'false'}}.
-atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
+atom -> TRUE                                                                                    : {atom, {terminal, "true"}}.
+atom -> FALSE                                                                                   : {atom, {terminal, "false"}}.
+atom -> NULL                                                                                    : {atom, {terminal, "null"}}.
 atom -> case_expression                                                                         : {atom, '$1'}.
-atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
+atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, "count(*)"}}.
 %% wwe atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
