@@ -515,9 +515,9 @@ node_property_existence_constraint -> CONSTRAINT ON '(' variable node_label ')' 
 relationship_property_existence_constraint -> CONSTRAINT ON relationship_pattern_syntax ASSERT EXISTS '(' property_expression ')'
                                                                                                 : {relationshipPropertyExistenceConstraint, '$3', '$7'}.
 
-relationship_pattern_syntax -> '(' ')' '<' '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, "<", "-", '$6', '$7', "-", {}}.
-relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-' '>' '(' ')'        : {relationshipPatternSyntax, {},  "-", '$5', '$6', "-", ">"}.
-relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, {},  "-", '$5', '$6', "-", {}}.
+relationship_pattern_syntax -> '(' ')' '<' '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, "<", "-", '$6', '$7', "-", []}.
+relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-' '>' '(' ')'        : {relationshipPatternSyntax, [],  "-", '$5', '$6', "-", ">"}.
+relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, [],  "-", '$5', '$6', "-", []}.
 
 load_csv -> LOAD CSV with_headers_opt FROM expression AS variable field_terminator_opt          : {loadCSV, '$3', '$5', '$7', '$8'}.
 
@@ -775,9 +775,9 @@ node_pattern -> '('  ')'                                                        
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
 relationship_pattern -> '<' '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, "<", "-", '$3', "-", ">"}.
-relationship_pattern -> '<' '-' relationship_detail_opt '-'                                     : {relationshipPattern, "<", "-", '$3', "-", {}}.
-relationship_pattern ->     '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, {},  "-", '$2', "-", ">"}.
-relationship_pattern ->     '-' relationship_detail_opt '-'                                     : {relationshipPattern, {},  "-", '$2', "-", {}}.
+relationship_pattern -> '<' '-' relationship_detail_opt '-'                                     : {relationshipPattern, "<", "-", '$3', "-", []}.
+relationship_pattern ->     '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, [],  "-", '$2', "-", ">"}.
+relationship_pattern ->     '-' relationship_detail_opt '-'                                     : {relationshipPattern, [],  "-", '$2', "-", []}.
 
 %% =====================================================================================================================
 %% Helper definitions.
