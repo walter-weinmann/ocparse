@@ -40,6 +40,7 @@
 %% Expression3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+"DELETE 'test_1' .property_1 :label_1 [ .. ] [nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null]".
 "DELETE 'test_1' .property_1 :label_1 is null is not null".
 "DELETE 'test_1' .property_1 :label_1 is NOT null is null".
 "DELETE 'test_1' .property_1 :label_1 iN 'test_2' .property_1 :label_1 iN 'test_2' .property_1 :label_1".

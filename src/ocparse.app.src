@@ -1,0 +1,8 @@
+{application, ocparse,
+    [{description, "A LALR open cypher parser and compiler"},
+        {vsn, "1.0.0"},
+        {registered, []},
+        {applications, [kernel, stdlib]},
+        {mod, {ocparse, []}},
+        {env, []},
+        {modules, [oclexer, ocparse, ocparse_fold, octest]}]}.

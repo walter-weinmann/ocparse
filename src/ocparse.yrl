@@ -17,7 +17,7 @@ Nonterminals
  case_expression
  char_opt
  char_question_mark_opt
- char_semicolon_opt
+ char_semicolon_opt 
  char_vertical_bar_expression
  char_vertical_bar_expression_opt
  clause
@@ -35,8 +35,10 @@ Nonterminals
  create_unique_constraint
  cypher
  cypher_option
+ decimal_integer
  delete
  detach_opt
+ digit_string
  distinct_opt
  double_literal
  drop_index
@@ -98,6 +100,7 @@ Nonterminals
  for_each
  function_invocation
  function_name
+ hex_integer
  hint
  hint_list
  hint_list_opt
@@ -126,6 +129,7 @@ Nonterminals
  node_pattern
  node_property_existence_constraint
  number_literal
+ octal_integer
  optional_opt
  order
  order_opt
@@ -136,7 +140,7 @@ Nonterminals
  pattern_element
  pattern_element_chain
  pattern_element_chain_list
- pattern_element_chain_opt
+ pattern_element_chain_list_opt
  pattern_part
  pattern_part_commalist
  periodic_commit_hint
@@ -154,7 +158,6 @@ Nonterminals
  range_literal_opt
  range_opt
  reduce
- regular_decimal_real
  regular_query
  rel_type
  rel_type_name
@@ -196,7 +199,6 @@ Nonterminals
  union_list_opt
  unique_constraint
  unique_opt
- unsigned_decimal_integer
  unsigned_integer_literal
  unsigned_integer_literal_commalist
  unsigned_integer_literal_opt
@@ -235,6 +237,7 @@ Terminals
  DESC
  DESCENDING
  DETACH
+ DIGIT_STRING
  DISTINCT
  DROP
  ELSE
@@ -264,7 +267,6 @@ Terminals
  NONE
  NOT
  NULL
- OCTAL_INTEGER
  ON
  OPTIONAL
  OR
@@ -280,7 +282,8 @@ Terminals
  SET
  SHORTESTPATH
  SIGNED_DECIMAL_INTEGER
- SIGNED_FLOAT
+ SIGNED_OCTAL_INTEGER
+ SIGNED_REGULAR_DECIMAL_REAL
  SINGLE
  SKIP
  START
@@ -292,7 +295,8 @@ Terminals
  UNION
  UNIQUE
  UNSIGNED_DECIMAL_INTEGER
- UNSIGNED_FLOAT
+ UNSIGNED_OCTAL_INTEGER
+ UNSIGNED_REGULAR_DECIMAL_REAL
  UNWIND
  USING
  WHEN
@@ -310,6 +314,10 @@ Terminals
  '-'
  '+'
  '+='
+ '<-->'
+ '<--'
+ '-->'
+ '--'
  '*'
  '/'
  '%'
@@ -328,7 +336,6 @@ Terminals
  '..'
  '!'
  '?'
- '0'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -366,7 +373,7 @@ query_options -> any_cypher_option_list                                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-char_semicolon_opt -> '$empty'                                                                  : {}.
+char_semicolon_opt -> '$empty'                                                                  : [].
 char_semicolon_opt -> ';'                                                                       : ";".
 
 any_cypher_option_list -> any_cypher_option_list any_cypher_option                              : '$1' ++ ['$2'].
@@ -392,7 +399,16 @@ configuration_option_list -> configuration_option_list configuration_option     
 configuration_option_list -> configuration_option                                               : ['$1'].
 %% =====================================================================================================================
 
-version_number -> UNSIGNED_FLOAT                                                                : {versionNumber, unwrap('$1')}.
+version_number -> digit_string '.' digit_string                                                 : {versionNumber, '$1', '$3'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+version_number -> UNSIGNED_REGULAR_DECIMAL_REAL                                                 : {versionNumber, unwrap('$1')}.
+
+digit_string -> DIGIT_STRING                                                                    : unwrap('$1').
+% digit_string -> UNSIGNED_OCTAL_INTEGER                                                          : unwrap('$1').
+%% =====================================================================================================================
 
 configuration_option -> symbolic_name '=' symbolic_name                                         : {configurationOption, '$1', '$3'}.
 
@@ -540,7 +556,7 @@ merge -> MERGE pattern_part merge_action_list_opt                               
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-merge_action_list_opt -> '$empty'                                                               : {}.
+merge_action_list_opt -> '$empty'                                                               : [].
 merge_action_list_opt -> merge_action_list                                                      : '$1'.
 
 merge_action_list -> merge_action_list merge_action                                             : '$1' ++ ['$2'].
@@ -734,24 +750,27 @@ anonymous_pattern_part -> pattern_element                                       
 shortest_path_pattern -> SHORTESTPATH '(' pattern_element ')'                                   : {shortestPathPattern, "shortestpath", '$3'}.
 shortest_path_pattern -> ALLSHORTESTPATHS '(' pattern_element ')'                               : {shortestPathPattern, "allshortestpaths", '$3'}.
 
-pattern_element -> node_pattern pattern_element_chain_opt                                       : {patternElement, '$1', '$2'}.
+pattern_element -> node_pattern pattern_element_chain_list_opt                                  : {patternElement, '$1', '$2'}.
 pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-pattern_element_chain_opt -> '$empty'                                                           : {}.
-pattern_element_chain_opt -> pattern_element_chain                                              : '$1'.
+pattern_element_chain_list_opt -> '$empty'                                                      : [].
+pattern_element_chain_list_opt -> pattern_element_chain_list                                    : '$1'.
+
+pattern_element_chain_list -> pattern_element_chain_list pattern_element_chain                  : '$1' ++ ['$2'].
+pattern_element_chain_list -> pattern_element_chain                                             : ['$1'].
 %% =====================================================================================================================
 
 node_pattern -> '(' variable node_labels properties ')'                                         : {nodePattern, '$2', {nodeLabels, '$3'}, '$4'}.
 node_pattern -> '(' variable node_labels ')'                                                    : {nodePattern, '$2', {nodeLabels, '$3'}, {}}.
-node_pattern -> '(' variable properties ')'                                                     : {nodePattern, '$2', [], '$3'}.
-node_pattern -> '(' variable ')'                                                                : {nodePattern, '$2', [], {}}.
-node_pattern -> '(' node_labels properties ')'                                                  : {nodePattern, {}, {nodeLabels, '$2'}, '$3'}.
-node_pattern -> '(' node_labels ')'                                                             : {nodePattern, {}, {nodeLabels, '$2'}, {}}.
-node_pattern -> '(' properties ')'                                                              : {nodePattern, {}, [], '$2'}.
-node_pattern -> '('  ')'                                                                        : {nodePattern, {}, [], {}}.
+node_pattern -> '(' variable properties ')'                                                     : {nodePattern, '$2', {},                 '$3'}.
+node_pattern -> '(' variable ')'                                                                : {nodePattern, '$2', {},                 {}}.
+node_pattern -> '(' node_labels properties ')'                                                  : {nodePattern, {},   {nodeLabels, '$2'}, '$3'}.
+node_pattern -> '(' node_labels ')'                                                             : {nodePattern, {},   {nodeLabels, '$2'}, {}}.
+node_pattern -> '(' properties ')'                                                              : {nodePattern, {},   {},                 '$2'}.
+node_pattern -> '('  ')'                                                                        : {nodePattern, {},   {},                 {}}.
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
@@ -763,6 +782,11 @@ relationship_pattern ->     '-' relationship_detail_opt '-'                     
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+relationship_pattern -> '<-->'                                                                  : {relationshipPattern, "<-->"}.
+relationship_pattern -> '<--'                                                                   : {relationshipPattern, "<--"}.
+relationship_pattern ->  '-->'                                                                  : {relationshipPattern, "-->"}.
+relationship_pattern ->  '--'                                                                   : {relationshipPattern, "--"}.
+
 relationship_detail_opt -> '$empty'                                                             : {}.
 relationship_detail_opt -> relationship_detail                                                  : '$1'.
 %% =====================================================================================================================
@@ -961,7 +985,7 @@ expression_3_addon_list_opt -> expression_3_addon_list                          
 expression_3_addon_list -> expression_3_addon_list expression_3_addon                           : '$1' ++ ['$2'].
 expression_3_addon_list -> expression_3_addon                                                   : ['$1'].
 
-expression_3_addon -> '[' expression '..' expression ']'                                        : {"[", '$2', '$4'}.
+expression_3_addon -> '[' expression_opt '..' expression_opt ']'                                : {"[", '$2', '$4'}.
 expression_3_addon -> '[' expression ']'                                                        : {"[", '$2'}.
 expression_3_addon -> '=~' expression_2                                                         : {"=~", '$2'}.
 expression_3_addon -> IN expression_2                                                           : {"in", '$2'}.
@@ -970,6 +994,9 @@ expression_3_addon -> ENDS WITH expression_2                                    
 expression_3_addon -> CONTAINS expression_2                                                     : {"contains", '$2'}.
 expression_3_addon -> IS NOT NULL                                                               : {"is not null"}.
 expression_3_addon -> IS NULL                                                                   : {"is null"}.
+
+expression_opt -> '$empty'                                                                      : {}.
+expression_opt -> expression                                                                    : '$1'.
 %% =====================================================================================================================
 
 expression_2 -> atom expression_2_addon_list_opt                                                : {expression2, '$1', '$2'}.
@@ -1041,13 +1068,6 @@ parenthesized_expression -> '(' expression ')'                                  
 
 relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
 
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-pattern_element_chain_list -> pattern_element_chain_list pattern_element_chain                  : '$1' ++ ['$2'].
-pattern_element_chain_list -> pattern_element_chain                                             : ['$1'].
-%% =====================================================================================================================
-
 filter_expression -> id_in_coll where_opt                                                       : {filterExpression, '$1', '$2'}.
 
 id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
@@ -1057,6 +1077,9 @@ function_invocation -> function_name '(' distinct_opt expression_commalist_opt '
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+function_invocation -> COUNT  '(' distinct_opt expression_commalist_opt ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}}, '$4', '$3'}.
+function_invocation -> EXISTS '(' distinct_opt expression_commalist_opt ')'                     : {functionInvocation, {functionName, {symbolicName, "exists"}}, '$4', '$3'}.
+
 expression_commalist_opt -> '$empty'                                                            : [].
 expression_commalist_opt -> expression_commalist                                                : '$1'.
 %% =====================================================================================================================
@@ -1089,9 +1112,6 @@ case_expression -> CASE expression_opt case_alternatives_list else_expression_op
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_opt -> '$empty'                                                                      : {}.
-expression_opt -> expression                                                                    : '$1'.
-
 else_expression_opt -> '$empty'                                                                 : {}.
 else_expression_opt -> else_expression                                                          : '$1'.
 
@@ -1124,7 +1144,7 @@ property_key_name_expression -> property_key_name ':' expression                
 %% =====================================================================================================================
 
 parameter -> '{' symbolic_name '}'                                                              : {parameter, '$2'}.
-parameter -> '{' unsigned_decimal_integer '}'                                                   : {parameter, '$2'}.
+parameter -> '{' UNSIGNED_DECIMAL_INTEGER '}'                                                   : {parameter, unwrap('$2')}.
 
 property_expression -> atom property_lookup_list                                                : {propertyExpression, '$1', '$2'}.
 
@@ -1137,21 +1157,29 @@ property_lookup_list -> property_lookup                                         
 
 property_key_name -> symbolic_name                                                              : {propertyKeyName, '$1'}.
 
-signed_integer_literal -> HEX_INTEGER                                                           : {signedIntegerLiteral, {hexInteger, unwrap('$1')}}.
-signed_integer_literal -> OCTAL_INTEGER                                                         : {signedIntegerLiteral, {octalInteger, unwrap('$1')}}.
-signed_integer_literal -> SIGNED_DECIMAL_INTEGER                                                : {signedIntegerLiteral, {decimalInteger, unwrap('$1')}}.
-signed_integer_literal -> unsigned_decimal_integer                                              : '$1'.
+signed_integer_literal -> hex_integer                                                           : {signedIntegerLiteral, '$1'}.
+signed_integer_literal -> octal_integer                                                         : {signedIntegerLiteral, '$1'}.
+signed_integer_literal -> decimal_integer                                                       : {signedIntegerLiteral, '$1'}.
 
-unsigned_integer_literal -> unsigned_decimal_integer                                            : {unsignedIntegerLiteral, '$1'}.
+unsigned_integer_literal -> UNSIGNED_DECIMAL_INTEGER                                            : {unsignedIntegerLiteral, unwrap('$1')}.
 
-unsigned_decimal_integer -> UNSIGNED_DECIMAL_INTEGER                                            : {unsignedDecimalInteger, unwrap('$1')}.
-unsigned_decimal_integer -> '0'                                                                 : {unsignedDecimalInteger, "0"}.
+hex_integer -> HEX_INTEGER                                                                      : {hexInteger, unwrap('$1')}.
 
-double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, {exponentDecimalReal, unwrap('$1')}}.
-double_literal -> regular_decimal_real                                                          : '$1'.
+decimal_integer -> SIGNED_DECIMAL_INTEGER                                                       : {decimalInteger, unwrap('$1')}.
+decimal_integer -> UNSIGNED_DECIMAL_INTEGER                                                     : {decimalInteger, unwrap('$1')}.
 
-regular_decimal_real -> SIGNED_FLOAT                                                            : {doubleLiteral, {regularDecimalReal, unwrap('$1')}}.
-regular_decimal_real -> UNSIGNED_FLOAT                                                          : {doubleLiteral, {regularDecimalReal, unwrap('$1')}}.
+octal_integer -> SIGNED_OCTAL_INTEGER                                                           : {octalInteger, unwrap('$1')}.
+octal_integer -> UNSIGNED_OCTAL_INTEGER                                                         : {octalInteger, unwrap('$1')}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+decimal_integer -> digit_string                                                                 : {decimalInteger, '$1'}.
+%% =====================================================================================================================
+
+double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, unwrap('$1')}.
+double_literal -> SIGNED_REGULAR_DECIMAL_REAL                                                   : {doubleLiteral, unwrap('$1')}.
+double_literal -> UNSIGNED_REGULAR_DECIMAL_REAL                                                 : {doubleLiteral, unwrap('$1')}.
 
 symbolic_name -> ESCAPED_SYMBOLIC_NAME                                                          : {symbolicName, unwrap('$1')}.
 symbolic_name -> UNESCAPED_SYMBOLIC_NAME                                                        : {symbolicName, unwrap('$1')}.
@@ -1233,7 +1261,7 @@ parsetree_with_tokens(Cypher0) ->
     Cypher = re:replace(Cypher0, "(^[ \r\n]+)|([ \r\n]+$)", "",
                      [global, {return, list}]),
     [C|_] = lists:reverse(Cypher),
-    NCypher = if C =:= $; -> Cypher; true -> string:strip(Cypher) ++ ";" end,
+    NCypher = if C =:= $; -> Cypher; true -> string:strip(Cypher) end,
     case oclexer:string(NCypher) of
         {ok, Toks, _} ->
             case ocparse:parse(Toks) of
