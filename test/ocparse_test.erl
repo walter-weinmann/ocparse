@@ -142,15 +142,20 @@ test_cypher(TestGroup, Test, Logs) ->
                     ?D_("~n > ~p", [Tokens]),
                     ?D_("~n > ~p", [NToks])
             end,
-            ?assertEqual(ParseTree, NPTree),
+            try
+                ?assertEqual(ParseTree, NPTree)
+            catch
+                _:_ ->
+                    ?debugFmt("wwe debugging test_cypher/3 ===> not equal~n ParseTree: ~p~n NPTree: ~p~n", [ParseTree, NPTree])
+            end,
             ?D4("~n ~p~n", [ParseTree]);
         {lex_error, Error} ->
-            ?debugFmt("wwe debugging test_cypher/3 ===> ~n Error lexer: ~p~n", [Error]),
+            ?debugFmt("wwe debugging test_cypher/3 ===> Failed lexer~n Error: ~p~n", [Error]),
             ?D_("Failed lexer ~p", [Error]),
             ?assertEqual(ok, Error);
         {parse_error, {Error, _Tokens}} ->
-            ?debugFmt("wwe debugging test_cypher/3 ===> ~n Error parse: ~p~n Tokens: ~p~n", [Error, _Tokens]),
-            ?D_("Failed lexer ~p", [Error]),
+            ?debugFmt("wwe debugging test_cypher/3 parser ===> ~n Error: ~p~n Tokens: ~p~n", [Error, _Tokens]),
+            ?D_("Failed parser ~p", [Error]),
             % ?D_("~nFailed: ~p~nTest: ~s~nTokens ~p", [Error, Test, Tokens]),
             ?assertEqual(ok, Error)
     end.

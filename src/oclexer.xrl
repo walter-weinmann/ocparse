@@ -3,30 +3,38 @@ Definitions.
 
 Rules.
 
-%% punctuation
-(\.\.|\-\-|\+=)                                           : {token, {list_to_atom(TokenChars), TokenLine}}.
-(=~|<>|!=|<=|>=)                                          : {token, {list_to_atom(TokenChars), TokenLine}}.
-([\^\.\|\?\*\+\(\)\[\]\{\}\-])                            : {token, {list_to_atom(TokenChars), TokenLine}}.
-([=<>/%:,;!0])                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
+
+%% number literals
+(-?[0-9]*[0-9\.](e|E)-?[0-9]+)                            : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
+([0-9]*\.[0-9]+)                                          : {token, {'UNSIGNED_REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
+(-[0-9]*\.[0-9]+)                                         : {token, {'SIGNED_REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
+(-?0X([0-9]|[A-F])+)                                      : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
+(0[0-7]+)                                                 : {token, {'UNSIGNED_OCTAL_INTEGER', TokenLine, TokenChars}}.
+(-?0[0-7]+)                                               : {token, {'SIGNED_OCTAL_INTEGER', TokenLine, TokenChars}}.
+(0|([1-9][0-9]*))                                         : {token, {'UNSIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
+(-[0-9]+)                                                 : {token, {'SIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
+([0-9]+)                                                  : {token, {'DIGIT_STRING', TokenLine, TokenChars}}.
 
 %% symbolic names
 (`([^`]*)*`)                                              : {token, {'ESCAPED_SYMBOLIC_NAME', TokenLine, TokenChars}}.
 ([A-Za-z_@#\$][A-Za-z0-9_@#\$]*)                          : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
 
-%% numbers
-([1-9][0-9]*)                                             : {token, {'UNSIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
-(\-?([0-9]|\.)+(e|E)(\-)?[0-9]+)                          : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
-(\-?0X([0-9]|[A-F])+)                                     : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
-(\-?0[0-7]+)                                              : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
-(-[1-9][0-9]*)                                            : {token, {'SIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
-(\-[0-9]*\.[0-9]*)                                        : {token, {'SIGNED_FLOAT', TokenLine, TokenChars}}.
+%% string literals
 (\'([^\\\']*)*\')                                         : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
 (\"([^\\\"]*)*\")                                         : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
-([0-9]*\.[0-9]*)                                          : {token, {'UNSIGNED_FLOAT', TokenLine, TokenChars}}.
 
-%% skip tokens
-([\s\t\r\n]+)                                             : skip_token.                                                          %% white space
-(\/\/.*[\n|\r])                                           : skip_token.                                                          %% comment
+% comments
+((//).*[\n\r]?)                                           : skip_token.
+((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
+
+%% punctuation
+(\.\.|\-\-|\+=|<\-\->|<\-\-|\-\->)                        : {token, {list_to_atom(TokenChars), TokenLine}}.
+(=~|<>|!=|<=|>=|0X)                                       : {token, {list_to_atom(TokenChars), TokenLine}}.
+([\^\.\|\?\*\+\(\)\[\]\{\}\-])                            : {token, {list_to_atom(TokenChars), TokenLine}}.
+([=<>/%:,;!0])                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
+
+%% white space
+([\n\r\s\t]+)                                             : skip_token.
 
 Erlang code.
 
