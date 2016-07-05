@@ -278,8 +278,7 @@ test_neo4j_5_2_updating(_Config) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 test_neo4j_5_4_uniqueness(_Config) ->
-    Cypher_01 = "CREATE (adam:User { name: 'Adam' }),(pernilla:User { name: 'Pernilla' }),(david:User { name: 'David'
-                   }),
+    Cypher_01 = "CREATE (adam:User { name: 'Adam' }),(pernilla:User { name: 'Pernilla' }),(david:User { name: 'David' }),
                    (adam)-[:FRIEND]->(pernilla),(pernilla)-[:FRIEND]->(david)",
     octest:ct_string(Cypher_01),
     Cypher_02 = "MATCH (user:User { name: 'Adam' })-[r1:FRIEND]-()-[r2:FRIEND]-(friend_of_a_friend)
@@ -737,8 +736,7 @@ test_neo4j_8_2_optional_match(_Config) ->
 
 test_neo4j_8_3_where(_Config) ->
     Cypher_01 = "MATCH (n)
-                 WHERE n.name = 'Peter' XOR (n.age < 30 AND n.name = \"Tobias\") OR NOT (n.name = \"Tobias\" OR
-                   n.name=\"Peter\")
+                 WHERE n.name = 'Peter' XOR (n.age < 30 AND n.name = \"Tobias\") OR NOT (n.name = \"Tobias\" OR n.name=\"Peter\")
                  RETURN n",
 %   octest:ct_string(Cypher_01),                                                % not supported by openCypher ???
     Cypher_02 = "MATCH (n)
@@ -1730,18 +1728,15 @@ test_neo4j_13_5_update_operators(_Config) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 test_neo4j_13_6_shortest_path(_Config) ->
-    Cypher_01 = "MATCH (ms:Person { name:'Martin Sheen' }),(cs:Person { name:'Charlie Sheen' }), p = shortestPath((ms)-
-                 [rels:ACTED_IN*]-(cs))
+    Cypher_01 = "MATCH (ms:Person { name:'Martin Sheen' }),(cs:Person { name:'Charlie Sheen' }), p = shortestPath((ms)-[rels:ACTED_IN*]-(cs))
                  WHERE ALL (r IN rels WHERE exists(r.role))
                  RETURN p",
     octest:ct_string(Cypher_01),
-    Cypher_02 = "MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-
-                 (ms))
+    Cypher_02 = "MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-(ms))
                  WHERE length(p)> 1
                  RETURN p",
     octest:ct_string(Cypher_02),
-    Cypher_03 = "MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-
-                 (ms))
+    Cypher_03 = "MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-(ms))
                  WITH p
                  WHERE length(p)> 1
                  RETURN p",
