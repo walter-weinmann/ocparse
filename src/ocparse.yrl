@@ -486,23 +486,23 @@ command -> drop_node_property_existence_constraint                              
 command -> create_relationship_property_existence_constraint                                    : {command, '$1'}.
 command -> drop_relationship_property_existence_constraint                                      : {command, '$1'}.
 
-create_unique_constraint -> CREATE unique_constraint                                            : {createUniqueConstraint, '$2'}.
+create_unique_constraint -> CREATE unique_constraint                                            : {create, '$2'}.
 
-create_node_property_existence_constraint -> CREATE node_property_existence_constraint          : {createNodePropertyExistenceConstraint, '$2'}.
+create_node_property_existence_constraint -> CREATE node_property_existence_constraint          : {create, '$2'}.
 
 create_relationship_property_existence_constraint -> CREATE relationship_property_existence_constraint
-                                                                                                : {createRelationshipPropertyExistenceConstraint, '$2'}.
+                                                                                                : {create, '$2'}.
 
-create_index -> CREATE index                                                                    : {createIndex, '$2'}.
+create_index -> CREATE index                                                                    : {create, '$2'}.
 
-drop_unique_constraint -> DROP unique_constraint                                                : {dropUniqueConstraint, '$2'}.
+drop_unique_constraint -> DROP unique_constraint                                                : {drop, '$2'}.
 
-drop_node_property_existence_constraint -> DROP node_property_existence_constraint              : {dropNodePropertyExistenceConstraint, '$2'}.
+drop_node_property_existence_constraint -> DROP node_property_existence_constraint              : {drop, '$2'}.
 
 drop_relationship_property_existence_constraint -> DROP relationship_property_existence_constraint
-                                                                                                : {dropRelationshipPropertyExistenceConstraint, '$2'}.
+                                                                                                : {drop, '$2'}.
 
-drop_index -> DROP index                                                                        : {dropIndex, '$2'}.
+drop_index -> DROP index                                                                        : {drop, '$2'}.
 
 index -> INDEX ON node_label '(' property_key_name ')'                                          : {index ,{'$3', '$5'}}.
 
@@ -515,9 +515,9 @@ node_property_existence_constraint -> CONSTRAINT ON '(' variable node_label ')' 
 relationship_property_existence_constraint -> CONSTRAINT ON relationship_pattern_syntax ASSERT EXISTS '(' property_expression ')'
                                                                                                 : {relationshipPropertyExistenceConstraint, '$3', '$7'}.
 
-relationship_pattern_syntax -> '(' ')' '<' '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, "<", "-", '$6', '$7', "-", {}}.
-relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-' '>' '(' ')'        : {relationshipPatternSyntax, {},  "-", '$5', '$6', "-", ">"}.
-relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, {},  "-", '$5', '$6', "-", {}}.
+relationship_pattern_syntax -> '(' ')' '<' '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, "<", "-", '$6', '$7', "-", []}.
+relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-' '>' '(' ')'        : {relationshipPatternSyntax, [],  "-", '$5', '$6', "-", ">"}.
+relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, [],  "-", '$5', '$6', "-", []}.
 
 load_csv -> LOAD CSV with_headers_opt FROM expression AS variable field_terminator_opt          : {loadCSV, '$3', '$5', '$7', '$8'}.
 
@@ -718,7 +718,7 @@ index_query -> ':' symbolic_name '(' parameter ')'                              
 
 id_lookup -> '(' literal_ids ')'                                                                : {idLookup, '$2'}.
 id_lookup -> '(' parameter ')'                                                                  : {idLookup, '$2'}.
-id_lookup -> '(' '*' ')'                                                                        : {idLookup, "*"}.
+id_lookup -> '(' '*' ')'                                                                        : {idLookup, "(*)"}.
 
 literal_ids -> unsigned_integer_literal_commalist                                               : {literalIds, '$1'}.
 
@@ -775,9 +775,9 @@ node_pattern -> '('  ')'                                                        
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
 relationship_pattern -> '<' '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, "<", "-", '$3', "-", ">"}.
-relationship_pattern -> '<' '-' relationship_detail_opt '-'                                     : {relationshipPattern, "<", "-", '$3', "-", {}}.
-relationship_pattern ->     '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, {},  "-", '$2', "-", ">"}.
-relationship_pattern ->     '-' relationship_detail_opt '-'                                     : {relationshipPattern, {},  "-", '$2', "-", {}}.
+relationship_pattern -> '<' '-' relationship_detail_opt '-'                                     : {relationshipPattern, "<", "-", '$3', "-", []}.
+relationship_pattern ->     '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, [],  "-", '$2', "-", ">"}.
+relationship_pattern ->     '-' relationship_detail_opt '-'                                     : {relationshipPattern, [],  "-", '$2', "-", []}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -812,7 +812,7 @@ relationship_types_opt -> relationship_types                                    
 range_opt -> '$empty'                                                                           : {}.
 range_opt -> '*' range_literal_opt                                                              : {"*", '$2'}.
 
-range_literal_opt -> '$empty'                                                                   : {}.
+range_literal_opt -> '$empty'                                                                   : "*".
 range_literal_opt -> range_literal                                                              : '$1'.
 %% =====================================================================================================================
 
@@ -1026,11 +1026,11 @@ atom -> properties                                                              
 %% =====================================================================================================================
 
 %% wwe atom -> parameter                                                                               : {atom, '$1'}.
-atom -> TRUE                                                                                    : {atom, {terminal, 'true'}}.
-atom -> FALSE                                                                                   : {atom, {terminal, 'false'}}.
-atom -> NULL                                                                                    : {atom, {terminal, 'null'}}.
+atom -> TRUE                                                                                    : {atom, {terminal, "true"}}.
+atom -> FALSE                                                                                   : {atom, {terminal, "false"}}.
+atom -> NULL                                                                                    : {atom, {terminal, "null"}}.
 atom -> case_expression                                                                         : {atom, '$1'}.
-atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, 'count'}}.
+atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, "count(*)"}}.
 %% wwe atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
@@ -1133,7 +1133,7 @@ map_literal -> '{' property_key_name_expression_commalist_opt '}'               
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-property_key_name_expression_commalist_opt -> '$empty'                                          : [].
+property_key_name_expression_commalist_opt -> '$empty'                                          : "{}".
 property_key_name_expression_commalist_opt -> property_key_name_expression_commalist            : '$1'.
 
 property_key_name_expression_commalist -> property_key_name_expression                          : ['$1'].
