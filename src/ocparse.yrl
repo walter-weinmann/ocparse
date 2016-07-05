@@ -486,23 +486,23 @@ command -> drop_node_property_existence_constraint                              
 command -> create_relationship_property_existence_constraint                                    : {command, '$1'}.
 command -> drop_relationship_property_existence_constraint                                      : {command, '$1'}.
 
-create_unique_constraint -> CREATE unique_constraint                                            : {createUniqueConstraint, '$2'}.
+create_unique_constraint -> CREATE unique_constraint                                            : {create, '$2'}.
 
-create_node_property_existence_constraint -> CREATE node_property_existence_constraint          : {createNodePropertyExistenceConstraint, '$2'}.
+create_node_property_existence_constraint -> CREATE node_property_existence_constraint          : {create, '$2'}.
 
 create_relationship_property_existence_constraint -> CREATE relationship_property_existence_constraint
-                                                                                                : {createRelationshipPropertyExistenceConstraint, '$2'}.
+                                                                                                : {create, '$2'}.
 
-create_index -> CREATE index                                                                    : {createIndex, '$2'}.
+create_index -> CREATE index                                                                    : {create, '$2'}.
 
-drop_unique_constraint -> DROP unique_constraint                                                : {dropUniqueConstraint, '$2'}.
+drop_unique_constraint -> DROP unique_constraint                                                : {drop, '$2'}.
 
-drop_node_property_existence_constraint -> DROP node_property_existence_constraint              : {dropNodePropertyExistenceConstraint, '$2'}.
+drop_node_property_existence_constraint -> DROP node_property_existence_constraint              : {drop, '$2'}.
 
 drop_relationship_property_existence_constraint -> DROP relationship_property_existence_constraint
-                                                                                                : {dropRelationshipPropertyExistenceConstraint, '$2'}.
+                                                                                                : {drop, '$2'}.
 
-drop_index -> DROP index                                                                        : {dropIndex, '$2'}.
+drop_index -> DROP index                                                                        : {drop, '$2'}.
 
 index -> INDEX ON node_label '(' property_key_name ')'                                          : {index ,{'$3', '$5'}}.
 
