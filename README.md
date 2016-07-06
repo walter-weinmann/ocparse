@@ -4,7 +4,7 @@
 
 **ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang. The [openCypher project](https://http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](http://neo4j.com/docs/developer-manual/current/#cypher-query-lang). The [openCypher](https://github.com/opencypher/openCypher) project provides with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the basis for the definition of the grammar. In future **ocparse** will follow the [openCypher](https://github.com/opencypher/openCypher) project very closely.
 
-## Usage
+## 1. Usage
 
 ### Example code:
 
@@ -216,11 +216,11 @@ The output of the parse tree in the Erlang shell is somehow shortened. The compl
  []}
 ``` 
 
-## Documentation
+## 2. Documentation
 
 The documentation for **ocparse** is available here: [Wiki](https://github.com/walter-weinmann/ocparse/wiki).
 
-## Known issues
+## 3. Known issues
 
 ### SymbolicName
 
@@ -245,11 +245,11 @@ An exception is the use of the tokens `COUNT` and `EXISTS` as `FunctionName`.
 
 Unicode is not supported with `Dash`, `LeftArrowHead`, `RightArrowHerad` or `UnescapedSymbolicName`. Hence `Dash` is limited to the hyphen (-), `LeftArrowHead` is limited to '<' and `RightArrowHead` is limited to '>'.
 
-## Acknowledgements
+## 4. Acknowledgements
 
 This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH/sqlparse) project of the company [K2 Informatics GmbH](http://www.k2informatics.ch).
 
-## Contributing
+## 5. Contributing
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
@@ -257,7 +257,7 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
 
-## Release Notes
+## 6. Release Notes
 
 ### Version 1.0.0
 
