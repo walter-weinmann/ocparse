@@ -222,6 +222,10 @@ The documentation for **ocparse** is available here: [Wiki](https://github.com/w
 
 ## 3. Known issues
 
+### Comment
+
+The number of block comments (`/* ... */`) is limted to one perline.
+
 ### SymbolicName
 
 The following tokens may not be used as `SymbolicName`:
@@ -243,7 +247,7 @@ An exception is the use of the tokens `COUNT` and `EXISTS` as `FunctionName`.
 
 ### Unicode
 
-Unicode is not supported with `Dash`, `LeftArrowHead`, `RightArrowHerad` or `UnescapedSymbolicName`. Hence `Dash` is limited to the hyphen (-), `LeftArrowHead` is limited to '<' and `RightArrowHead` is limited to '>'.
+Unicode is not supported with `Dash`, `LeftArrowHead`, `RightArrowHerad` or `UnescapedSymbolicName`. Hence `Dash` is limited to the hyphen (`-`), `LeftArrowHead` is limited to '`<`' and `RightArrowHead` is limited to '`>`'.
 
 ## 4. Acknowledgements
 
