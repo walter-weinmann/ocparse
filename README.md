@@ -6,7 +6,7 @@
 
 ## Usage
 
-Example code:
+### Example code:
 
 ```
 MATCH (m:Movie) 
@@ -14,7 +14,7 @@ WHERE m.title = 'The Matrix'
 RETURN m
 ```
 
-Parsing the example code:
+### Parsing the example code:
 
 ```erlang
 1> {ok, {ParseTree, Tokens}} = ocparse:parsetree_with_tokens("MATCH (m:Movie) WHERE m.title = 'The Matrix' RETURN m").
@@ -55,7 +55,7 @@ Parsing the example code:
    {'UNESCAPED_SYMBOLIC_NAME',1,"m"}]}}
 ````   
 
-Access the parse tree of the example code:
+### Access the parse tree of the example code:
 
 ```erlang
 2> ParseTree.
@@ -89,7 +89,7 @@ Access the parse tree of the example code:
  []}
 ```    
 
-Access the token list of the example code:
+### Access the token list of the example code:
 
 ```erlang
 3> Tokens.
@@ -110,13 +110,15 @@ Access the token list of the example code:
  {'UNESCAPED_SYMBOLIC_NAME',1,"m"}]
 ``` 
 
-Compile the code from a parse tree:
+### Compile the code from a parse tree:
 
 ```erlang
 4> ocparse:parsetree_to_string(ParseTree).
 
 <<"match (m:Movie) where m .title = 'The Matrix' return m">>
 ``` 
+
+### Complete parse tree:
 
 The output of the parse tree in the Erlang shell is somehow shortened. The complete parse tree of the example code looks as follows:
 
