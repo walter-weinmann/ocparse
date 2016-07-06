@@ -26,7 +26,7 @@ ct_string(Test) ->
             %% --------------------------------------------------------
             %% Test TopDown
             %% --------------------------------------------------------
-            NCypherTD = case ocparse:pt_to_string_td(ParseTree) of
+            NCypherTD = case ocparse:parsetree_to_string_td(ParseTree) of
                             {error, ErrorTD} ->
                                 throw({error, ErrorTD});
                             NSTD ->
@@ -58,7 +58,7 @@ ct_string(Test) ->
             %% --------------------------------------------------------
             %% Test BottomUp
             %% --------------------------------------------------------
-            NCypherBU = case ocparse:pt_to_string_bu(ParseTree) of
+            NCypherBU = case ocparse:parsetree_to_string_bu(ParseTree) of
                             {error, ErrorBU} ->
                                 throw({error, ErrorBU});
                             NSBU ->

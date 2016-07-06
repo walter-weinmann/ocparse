@@ -119,7 +119,7 @@ test_cypher(TestGroup, Test, Logs) ->
         {ok, {ParseTree, Tokens}} ->
             %?debugFmt("wwe debugging test_cypher/3 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
             ?D2("~n~p", [ParseTree]),
-            NCypher = case ocparse:pt_to_string_td(ParseTree) of
+            NCypher = case ocparse:parsetree_to_string_td(ParseTree) of
                           {error, Error} ->
                               throw({error, Error});
                           NS ->
