@@ -1201,13 +1201,15 @@ Erlang code.
 -export([init/1]).
 
 % parser and compiler interface
--export([foldbu/3,
-         foldtd/3, 
+-export([fold/3,
+         fold_bu/3,
+         fold_td/3, 
          is_reserved/1,
          parsetree/1,
-         parsetree_with_tokens/1,
-         pt_to_string_bu/1,
-         pt_to_string_td/1
+         parsetree_to_string/1,
+         parsetree_to_string_bu/1,
+         parsetree_to_string_td/1,
+         parsetree_with_tokens/1
         ]).
 
 %-define(NODEBUG, true).
@@ -1228,16 +1230,20 @@ start() ->
 stop() ->
     application:stop(?MODULE).
 
-start(_Type, _Args) -> supervisor:start_link({local, ?MODULE}, ?MODULE, []).
-stop(_State)        -> ok.
+start(_Type, _Args) -> 
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+stop(_State) -> 
+    ok.
 
-init([])            -> {ok, { {one_for_one, 5, 10}, []} }.
+init([]) ->
+     {ok, { {one_for_one, 5, 10}, []} }.
 
 %%-----------------------------------------------------------------------------
 %%                          parser helper functions
 %%-----------------------------------------------------------------------------
 
-unwrap({_,_,X}) -> X.
+unwrap({_,_,X}) -> 
+    X.
 
 %%-----------------------------------------------------------------------------
 
@@ -1273,7 +1279,8 @@ parsetree_with_tokens(Cypher0) ->
         {error,Error,_} -> {lex_error, Error}
     end.
 
--spec is_reserved(binary() | atom() | list()) -> true | false.
+-spec is_reserved(binary() | atom() | list()) ->
+    true | false.
 is_reserved(Word) when is_binary(Word) ->
     is_reserved(erlang:binary_to_list(Word));
 is_reserved(Word) when is_atom(Word) ->
@@ -1289,30 +1296,46 @@ is_reserved(Word) when is_list(Word) ->
 %%                                  COMPILER
 %%-----------------------------------------------------------------------------
 
--spec pt_to_string_bu(tuple()| list()) -> {error, term()} | binary().
-pt_to_string_bu(PTree) -> foldbu(fun(_,_) -> null_fun end, null_fun, PTree).
+-spec parsetree_to_string(tuple()| list()) ->
+    {error, term()} | binary().
+parsetree_to_string(PTree) ->
+    parsetree_to_string_td(PTree).
 
--spec pt_to_string_td(tuple()| list()) -> {error, term()} | binary().
-pt_to_string_td(PTree) -> foldtd(fun(_,_) -> null_fun end, null_fun, PTree).
+-spec parsetree_to_string_bu(tuple()| list()) ->
+    {error, term()} | binary().
+parsetree_to_string_bu(PTree) ->
+    fold_bu(fun(_,_) -> null_fun end, null_fun, PTree).
 
--spec foldtd(fun(), term(), tuple() | list()) -> {error, term()} | binary().
-foldtd(Fun, Ctx, PTree) when is_function(Fun, 2) ->
+-spec parsetree_to_string_td(tuple()| list()) ->
+    {error, term()} | binary().
+parsetree_to_string_td(PTree) ->
+    fold_td(fun(_,_) -> null_fun end, null_fun, PTree).
+
+-spec fold(fun(), term(), tuple()) ->
+    {error, term()} | binary().
+fold(Fun, Ctx, PTree) when is_function(Fun, 2) ->
+    fold_td(Fun, Ctx, PTree). 
+    
+-spec fold_bu(fun(), term(), tuple()) ->
+    {error, term()} | binary().
+fold_bu(Fun, Ctx, PTree) when is_function(Fun, 2) ->
+    try ocparse_fold:fold(bottom_up, Fun, Ctx, 0, PTree) of
+        {error,_} = Error -> Error;
+        {Cypher, null_fun = Ctx} -> list_to_binary(string:strip(Cypher));
+        {_Output, NewCtx} -> NewCtx
+    catch
+        _:Error -> {error, Error}
+    end.
+
+-spec fold_td(fun(), term(), tuple() | list()) ->
+    {error, term()} | binary().
+fold_td(Fun, Ctx, PTree) when is_function(Fun, 2) ->
     try ocparse_fold:fold(top_down, Fun, Ctx, 0, PTree) of
         {error,_} = Error -> Error;
         {Cypher, null_fun = Ctx} -> 
             list_to_binary(string:strip(Cypher));
         {_Output, NewCtx} -> 
             NewCtx
-    catch
-        _:Error -> {error, Error}
-    end.
-
--spec foldbu(fun(), term(), tuple()) -> {error, term()} | binary().
-foldbu(Fun, Ctx, PTree) when is_function(Fun, 2) ->
-    try ocparse_fold:fold(bottom_up, Fun, Ctx, 0, PTree) of
-        {error,_} = Error -> Error;
-        {Cypher, null_fun = Ctx} -> list_to_binary(string:strip(Cypher));
-        {_Output, NewCtx} -> NewCtx
     catch
         _:Error -> {error, Error}
     end.
