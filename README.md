@@ -1,4 +1,4 @@
-# ocparse
+# ocparse - Cypher parser based on openCypher's LALR grammar
 
 [![Build Status](https://travis-ci.org/walter-weinmann/ocparse.svg?branch=master)](https://travis-ci.org/walter-weinmann/ocparse)
 
