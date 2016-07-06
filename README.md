@@ -224,7 +224,7 @@ The documentation for **ocparse** is available here: [Wiki](https://github.com/w
 
 ### Comment
 
-The number of block comments (`/* ... */`) is limted to one perline.
+The number of block comments (`/* ... */`) is limted to one per line.
 
 ### SymbolicName
 
