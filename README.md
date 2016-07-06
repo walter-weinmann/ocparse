@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/walter-weinmann/ocparse.svg?branch=master)](https://travis-ci.org/walter-weinmann/ocparse)
 
-**ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang. The [openCypher project](https://http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](http://neo4j.com/docs/developer-manual/current/#cypher-query-lang). The [openCypher](https://github.com/opencypher/openCypher) project provides with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the basis for the definition of the LALR grammar. In future **ocparse** will follow the [openCypher](https://github.com/opencypher/openCypher) project very closely.
+**ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang. The **ocparse** is closely aligned to the [openCypher](https://github.com/opencypher/openCypher) project and in future will be adapted on a regular basis as the [openCypher](https://github.com/opencypher/openCypher) project evolves. The [openCypher project](https://http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](http://neo4j.com/docs/developer-manual/current/#cypher-query-lang). And, with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the project provides the basis for the definition of the LALR grammar. 
 
 ## 1. Usage
 
@@ -120,7 +120,7 @@ RETURN m
 
 ### Complete parse tree:
 
-The output of the parse tree in the Erlang shell is somehow shortened. The complete parse tree of the example code looks as follows:
+The output of the parse tree in the Erlang shell is shortened (cause not known). The complete parse tree of the example code looks as follows:
 
 ```erlang
 {cypher,{},
@@ -249,7 +249,7 @@ An exception is the use of the tokens `COUNT` and `EXISTS` as `FunctionName`.
 
 Unicode is not supported with `Dash`, `LeftArrowHead`, `RightArrowHerad` or `UnescapedSymbolicName`. Hence `Dash` is limited to the hyphen (`-`), `LeftArrowHead` is limited to '`<`' and `RightArrowHead` is limited to '`>`'.
 
-## 4. Acknowledgements
+## 4. Acknowledgement
 
 This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH/sqlparse) project of the company [K2 Informatics GmbH](http://www.k2informatics.ch).
 
