@@ -220,7 +220,6 @@ The output of the parse tree in the Erlang shell is somehow shortened. The compl
 
 The documentation for **ocparse** is available here: [Wiki](https://github.com/walter-weinmann/ocparse/wiki).
 
-
 ## Known issues
 
 ### SymbolicName
@@ -263,6 +262,3 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 ### Version 1.0.0
 
 Release Date: 07.07.2016
-
-
-
