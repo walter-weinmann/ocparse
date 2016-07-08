@@ -14,3 +14,4 @@ src/ocparse.erl
 /ct/logs
 /ct/*.beam
 /test/wwe.tst
+/test/wwe.legacy

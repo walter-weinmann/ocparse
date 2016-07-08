@@ -4,6 +4,8 @@
 
 **ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang.  **ocparse** is closely aligned to the [openCypher](https://github.com/opencypher/openCypher) project and in future will be adapted on a regular basis as the [openCypher](https://github.com/opencypher/openCypher) project evolves. The [openCypher project](http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](https://neo4j.com/docs/developer-manual/current/#cypher-query-lang). And, with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the project provides the basis for the definition of the LALR grammar. 
 
+Not all grammar rules of Cypher the language will be standardised in their current form, meaning that they will not be part of openCypher as-is. Therefore, the openCypher grammar will not include some well-known Cypher constructs; these are called 'legacy'. To still enable tool authors or others interested in developing support for Cypher in its full current shape, these legacy rules are still present in the the legacy version of the parser. The legacy version of the parser uses `ocparse_legacy` instead of `ocparse` etc.
+
 ## 1. Usage
 
 ### Example code:
@@ -231,19 +233,25 @@ The number of block comments (`/* ... */`) is limted to one per line.
 The following tokens may not be used as `SymbolicName`:
 
 ```
- ALL, ALLSHORTESTPATHS, AND, ANY, AS, ASC, ASCENDING, ASSERT, BY, CASE, COMMIT, 
- CONSTRAINT, CONTAINS, COUNT, CREATE, CSV, CYPHER, DELETE, DESC, DESCENDING, 
- DETACH, DIGIT_STRING, DISTINCT, DROP, ELSE, END, ENDS, ESCAPED_SYMBOLIC_NAME, 
- EXISTS, EXPLAIN, EXPONENT_DECIMAL_REAL, EXTRACT, FALSE, FIELDTERMINATOR, FILTER, 
- FOREACH, FROM, HEADERS, HEX_INTEGER, IN, INDEX, IS, JOIN, LIMIT, LOAD, MATCH, 
- MERGE, NODE, NONE, NOT, NULL, ON, OPTIONAL, OR, ORDER, PERIODIC, PROFILE, REDUCE, 
- REL, RELATIONSHIP, REMOVE, RETURN, SCAN, SET, SHORTESTPATH, SIGNED_DECIMAL_INTEGER, 
- SIGNED_OCTAL_INTEGER, SIGNED_REGULAR_DECIMAL_REAL, SINGLE, SKIP, START, STARTS, 
- STRING_LITERAL, THEN, TRUE, UNESCAPED_SYMBOLIC_NAME, UNION, UNIQUE, UNSIGNED_DECIMAL_INTEGER, 
- UNSIGNED_OCTAL_INTEGER, UNSIGNED_REGULAR_DECIMAL_REAL, UNWIND, USING, WHEN, WHERE, WITH, XOR
+ ALL, AND, ANY, AS, ASC, ASCENDING, BY, CONTAINS, COUNT, CREATE, DELETE, DESC, DESCENDING, 
+ DETACH, DIGIT_STRING, DISTINCT, ENDS, ESCAPED_SYMBOLIC_NAME, EXISTS, EXPONENT_DECIMAL_REAL, 
+ EXTRACT, FALSE, FILTER, HEX_INTEGER, IN, IS, LIMIT, MATCH, MERGE, NONE, NOT, NULL, ON, 
+ OPTIONAL, OR, ORDER, REMOVE, RETURN, SET, SIGNED_DECIMAL_INTEGER, SIGNED_OCTAL_INTEGER, 
+ SIGNED_REGULAR_DECIMAL_REAL, SINGLE, SKIP, STARTS, STRING_LITERAL, TRUE, UNESCAPED_SYMBOLIC_NAME, 
+ UNION, UNSIGNED_DECIMAL_INTEGER, UNSIGNED_OCTAL_INTEGER, UNSIGNED_REGULAR_DECIMAL_REAL, UNWIND, 
+ WHERE, WITH, XOR
 ```
 
 An exception is the use of the tokens `COUNT` and `EXISTS` as `FunctionName`.
+
+In the legacy version of the parser the following tokens are also excluded as `SymbolicName`:
+
+```
+ ALLSHORTESTPATHS, ASSERT, CASE, COMMIT, CONSTRAINT, CSV, CYPHER, DROP, ELSE, END, EXPLAIN, 
+ FIELDTERMINATOR, FOREACH, FROM, HEADERS, INDEX, JOIN, LOAD, NODE, PERIODIC, PROFILE, REDUCE, 
+ REL, RELATIONSHIP, SCAN, SHORTESTPATH, START, THEN, UNIQUE, USING, WHEN
+```
+
 
 ### Unicode
 
@@ -262,6 +270,22 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 5. Create new Pull Request
 
 ## 6. Release Notes
+
+### Version 1.1.0
+
+Release Date: 08.07.2016
+
+#### Issues
+
+1. Correction in definition of Atom with MapLiteral and Parameter.
+2. Test case removed, since multiple statements are not supported (see [openParser #113](https://github.com/opencypher/openCypher/issues/113)).
+3. PropertyKeyNameExpression removed from parse tree.
+
+#### New features
+
+1. Support of the legacy grammar.
+
+----------
 
 ### Version 1.0.0
 

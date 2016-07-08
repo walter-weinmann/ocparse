@@ -5,4 +5,5 @@
         {applications, [kernel, stdlib]},
         {mod, {ocparse, []}},
         {env, []},
-        {modules, [oclexer, ocparse, ocparse_fold, octest]}]}.
+        {modules, [oclexer, ocparse, ocparse_fold, octest,
+            oclexer_legacy, ocparse_legacy, ocparse_fold_legacy, octest_legacy]}]}.

@@ -142,6 +142,12 @@ RETURN person.name, appearances, movies
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 "
+CREATE CONSTRAINT ON (movie:Movie) ASSERT movie.title IS UNIQUE
+".
+"
+CREATE INDEX ON :Actor(name)
+".
+"
 CREATE (actor:Actor { name:\"Tom Hanks\" }),(movie:Movie { title:'Sleepless IN Seattle' }),
 (actor)-[:ACTED_IN]->(movie);
 ".
@@ -255,6 +261,54 @@ RETURN n.name
 MATCH (n)
 WHERE id(n) IN { ids }
 RETURN n.name
+".
+"
+START n=node:people(name = { value })
+RETURN n
+".
+"
+START n=node:people({ query })
+RETURN n
+".
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 5.6 Compatibility
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"
+CYPHER 2.2
+START n=node:nodes(name = \"A\")
+RETURN n
+".
+"
+CYPHER 1.9
+START n=node(42)
+RETURN n
+".
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 6.2 Expressions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"
+MATCH (n)
+RETURN
+CASE n.eyes
+WHEN 'blue'
+THEN 1
+WHEN 'brown'
+THEN 2
+ELSE 3 END AS result
+".
+"
+MATCH (n)
+RETURN
+CASE
+WHEN n.eyes = 'blue'
+THEN 1
+WHEN n.age < 40
+THEN 2
+ELSE 3 END AS result
 ".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -604,6 +658,19 @@ WHERE id(r)= 0
 RETURN a,b
 ".
 "
+MATCH (martin:Person { name:\"Martin Sheen\" }),(oliver:Person { name:\"Oliver Stone\" }), p = shortestPath((martin)-[*..15]-(oliver))
+RETURN p
+".
+"
+MATCH (charlie:Person { name:\"Charlie Sheen\" }),(martin:Person { name:\"Martin Sheen\" }), p = shortestPath((charlie)-[*]-(martin))
+WHERE NONE (r IN rels(p) WHERE type(r)= \"FATHER\")
+RETURN p
+".
+"
+MATCH (martin:Person { name:\"Martin Sheen\" }),(michael:Person { name:\"Michael Douglas\" }), p = allShortestPaths((martin)-[*]-(michael))
+RETURN p
+".
+"
 MATCH (n)
 WHERE id(n)= 0
 RETURN n
@@ -755,6 +822,23 @@ RETURN a
 ".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 8.4 Start
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"
+START n=node:nodes(name = \"A\")
+RETURN n
+".
+"
+START r=relationship:rels(name = \"Andrés\")
+RETURN r
+".
+"
+START n=node:nodes(\"name:A\")
+RETURN n
+".
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 8.5 Aggregation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -823,6 +907,39 @@ RETURN collect(n.property)
 "
 MATCH (a:Person { name: 'A' })-->(b)
 RETURN count(DISTINCT b.eyes)
+".
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 8.6 Load CSV
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"
+LOAD CSV FROM 'http://neo4j.com/docs/3.0.3/csv/artists.csv' AS line
+CREATE (:Artist { name: line[1], year: toInt(line[2])})
+".
+"
+LOAD CSV WITH HEADERS FROM 'http://neo4j.com/docs/3.0.3/csv/artists-with-headers.csv' AS line
+CREATE (:Artist { name: line.Name, year: toInt(line.Year)})
+".
+"
+LOAD CSV FROM 'http://neo4j.com/docs/3.0.3/csv/artists-fieldterminator.csv' AS line FIELDTERMINATOR
+';'
+CREATE (:Artist { name: line[1], year: toInt(line[2])})
+".
+"
+USING PERIODIC COMMIT
+LOAD CSV FROM 'http://neo4j.com/docs/3.0.3/csv/artists.csv' AS line
+CREATE (:Artist { name: line[1], year: toInt(line[2])})
+".
+"
+USING PERIODIC COMMIT 500
+LOAD CSV FROM 'http://neo4j.com/docs/3.0.3/csv/artists.csv' AS line
+CREATE (:Artist { name: line[1], year: toInt(line[2])})
+".
+"
+LOAD CSV FROM 'http://neo4j.com/docs/3.0.3/csv/artists-with-escaped-char.csv' AS line
+CREATE (a:Artist { name: line[1], year: toInt(line[2])})
+RETURN a.name AS name, a.year AS year, length(a.name) AS length
 ".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -941,6 +1058,7 @@ MATCH (person:Person)
 MERGE (person)-[r:HAS_CHAUFFEUR]->(chauffeur:Chauffeur { name: person.chauffeurName })
 RETURN person.name, person.chauffeurName, chauffeur
 ".
+% wwe "CREATE CONSTRAINT ON (n:Person) ASSERT n.name IS UNIQUE; CREATE CONSTRAINT ON (n:Person) ASSERT n.role IS UNIQUE;".
 "
 MERGE (laurence:Person { name: 'Laurence Fishburne' })
 RETURN laurence.name
@@ -1044,6 +1162,85 @@ RETURN n
 MATCH (n { name: 'Peter' })
 REMOVE n:German:Swedish
 RETURN n
+".
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 9.6 Foreach
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"
+MATCH p =(begin)-[*]->(END_4711 )
+WHERE begin.name='A' AND END_4711 .name='D'
+FOREACH (n IN nodes(p)| SET n.marked = TRUE )
+".
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 9.7 Create Unique
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"
+MATCH (root { name: 'root' })
+CREATE UNIQUE (root)-[:LOVES]-(someone)
+RETURN someone
+".
+"
+MATCH (root { name: 'root' })
+CREATE UNIQUE (root)-[:X]-(leaf { name:'D' })
+RETURN leaf
+".
+"
+MATCH (a { name: 'A' })
+CREATE UNIQUE (a)-[:KNOWS]-(c:blue)
+RETURN c
+".
+"
+MATCH (lft { name: 'A' }),(rgt)
+WHERE rgt.name IN ['B', 'C']
+CREATE UNIQUE (lft)-[r:KNOWS]->(rgt)
+RETURN r
+".
+"
+MATCH (root { name: 'root' })
+CREATE UNIQUE (root)-[r:X { since:'forever' }]-()
+RETURN r
+".
+"
+MATCH (root { name: 'root' })
+CREATE UNIQUE (root)-[:FOO]->(x),(root)-[:BAR]->(x)
+RETURN x
+".
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 9.8 Importing CSV files
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"
+LOAD CSV WITH HEADERS FROM \"http://neo4j.com/docs/3.0.1/csv/import/persons.csv\" AS csvLine
+CREATE (p:Person { id: toInt(csvLine.id), name: csvLine.name })
+".
+"
+CREATE INDEX ON :Country(name)
+".
+"
+LOAD CSV WITH HEADERS FROM \"http://neo4j.com/docs/3.0.1/csv/import/movies.csv\" AS csvLine
+MERGE (country:Country { name: csvLine.country })
+CREATE (movie:Movie { id: toInt(csvLine.id), title: csvLine.title, year:toInt(csvLine.year)})
+CREATE (movie)-[:MADE_IN]->(country)
+".
+"
+CREATE CONSTRAINT ON (person:Person) ASSERT person.id IS UNIQUE
+".
+"
+CREATE CONSTRAINT ON (movie:Movie) ASSERT movie.id IS UNIQUE
+".
+"
+USING PERIODIC COMMIT 500
+LOAD CSV WITH HEADERS FROM \"http://neo4j.com/docs/3.0.1/csv/import/roles.csv\" AS csvLine
+MATCH (person:Person { id: toInt(csvLine.personId)}),(movie:Movie { id: toInt(csvLine.movieId)})
+CREATE (person)-[:PLAYED { role: csvLine.role }]->(movie)
+".
+"
+DROP CONSTRAINT ON (person:Person) ASSERT person.id IS UNIQUE
 ".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1186,6 +1383,11 @@ RETURN a.array, tail(a.array)
 "
 RETURN range(0,10), range(2,18,3)
 ".
+"
+MATCH p=(a)-->(b)-->(c)
+WHERE a.name='Alice' AND b.name='Bob' AND c.name='Daniel'
+RETURN reduce(totalAge = 0, n IN nodes(p)| totalAge + n.age) AS reduction
+".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 10.4 Math functions
@@ -1314,6 +1516,12 @@ RETURN toString(11.5), toString(\"already a string\"), toString(TRUE )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 "
+CREATE INDEX ON :Person(name)
+".
+"
+DROP INDEX ON :Person(name)
+".
+"
 MATCH (person:Person { name: 'Andres' })
 RETURN person
 ".
@@ -1348,10 +1556,25 @@ RETURN p
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 "
+CREATE CONSTRAINT ON (book:Book) ASSERT book.isbn IS UNIQUE
+".
+"
+DROP CONSTRAINT ON (book:Book) ASSERT book.isbn IS UNIQUE
+".
+"
 CREATE (book:Book { isbn: '1449356265', title: 'Graph Databases' })
 ".
 "
 CREATE (book:Book { isbn: '1449356265', title: 'Graph Databases' })
+".
+"
+CREATE CONSTRAINT ON (book:Book) ASSERT book.isbn IS UNIQUE
+".
+"
+CREATE CONSTRAINT ON (book:Book) ASSERT exists(book.isbn)
+".
+"
+DROP CONSTRAINT ON (book:Book) ASSERT exists(book.isbn)
 ".
 "
 CREATE (book:Book { isbn: '1449356265', title: 'Graph Databases' })
@@ -1364,6 +1587,15 @@ MATCH (book:Book { title: 'Graph Databases' })
 REMOVE book.isbn
 ".
 "
+CREATE CONSTRAINT ON (book:Book) ASSERT exists(book.isbn)
+".
+"
+CREATE CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)
+".
+"
+DROP CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)
+".
+"
 CREATE (user:User)-[like:LIKED { day: 'yesterday' }]->(book:Book)
 ".
 "
@@ -1373,12 +1605,39 @@ CREATE (user:User)-[like:LIKED]->(book:Book)
 MATCH (user:User)-[like:LIKED]->(book:Book)
 REMOVE like.day
 ".
+"
+CREATE CONSTRAINT ON ()-[like:LIKED]-() ASSERT exists(like.day)
+".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 12.3 Basis query tuning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 "
+LOAD CSV WITH HEADERS FROM \"http://neo4j.com/docs/3.0.1/csv/query-tuning/movies.csv\" AS line
+MERGE (m:Movie { title:line.title })
+ON CREATE SET m.released = toInt(line.released), m.tagline = line.tagline
+".
+"
+LOAD CSV WITH HEADERS FROM 'http://neo4j.com/docs/3.0.1/csv/query-tuning/actors.csv' AS line
+MATCH (m:Movie { title:line.title })
+MERGE (p:Person { name:line.name })
+ON CREATE SET p.born = toInt(line.born)
+MERGE (p)-[:ACTED_IN { roles:split(line.roles,\";\")}]->(m)
+".
+"
+LOAD CSV WITH HEADERS FROM 'http://neo4j.com/docs/3.0.1/csv/query-tuning/directors.csv' AS line
+MATCH (m:Movie { title:line.title })
+MERGE (p:Person { name:line.name })
+ON CREATE SET p.born = toInt(line.born)
+MERGE (p)-[:DIRECTED]->(m)
+".
+"
+MATCH (p { name:\"Tom Hanks\" })
+RETURN p
+".
+"
+PROFILE
 MATCH (p { name:\"Tom Hanks\" })
 RETURN p
 ".
@@ -1387,6 +1646,19 @@ MATCH (p:Person { name:\"Tom Hanks\" })
 RETURN p
 ".
 "
+PROFILE
+MATCH (p:Person { name:\"Tom Hanks\" })
+RETURN p
+".
+"
+CREATE INDEX ON :Person(name)
+".
+"
+MATCH (p:Person { name:\"Tom Hanks\" })
+RETURN p
+".
+"
+PROFILE
 MATCH (p:Person { name:\"Tom Hanks\" })
 RETURN p
 ".
@@ -1399,6 +1671,40 @@ RETURN p
 MATCH (liskov:Scientist { name:'Liskov' })-[:KNOWS]->(wing:Scientist)-[:RESEARCHED]->(cs:Science {
 name:'Computer Science' })<-[:RESEARCHED]-(conway:Scientist { name: 'Conway' })
 RETURN 1 AS column
+".
+"
+MATCH (liskov:Scientist { name:'Liskov' })-[:KNOWS]->(wing:Scientist)-[:RESEARCHED]->(cs:Science {
+name:'Computer Science' })<-[:RESEARCHED]-(conway:Scientist { name: 'Conway' })
+USING INDEX liskov:Scientist(name)
+RETURN liskov.born AS column
+".
+"
+MATCH (liskov:Scientist { name:'Liskov' })-[:KNOWS]->(wing:Scientist)-[:RESEARCHED]->(cs:Science {
+name:'Computer Science' })<-[:RESEARCHED]-(conway:Scientist { name: 'Conway' })
+USING INDEX liskov:Scientist(name)
+USING INDEX conway:Scientist(name)
+RETURN liskov.born AS column
+".
+"
+MATCH (s:Scientist)
+USING SCAN s:Scientist
+WHERE s.born < 1939
+RETURN s.born AS column
+".
+"
+MATCH (liskov:Scientist { name:'Liskov' })-[:KNOWS]->(wing:Scientist)-[:RESEARCHED]->(cs:Science {
+name:'Computer Science' })<-[:RESEARCHED]-(conway:Scientist { name: 'Conway' })
+USING INDEX liskov:Scientist(name)
+USING INDEX conway:Scientist(name)
+USING JOIN ON wing
+RETURN wing.born AS column
+".
+"
+MATCH (liskov:Scientist { name:'Liskov' })-[:KNOWS]->(wing:Scientist { name:'Wing' })-[:RESEARCHED]-
+>(cs:Science { name:'Computer Science' })<-[:RESEARCHED]-(liskov)
+USING INDEX liskov:Scientist(name)
+USING JOIN ON liskov, cs
+RETURN wing.born AS column
 ".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1596,5 +1902,38 @@ RETURN value;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 "
+CREATE CONSTRAINT ON (c:Country) ASSERT c.name IS UNIQUE
+".
+"
 CREATE (:Person)
+".
+"
+CYPHER planner=rule
+CREATE (:Person { name: \"Alistair\" })
+".
+"
+CYPHER planner=rule
+MATCH (p:Person { name: \"me\" }),(f:Person { name: \"Andres\" })
+MERGE (p)-[:FRIENDS_WITH]->(f)
+".
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 13.6 Shortest path planning
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"
+MATCH (ms:Person { name:'Martin Sheen' }),(cs:Person { name:'Charlie Sheen' }), p = shortestPath((ms)-[rels:ACTED_IN*]-(cs))
+WHERE ALL (r IN rels WHERE exists(r.role))
+RETURN p
+".
+"
+MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-(ms))
+WHERE length(p)> 1
+RETURN p
+".
+"
+MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-(ms))
+WITH p
+WHERE length(p)> 1
+RETURN p
 ".
