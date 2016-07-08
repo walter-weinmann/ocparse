@@ -1016,22 +1016,13 @@ expression_2_addon -> property_lookup                                           
 
 atom -> number_literal                                                                          : {atom, '$1'}.
 atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
-
-%% =====================================================================================================================
-%% Helper definitions: reduce / recuce conflict with 
-%%        atom -> parameter
-%%        atom -> map_literal
-%% ---------------------------------------------------------------------------------------------------------------------
-atom -> properties                                                                              : {atom, '$1'}.
-%% =====================================================================================================================
-
-%% wwe atom -> parameter                                                                               : {atom, '$1'}.
+atom -> parameter                                                                               : {atom, '$1'}.
 atom -> TRUE                                                                                    : {atom, {terminal, "true"}}.
 atom -> FALSE                                                                                   : {atom, {terminal, "false"}}.
 atom -> NULL                                                                                    : {atom, {terminal, "null"}}.
 atom -> case_expression                                                                         : {atom, '$1'}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, "count(*)"}}.
-%% wwe atom -> map_literal                                                                             : {atom, '$1'}.
+atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
 atom -> FILTER '(' filter_expression ')'                                                        : {atom, {'filter', '$3'}}.

@@ -140,7 +140,7 @@ fold(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
 
 fold(FType, Fun, Ctx, Lvl, {atom, {Type, _} = Value} = ST)
     when Type == caseExpression; Type == functionInvocation; Type == listComprehension;
-    Type == numberLiteral; Type == parenthesizedExpression; Type == properties;
+    Type == mapLiteral; Type == numberLiteral; Type == parameter; Type == parenthesizedExpression;
     Type == stringLiteral; Type == terminal; Type == variable ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
