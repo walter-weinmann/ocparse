@@ -38,7 +38,6 @@ Nonterminals
  decimal_integer
  delete
  detach_opt
- digit_string
  distinct_opt
  double_literal
  drop_index
@@ -399,16 +398,7 @@ configuration_option_list -> configuration_option_list configuration_option     
 configuration_option_list -> configuration_option                                               : ['$1'].
 %% =====================================================================================================================
 
-version_number -> digit_string '.' digit_string                                                 : {versionNumber, '$1', '$3'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
 version_number -> UNSIGNED_REGULAR_DECIMAL_REAL                                                 : {versionNumber, unwrap('$1')}.
-
-digit_string -> DIGIT_STRING                                                                    : unwrap('$1').
-% digit_string -> UNSIGNED_OCTAL_INTEGER                                                          : unwrap('$1').
-%% =====================================================================================================================
 
 configuration_option -> symbolic_name '=' symbolic_name                                         : {configurationOption, '$1', '$3'}.
 
@@ -774,19 +764,18 @@ node_pattern -> '('  ')'                                                        
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
+relationship_pattern -> '<-->'                                                                  : {relationshipPattern, "<-->"}.
 relationship_pattern -> '<' '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, "<", "-", '$3', "-", ">"}.
+relationship_pattern -> '<--'                                                                   : {relationshipPattern, "<--"}.
 relationship_pattern -> '<' '-' relationship_detail_opt '-'                                     : {relationshipPattern, "<", "-", '$3', "-", []}.
+relationship_pattern ->  '-->'                                                                  : {relationshipPattern, "-->"}.
 relationship_pattern ->     '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, [],  "-", '$2', "-", ">"}.
+relationship_pattern ->  '--'                                                                   : {relationshipPattern, "--"}.
 relationship_pattern ->     '-' relationship_detail_opt '-'                                     : {relationshipPattern, [],  "-", '$2', "-", []}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-relationship_pattern -> '<-->'                                                                  : {relationshipPattern, "<-->"}.
-relationship_pattern -> '<--'                                                                   : {relationshipPattern, "<--"}.
-relationship_pattern ->  '-->'                                                                  : {relationshipPattern, "-->"}.
-relationship_pattern ->  '--'                                                                   : {relationshipPattern, "--"}.
-
 relationship_detail_opt -> '$empty'                                                             : {}.
 relationship_detail_opt -> relationship_detail                                                  : '$1'.
 %% =====================================================================================================================
@@ -1131,7 +1120,7 @@ property_key_name_expression_commalist -> property_key_name_expression          
 property_key_name_expression_commalist -> property_key_name_expression ',' property_key_name_expression_commalist
                                                                                                 : ['$1' | '$3'].
 
-property_key_name_expression -> property_key_name ':' expression                                : {propertyKeyNameExpression, '$1', '$3'}.
+property_key_name_expression -> property_key_name ':' expression                                : {'$1', '$3'}.
 %% =====================================================================================================================
 
 parameter -> '{' symbolic_name '}'                                                              : {parameter, '$2'}.
@@ -1165,7 +1154,7 @@ octal_integer -> UNSIGNED_OCTAL_INTEGER                                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-decimal_integer -> digit_string                                                                 : {decimalInteger, '$1'}.
+decimal_integer -> DIGIT_STRING                                                                 : unwrap('$1').
 %% =====================================================================================================================
 
 double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, unwrap('$1')}.

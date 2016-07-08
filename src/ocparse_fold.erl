@@ -720,7 +720,6 @@ fold(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                         end ++ SubAcc, CtxAcc1};
             {ListType, _, _}
                 when Type == patternPartCommalist, ListType == patternPart;
-                Type == propertyKeyNameExpressionCommalist, ListType == propertyKeyNameExpression;
                 Type == removeItemCommalist, ListType == removeItem;
                 Type == returnItemCommalist, ListType == returnItem;
                 Type == setItemCommalist, ListType == setItem;
@@ -734,6 +733,14 @@ fold(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                         end ++ SubAcc, CtxAcc1};
             {ListType, _, _, _}
                 when Type == setItemCommalist, ListType == setItem ->
+                ?debugFmt("wwe debugging fold/5 ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = fold(FType, Fun, CtxAcc, Lvl + 1, F),
+                {Acc ++ case length(Acc) of
+                            0 -> [];
+                            _ -> ","
+                        end ++ SubAcc, CtxAcc1};
+            {{propertyKeyName, _}, {expression, _}}
+                when Type == propertyKeyNameExpressionCommalist ->
                 ?debugFmt("wwe debugging fold/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = fold(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
@@ -2118,10 +2125,10 @@ fold(FType, Fun, Ctx, Lvl, {propertyExpression, Atom, PropertyLookUpList} = ST) 
     RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% propertyKeyNameExpression
+% propertyKeyNameExpression (Helper definition)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, Lvl, {propertyKeyNameExpression, {propertyKeyName, _} = PropertyKeyName, {expression, _} = Expression} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {{propertyKeyName, _} = PropertyKeyName, {expression, _} = Expression} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
