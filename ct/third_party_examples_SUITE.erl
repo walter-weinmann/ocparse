@@ -1020,9 +1020,6 @@ test_neo4j_9_2_merge(_Config) ->
                  MERGE (person)-[r:HAS_CHAUFFEUR]->(chauffeur:Chauffeur { name: person.chauffeurName })
                  RETURN person.name, person.chauffeurName, chauffeur",
     octest:ct_string(Cypher_13),
-    Cypher_14 = "CREATE CONSTRAINT ON (n:Person) ASSERT n.name IS UNIQUE;
-                 CREATE CONSTRAINT ON (n:Person) ASSERT n.role IS UNIQUE;",
-%   octest:ct_string(Cypher_14),                                                % not supported by openCypher ???
     Cypher_15 = "MERGE (laurence:Person { name: 'Laurence Fishburne' })
                  RETURN laurence.name",
     octest:ct_string(Cypher_15),
