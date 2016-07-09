@@ -12,29 +12,29 @@
 %% pattern = pattern_part_comma_list
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ( ) <- -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 ) - -> ( ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )".
-"MATCH ( ) <- -> ( ), variable_9 = ( ( : node_1 ) <- - ( ) )".
-"MATCH variable_9 = ( ( : node_1 : node_2 ) - - ( ) ) , ( ) <- -> ( )".
-"MATCH variable_9 = ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , variable_9 = ( ( variable_1 : node_1 ) <- [ ] -> ( ) )".
-"MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) )".
-"MATCH variable_9 = ( ( { } ) <- [ ] - ( ) ) , ( { } ) <- [ ] - ( )".
-"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) )".
-"MATCH variable_9 = ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )". 
-"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ( ( ) <- -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 ) - -> ( ) ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )".
-"MATCH ( ) <- -> ( ) , variable_9 = ( ( ( : node_1 ) <- - ( ) ) )".
-"MATCH variable_9 = ( ( ( : node_1 : node_2 ) - - ( ) ) ) , ( ) <- -> ( )".
-"MATCH variable_9 = ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , variable_9 = ( ( ( variable_1 : node_1 ) <- [ ] -> ( ) ) )".
-"MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( { } ) <- [ ] - ( ) ) ) , ( { } ) <- [ ] - ( )".
-"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) ) )".
-"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )". 
-"MATCH variable_9 = ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )".
+"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = SHORTESTPATH ( ( ) <- -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 ) - -> ( ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )".
+"MATCH ( ) <- -> ( ), variable_9 = SHORTESTPATH ( ( : node_1 ) <- - ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( : node_1 : node_2 ) - - ( ) ) , ( ) <- -> ( )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , variable_9 = SHORTESTPATH ( ( variable_1 : node_1 ) <- [ ] -> ( ) )".
+"MATCH ( { } ) <- [ ] - ( ) , variable_9 = SHORTESTPATH ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( { } ) <- [ ] - ( ) ) , ( { } ) <- [ ] - ( )".
+"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = SHORTESTPATH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )". 
+"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ALLSHORTESTPATHS ( ( ( ) <- -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 ) - -> ( ) ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )".
+"MATCH ( ) <- -> ( ) , variable_9 = ALLSHORTESTPATHS ( ( ( : node_1 ) <- - ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( : node_1 : node_2 ) - - ( ) ) ) , ( ) <- -> ( )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 : node_1 ) <- [ ] -> ( ) ) )".
+"MATCH ( { } ) <- [ ] - ( ) , variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { } ) <- [ ] - ( ) ) ) , ( { } ) <- [ ] - ( )".
+"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ALLSHORTESTPATHS ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) ) )".
+"MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ALLSHORTESTPATHS ( ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )". 
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )".
 "MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( ) <- -> ( )".
 "MATCH variable_9 = ( variable_1 ) - -> ( ) , ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( )".
 "MATCH ( ) <- -> ( ) , variable_9 = ( : node_1 ) <- - ( )".
-"MATCH variable_9 = ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , variable_9 = ( variable_1 : node_1 ) <- [ ] -> ( )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) ) , variable_9 = ( variable_1 : node_1 ) <- [ ] -> ( )".
 "MATCH ( { } ) <- [ ] - ( ) , variable_9 = ( variable_1 : node_1 : node_2 ) - [ ] -> ( )".
 "MATCH variable_9 = ( { } ) <- [ ] - ( ) , ( { } ) <- [ ] - ( )".
 "MATCH ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) , variable_9 = ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( )".
@@ -56,43 +56,43 @@
 %% pattern_part = variable = anonymous_pattern_part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"MATCH variable_9 = ( ( ) <- -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 ) - -> ( ) )".
-"MATCH variable_9 = ( ( : node_1 ) <- - ( ) )".
-"MATCH variable_9 = ( ( : node_1 : node_2 ) - - ( ) )".
-"MATCH variable_9 = ( ( variable_1 : node_1 ) <- [ ] -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) )".
-"MATCH variable_9 = ( ( { } ) <- [ ] - ( ) )".
-"MATCH variable_9 = ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) )".
-"MATCH variable_9 = ( ( { parameter_1 } ) <- [ ? ] -> ( ) )". 
-"MATCH variable_9 = ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) )".
-"MATCH variable_9 = ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) )".
-"MATCH variable_9 = ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) )".
-"MATCH variable_9 = ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( ) <- -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 ) - -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( : node_1 ) <- - ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( : node_1 : node_2 ) - - ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 : node_1 ) <- [ ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( { } ) <- [ ] - ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( { parameter_1 } ) <- [ ? ] -> ( ) )". 
+"MATCH variable_9 = SHORTESTPATH ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) )".
+"MATCH variable_9 = SHORTESTPATH ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) )".
 
-"MATCH variable_9 = ( ( ( ) <- -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 ) - -> ( ) ) )".
-"MATCH variable_9 = ( ( ( : node_1 ) <- - ( ) ) )".
-"MATCH variable_9 = ( ( ( : node_1 : node_2 ) - - ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 : node_1 ) <- [ ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( { } ) <- [ ] - ( ) ) )".
-"MATCH variable_9 = ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) ) )".
-"MATCH variable_9 = ( ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) )". 
-"MATCH variable_9 = ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) ) )".
-"MATCH variable_9 = ( ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( ) <- -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 ) - -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( : node_1 ) <- - ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( : node_1 : node_2 ) - - ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 : node_1 ) <- [ ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { } ) <- [ ] - ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) )". 
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) ) )".
+"MATCH variable_9 = ALLSHORTESTPATHS ( ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) ) )".
 
 "MATCH variable_9 = ( ) <- -> ( )".
 "MATCH variable_9 = ( variable_1 ) - -> ( )".
@@ -135,88 +135,88 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% shortest_path_pattern = ( pattern_element )
+%% shortest_path_pattern = SHORTESTPATH ( pattern_element )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"MATCH ( ( ) <- -> ( ) )".
-"MATCH ( ( variable_1 ) - -> ( ) )".
-"MATCH ( ( : node_1 ) <- - ( ) )".
-"MATCH ( ( : node_1 : node_2 ) - - ( ) )".
-"MATCH ( ( variable_1 : node_1 ) <- [ ] -> ( ) )".
-"MATCH ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) )".
-"MATCH ( ( { } ) <- [ ] - ( ) )".
-"MATCH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) )".
-"MATCH ( ( { parameter_1 } ) <- [ ? ] -> ( ) )". 
-"MATCH ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) )".
-"MATCH ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) )".
-"MATCH ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) )".
-"MATCH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) )".
-"MATCH ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) )".
-"MATCH ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) )".
-"MATCH ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) )".
-"MATCH ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) )".
-"MATCH ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( ) <- -> ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 ) - -> ( ) )".
+"MATCH SHORTESTPATH ( ( : node_1 ) <- - ( ) )".
+"MATCH SHORTESTPATH ( ( : node_1 : node_2 ) - - ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 : node_1 ) <- [ ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( { } ) <- [ ] - ( ) )".
+"MATCH SHORTESTPATH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) )".
+"MATCH SHORTESTPATH ( ( { parameter_1 } ) <- [ ? ] -> ( ) )". 
+"MATCH SHORTESTPATH ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) )".
+"MATCH SHORTESTPATH ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) )".
 
-"MATCH ( ( ( ) <- -> ( ) ) )".
-"MATCH ( ( ( variable_1 ) - -> ( ) ) )".
-"MATCH ( ( ( : node_1 ) <- - ( ) ) )".
-"MATCH ( ( ( : node_1 : node_2 ) - - ( ) ) )".
-"MATCH ( ( ( variable_1 : node_1 ) <- [ ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) ) )".
-"MATCH ( ( ( { } ) <- [ ] - ( ) ) )".
-"MATCH ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) ) )".
-"MATCH ( ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) )". 
-"MATCH ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) ) )".
-"MATCH ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) ) )".
-"MATCH ( ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( ) <- -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 ) - -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( : node_1 ) <- - ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( : node_1 : node_2 ) - - ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 : node_1 ) <- [ ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( { } ) <- [ ] - ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) )". 
+"MATCH SHORTESTPATH ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) ) )".
+"MATCH SHORTESTPATH ( ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) ) )".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% shortest_path_pattern = ALL( pattern_element )
+%% shortest_path_pattern = ALLSHORTESTPATH ( pattern_element )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"MATCH ( ( ) <- -> ( ) )".
-"MATCH ( ( variable_1 ) - -> ( ) )".
-"MATCH ( ( : node_1 ) <- - ( ) )".
-"MATCH ( ( : node_1 : node_2 ) - - ( ) )".
-"MATCH ( ( variable_1 : node_1 ) <- [ ] -> ( ) )".
-"MATCH ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) )".
-"MATCH ( ( { } ) <- [ ] - ( ) )".
-"MATCH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) )".
-"MATCH ( ( { parameter_1 } ) <- [ ? ] -> ( ) )". 
-"MATCH ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) )".
-"MATCH ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) )".
-"MATCH ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) )".
-"MATCH ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) )".
-"MATCH ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) )".
-"MATCH ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) )".
-"MATCH ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) )".
-"MATCH ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) )".
-"MATCH ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( ) <- -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 ) - -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( : node_1 ) <- - ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( : node_1 : node_2 ) - - ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 : node_1 ) <- [ ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( { } ) <- [ ] - ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( { parameter_1 } ) <- [ ? ] -> ( ) )". 
+"MATCH ALLSHORTESTPATHS ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) )".
+"MATCH ALLSHORTESTPATHS ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) )".
 
-"MATCH ( ( ( ) <- -> ( ) ) )".
-"MATCH ( ( ( variable_1 ) - -> ( ) ) )".
-"MATCH ( ( ( : node_1 ) <- - ( ) ) )".
-"MATCH ( ( ( : node_1 : node_2 ) - - ( ) ) )".
-"MATCH ( ( ( variable_1 : node_1 ) <- [ ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) ) )".
-"MATCH ( ( ( { } ) <- [ ] - ( ) ) )".
-"MATCH ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) ) )".
-"MATCH ( ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) )". 
-"MATCH ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) ) )".
-"MATCH ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) ) )".
-"MATCH ( ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) ) )".
-"MATCH ( ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( ) <- -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 ) - -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( : node_1 ) <- - ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( : node_1 : node_2 ) - - ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 : node_1 ) <- [ ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 : node_1 : node_2 ) - [ ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( { } ) <- [ ] - ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) - [ ] - ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( { parameter_1 } ) <- [ ? ] -> ( ) ) )". 
+"MATCH ALLSHORTESTPATHS ( ( ( { 4711 } ) <- [ : rel_type_1 ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 { } ) <- [ : rel_type_1 | : rel_type_1 ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ * .. ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 { parameter_1 } ) <- [ * 12 .. ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 { 4711 } ) <- [ * .. 34 ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( : node_1 { } ) <- [ * 12 .. 34 ] -> ( ) ) )".
+"MATCH ALLSHORTESTPATHS ( ( ( variable_1 : node_1 : node_2 { property_key_1 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null , property_key_2 : nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null } ) <- [ variable_1 ? : rel_type_1 | : rel_type_1 * 12 .. 34 { 4711 } ] -> ( ) ) )".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% (2) pattern_element = node_pattern pattern_element_chain
