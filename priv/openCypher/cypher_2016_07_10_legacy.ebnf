@@ -61,6 +61,7 @@ Clause = LoadCSV
        | Unwind
        | Merge
        | Create
+       | CreateUnique
        | Set
        | Delete
        | Remove
@@ -79,11 +80,11 @@ Command = CreateIndex
         | DropRelationshipPropertyExistenceConstraint
         ;
 
-CreateUniqueConstraint = (C,R,E,A,T,E), WS, UniqueConstraint ;
+CreateUniqueConstraint = (C,R,E,A,T,E), SP, UniqueConstraint ;
 
-CreateNodePropertyExistenceConstraint = (C,R,E,A,T,E), WS, NodePropertyExistenceConstraint ;
+CreateNodePropertyExistenceConstraint = (C,R,E,A,T,E), SP, NodePropertyExistenceConstraint ;
 
-CreateRelationshipPropertyExistenceConstraint = (C,R,E,A,T,E), WS, RelationshipPropertyExistenceConstraint ;
+CreateRelationshipPropertyExistenceConstraint = (C,R,E,A,T,E), SP, RelationshipPropertyExistenceConstraint ;
 
 CreateIndex = (C,R,E,A,T,E), SP, Index ;
 
@@ -97,11 +98,11 @@ DropIndex = (D,R,O,P), SP, Index ;
 
 Index = (I,N,D,E,X), SP, (O,N), WS, NodeLabel, '(', PropertyKeyName, ')' ;
 
-UniqueConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', (A,S,S,E,R,T), PropertyExpression, (I,S), SP, (U,N,I,Q,U,E) ;
+UniqueConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', WS, (A,S,S,E,R,T), SP, PropertyExpression, SP, (I,S), SP, (U,N,I,Q,U,E) ;
 
-NodePropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', (A,S,S,E,R,T), SP, (E,X,I,S,T,S), '(', PropertyExpression, ')' ;
+NodePropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', WS, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), WS, '(', PropertyExpression, ')' ;
 
-RelationshipPropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, RelationshipPatternSyntax, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), '(', PropertyExpression, ')' ;
+RelationshipPropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, RelationshipPatternSyntax, WS, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), WS, '(', PropertyExpression, ')' ;
 
 RelationshipPatternSyntax = ('(', WS, ')', Dash, '[', Variable, RelType, ']', Dash, '(', WS, ')')
                           | ('(', WS, ')', Dash, '[', Variable, RelType, ']', Dash, RightArrowHead, '(', WS, ')')
@@ -110,7 +111,7 @@ RelationshipPatternSyntax = ('(', WS, ')', Dash, '[', Variable, RelType, ']', Da
 
 LoadCSV = (L,O,A,D), SP, (C,S,V), SP, [(W,I,T,H), SP, (H,E,A,D,E,R,S), SP], (F,R,O,M), SP, Expression, SP, (A,S), SP, Variable, SP, [(F,I,E,L,D,T,E,R,M,I,N,A,T,O,R), SP, StringLiteral] ;
 
-Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), WS, Pattern, { WS, Hint }, [WS, Where] ;
+Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), WS, Pattern, { Hint }, [WS, Where] ;
 
 Unwind = (U,N,W,I,N,D), WS, Expression, SP, (A,S), SP, Variable ;
 
@@ -120,9 +121,9 @@ MergeAction = ((O,N), SP, (M,A,T,C,H), SP, Set)
             | ((O,N), SP, (C,R,E,A,T,E), SP, Set)
             ;
 
-Create = ((C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern)
-       | ((C,R,E,A,T,E), WS, Pattern)
-       ;
+Create = (C,R,E,A,T,E), WS, Pattern ;
+
+CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern ;
 
 Set = (S,E,T), SetItem, { ',', SetItem } ;
 
@@ -172,10 +173,7 @@ SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
          | (Expression, [(A,S,C,E,N,D,I,N,G) | (A,S,C)])
          ;
 
-Hint = ((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')')
-     | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { WS, ',', WS, Variable })
-     | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)
-     ;
+Hint = WS, (((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')') | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { WS, ',', WS, Variable }) | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)) ;
 
 Start = (S,T,A,R,T), SP, StartPoint, { WS, ',', WS, StartPoint }, [Where] ;
 
@@ -227,7 +225,7 @@ RelationshipPattern = (LeftArrowHead, WS, Dash, WS, [RelationshipDetail], WS, Da
                     | (Dash, WS, [RelationshipDetail], WS, Dash)
                     ;
 
-RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', [RangeLiteral]], [Properties], ']' ;
+RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', RangeLiteral], [Properties], ']' ;
 
 Properties = MapLiteral
            | Parameter
@@ -241,7 +239,7 @@ NodeLabels = NodeLabel, { WS, NodeLabel } ;
 
 NodeLabel = ':', LabelName ;
 
-RangeLiteral = [UnsignedIntegerLiteral, WS], '..', [WS, UnsignedIntegerLiteral] ;
+RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntegerLiteral, WS]] ;
 
 LabelName = SymbolicName ;
 
@@ -307,7 +305,7 @@ PartialComparisonExpression = ('=', WS, Expression7)
                             | ('>=', WS, Expression7)
                             ;
 
-parenthesizedExpression = '(', Expression, ')' ;
+parenthesizedExpression = '(', WS, Expression, WS, ')' ;
 
 RelationshipsPattern = NodePattern, { WS, PatternElementChain }- ;
 
@@ -331,6 +329,7 @@ Variable = SymbolicName ;
 
 StringLiteral = ('"', { ANY - ('"' | '\') | EscapedChar }, '"')
               | ("'", { ANY - ("'" | '\') | EscapedChar }, "'")
+              ;
 
 EscapedChar = '\', ('\' | "'" | '"' | (B) | (F) | (N) | (R) | (T) | '_' | '%' | ((U), 4 * HexDigit) | ((U), 8 * HexDigit)) ;
 
@@ -433,15 +432,15 @@ UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
  *)IdentifierStart = ID_Start
                 | Sc
                 | '_'
-                | '‿'
-                | '⁀'
-                | '⁔'
-                | '︳'
-                | '︴'
-                | '﹍'
-                | '﹎'
-                | '﹏'
-                | '＿'
+                | 'â€¿'
+                | 'â€'
+                | 'â”'
+                | 'ï¸³'
+                | 'ï¸´'
+                | 'ï¹'
+                | 'ï¹Ž'
+                | 'ï¹'
+                | 'ï¼¿'
                 ;
 
 (* Based on the unicode identifier and pattern syntax
@@ -467,25 +466,25 @@ whitespace = SPACE
            | GS
            | RS
            | US
-           | ' '
-           | '᠎'
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | ' '
-           | '　'
-           | ' '
-           | ' '
-           | ' '
+           | 'áš€'
+           | 'á Ž'
+           | 'â€€'
+           | 'â€'
+           | 'â€‚'
+           | 'â€ƒ'
+           | 'â€„'
+           | 'â€…'
+           | 'â€†'
+           | 'â€ˆ'
+           | 'â€‰'
+           | 'â€Š'
+           | 'â€¨'
+           | 'â€©'
+           | 'âŸ'
+           | 'ã€€'
+           | 'Â '
+           | 'â€‡'
+           | 'â€¯'
            | Comment
            ;
 
@@ -494,31 +493,31 @@ Comment = ('/*', { ANY - ('*') | ('*', ANY - ('/')) }, '*/')
         ;
 
 LeftArrowHead = '<'
-              | '⟨'
-              | '〈'
-              | '﹤'
-              | '＜'
+              | 'âŸ¨'
+              | 'ã€ˆ'
+              | 'ï¹¤'
+              | 'ï¼œ'
               ;
 
 RightArrowHead = '>'
-               | '⟩'
-               | '〉'
-               | '﹥'
-               | '＞'
+               | 'âŸ©'
+               | 'ã€‰'
+               | 'ï¹¥'
+               | 'ï¼ž'
                ;
 
 Dash = '-'
-     | '­'
-     | '‐'
-     | '‑'
-     | '‒'
-     | '–'
-     | '—'
-     | '―'
-     | '−'
-     | '﹘'
-     | '﹣'
-     | '－'
+     | 'Â­'
+     | 'â€'
+     | 'â€‘'
+     | 'â€’'
+     | 'â€“'
+     | 'â€”'
+     | 'â€•'
+     | 'âˆ’'
+     | 'ï¹˜'
+     | 'ï¹£'
+     | 'ï¼'
      ;
 
 A = 'A' | 'a' ;

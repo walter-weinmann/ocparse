@@ -692,11 +692,11 @@ test_neo4j_8_1_match(_Config) ->
     Cypher_19 = "MATCH (martin:Person { name:\"Martin Sheen\" }),(oliver:Person { name:\"Oliver Stone\" }), p = shortestPath((martin)-[*..15]-(oliver))
                  RETURN p",
     octest_legacy:ct_string(Cypher_19),
-    Cypher_20 = "MATCH (charlie:Person { name:\"Charlie Sheen\" }),(martin:Person { name:\"Martin Sheen\" }), p = shortestPath((charlie)-[*]-(martin))
+    Cypher_20 = "MATCH (charlie:Person { name:\"Charlie Sheen\" }),(martin:Person { name:\"Martin Sheen\" }), p = shortestPath((charlie)-[*..]-(martin))
                  WHERE NONE (r IN rels(p) WHERE type(r)= \"FATHER\")
                  RETURN p",
     octest_legacy:ct_string(Cypher_20),
-    Cypher_21 = "MATCH (martin:Person { name:\"Martin Sheen\" }),(michael:Person { name:\"Michael Douglas\" }), p = allShortestPaths((martin)-[*]-(michael))
+    Cypher_21 = "MATCH (martin:Person { name:\"Martin Sheen\" }),(michael:Person { name:\"Michael Douglas\" }), p = allShortestPaths((martin)-[*..]-(michael))
                  RETURN p",
     octest_legacy:ct_string(Cypher_21),
     Cypher_22 = "MATCH (n)
@@ -1113,7 +1113,7 @@ test_neo4j_9_5_remove(_Config) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 test_neo4j_9_6_foreach(_Config) ->
-    Cypher_01 = "MATCH p =(begin)-[*]->(END_4711 )
+    Cypher_01 = "MATCH p =(begin)-[*..]->(END_4711 )
                  WHERE begin.name='A' AND END_4711 .name='D'
                  FOREACH (n IN nodes(p)| SET n.marked = TRUE )",
     octest_legacy:ct_string(Cypher_01).
@@ -1725,15 +1725,15 @@ test_neo4j_13_5_update_operators(_Config) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 test_neo4j_13_6_shortest_path(_Config) ->
-    Cypher_01 = "MATCH (ms:Person { name:'Martin Sheen' }),(cs:Person { name:'Charlie Sheen' }), p = shortestPath((ms)-[rels:ACTED_IN*]-(cs))
+    Cypher_01 = "MATCH (ms:Person { name:'Martin Sheen' }),(cs:Person { name:'Charlie Sheen' }), p = shortestPath((ms)-[rels:ACTED_IN*..]-(cs))
                  WHERE ALL (r IN rels WHERE exists(r.role))
                  RETURN p",
     octest_legacy:ct_string(Cypher_01),
-    Cypher_02 = "MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-(ms))
+    Cypher_02 = "MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*..]-(ms))
                  WHERE length(p)> 1
                  RETURN p",
     octest_legacy:ct_string(Cypher_02),
-    Cypher_03 = "MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-(ms))
+    Cypher_03 = "MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*..]-(ms))
                  WITH p
                  WHERE length(p)> 1
                  RETURN p",

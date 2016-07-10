@@ -115,7 +115,6 @@ Nonterminals
  property_lookup_list
  query
  range_literal
- range_literal_opt
  range_opt
  regular_query
  rel_type_name
@@ -534,10 +533,7 @@ relationship_types_opt -> '$empty'                                              
 relationship_types_opt -> relationship_types                                                    : {relationshipTypes, '$1'}.
 
 range_opt -> '$empty'                                                                           : {}.
-range_opt -> '*' range_literal_opt                                                              : {"*", '$2'}.
-
-range_literal_opt -> '$empty'                                                                   : "*".
-range_literal_opt -> range_literal                                                              : '$1'.
+range_opt -> '*' range_literal                                                                  : '$2'.
 %% =====================================================================================================================
 
 properties -> map_literal                                                                       : {properties, '$1'}.
