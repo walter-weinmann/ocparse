@@ -273,6 +273,49 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ## 6. Release Notes
 
+### Version 1.1.1
+
+Release Date: 11.07.2016 - Grammar as of 10.07.2016
+
+#### Grammar changes
+
+- **Clause** (Legacy)
+
+```
+New: Clause = ... Create CreateUnique Set ... ;
+
+Old: Clause = ... Create Set ... ;
+```
+    
+- **CreateUnique** (Legacy)
+
+```
+New: Create = (C,R,E,A,T,E), WS, Pattern ;
+     CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern ;
+     
+Old: Create = ((C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern)
+            | ((C,R,E,A,T,E), WS, Pattern) 
+            ;
+```
+    
+- **RelationshipDetail** (openCypher & Legacy)
+
+```
+New: RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*',  RangeLiteral],  [Properties], ']' ;
+
+Old: RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', [RangeLiteral]], [Properties], ']' ;
+```
+
+- **RangeLiteral** (openCypher & Legacy)
+
+```
+New: RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntegerLiteral, WS]] ;
+
+Old: RangeLiteral =     [UnsignedIntegerLiteral, WS],  '..',[WS,  UnsignedIntegerLiteral] ;
+```
+
+----------
+
 ### Version 1.1.0
 
 Release Date: 08.07.2016

@@ -33,6 +33,7 @@ Nonterminals
  create_node_property_existence_constraint
  create_relationship_property_existence_constraint
  create_unique_constraint
+ createUnique
  cypher
  cypher_option
  decimal_integer
@@ -154,7 +155,8 @@ Nonterminals
  query
  query_options
  range_literal
- range_literal_opt
+ range_literal_left_opt
+ range_literal_right_opt
  range_opt
  reduce
  regular_query
@@ -197,7 +199,6 @@ Nonterminals
  union_list
  union_list_opt
  unique_constraint
- unique_opt
  unsigned_integer_literal
  unsigned_integer_literal_commalist
  unsigned_integer_literal_opt
@@ -460,6 +461,7 @@ clause -> match                                                                 
 clause -> unwind                                                                                : {clause, '$1'}.
 clause -> merge                                                                                 : {clause, '$1'}.
 clause -> create                                                                                : {clause, '$1'}.
+clause -> createUnique                                                                          : {clause, '$1'}.
 clause -> set                                                                                   : {clause, '$1'}.
 clause -> delete                                                                                : {clause, '$1'}.
 clause -> remove                                                                                : {clause, '$1'}.
@@ -556,14 +558,9 @@ merge_action_list -> merge_action                                               
 merge_action -> ON MATCH set                                                                    : {mergeAction, "match", '$3'}.
 merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
 
-create -> CREATE unique_opt pattern                                                             : {create, '$2', '$3'}.
+create -> CREATE pattern                                                                        : {create, '$2'}.
 
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-unique_opt -> '$empty'                                                                          : [].
-unique_opt -> UNIQUE                                                                            : "unique".
-%% ---------------------------------------------------------------------------------------------------------------------
+createUnique -> CREATE UNIQUE pattern                                                           : {createUnique, '$3'}.
 
 set -> SET set_item_commalist                                                                   : {set, '$2'}.
 
@@ -799,10 +796,7 @@ relationship_types_opt -> '$empty'                                              
 relationship_types_opt -> relationship_types                                                    : {relationshipTypes, '$1'}.
 
 range_opt -> '$empty'                                                                           : {}.
-range_opt -> '*' range_literal_opt                                                              : {"*", '$2'}.
-
-range_literal_opt -> '$empty'                                                                   : "*".
-range_literal_opt -> range_literal                                                              : '$1'.
+range_opt -> '*' range_literal                                                                  : '$2'.
 %% =====================================================================================================================
 
 properties -> map_literal                                                                       : {properties, '$1'}.
@@ -818,11 +812,17 @@ node_labels -> node_label                                                       
 
 node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
 
-range_literal -> unsigned_integer_literal_opt '..' unsigned_integer_literal_opt                 : {rangeLiteral, '$1', '$3'}.
+range_literal -> range_literal_left_opt range_literal_right_opt                                 : {rangeLiteral, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+range_literal_left_opt -> '$empty'                                                              : {}.
+range_literal_left_opt -> unsigned_integer_literal                                              : '$1'.
+
+range_literal_right_opt -> '$empty'                                                             : {}.
+range_literal_right_opt -> '..' unsigned_integer_literal_opt                                    : {"..", '$2'}.
+
 unsigned_integer_literal_opt -> '$empty'                                                        : {}.
 unsigned_integer_literal_opt -> unsigned_integer_literal                                        : '$1'.
 %% =====================================================================================================================
