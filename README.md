@@ -275,7 +275,7 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ### Version 1.1.1
 
-Release Date: xx.07.2016 - Grammar as of 10.07.2016
+Release Date: 11.07.2016 - Grammar as of 10.07.2016
 
 #### Grammar changes
 
