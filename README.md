@@ -287,7 +287,7 @@ New: Clause = ... Create CreateUnique Set ... ;
 Old: Clause = ... Create Set ... ;
 ```
     
-- **Create** (Legacy)
+- **CreateUnique** (Legacy)
 
 ```
 New: Create = (C,R,E,A,T,E), WS, Pattern ;

@@ -154,6 +154,8 @@ Nonterminals
  query
  query_options
  range_literal
+ range_literal_left_opt
+ range_literal_right_opt
  range_opt
  reduce
  regular_query
@@ -814,11 +816,17 @@ node_labels -> node_label                                                       
 
 node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
 
-range_literal -> unsigned_integer_literal_opt '..' unsigned_integer_literal_opt                 : {rangeLiteral, '$1', '$3'}.
+range_literal -> range_literal_left_opt range_literal_right_opt                                 : {rangeLiteral, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+range_literal_left_opt -> '$empty'                                                              : {}.
+range_literal_left_opt -> unsigned_integer_literal                                              : '$1'.
+
+range_literal_right_opt -> '$empty'                                                             : {}.
+range_literal_right_opt -> '..' unsigned_integer_literal_opt                                    : {"..", '$2'}.
+
 unsigned_integer_literal_opt -> '$empty'                                                        : {}.
 unsigned_integer_literal_opt -> unsigned_integer_literal                                        : '$1'.
 %% =====================================================================================================================
