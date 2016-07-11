@@ -315,6 +315,8 @@ test_atoms_parenthesized_expression(_Config) ->
     octest:ct_string("UNWIND ( nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null ) .property_4711 as variable_1").
 
 test_atoms_relationships_pattern(_Config) ->
+    octest:ct_string("UNWIND ( ) <- [ variable_1 ? * ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_4711 as variable_1"),
+    octest:ct_string("UNWIND ( ) <- [ variable_1 ? * 1 ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_4711 as variable_1"),
     octest:ct_string("UNWIND ( ) <- [ variable_1 ? * 1 ..99 ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_4711 as variable_1"),
     octest:ct_string("UNWIND ( ) <- [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> (variable_1 :node_1 :node_2 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null}) .property_4711 as variable_1"),
     octest:ct_string("UNWIND ( ) - [ variable_1 ? :rel_1 | :rel_2 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) .property_4711 as variable_1"),
