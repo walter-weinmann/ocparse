@@ -662,12 +662,12 @@ MATCH (martin:Person { name:\"Martin Sheen\" }),(oliver:Person { name:\"Oliver S
 RETURN p
 ".
 "
-MATCH (charlie:Person { name:\"Charlie Sheen\" }),(martin:Person { name:\"Martin Sheen\" }), p = shortestPath((charlie)-[*..]-(martin))
+MATCH (charlie:Person { name:\"Charlie Sheen\" }),(martin:Person { name:\"Martin Sheen\" }), p = shortestPath((charlie)-[*]-(martin))
 WHERE NONE (r IN rels(p) WHERE type(r)= \"FATHER\")
 RETURN p
 ".
 "
-MATCH (martin:Person { name:\"Martin Sheen\" }),(michael:Person { name:\"Michael Douglas\" }), p = allShortestPaths((martin)-[*..]-(michael))
+MATCH (martin:Person { name:\"Martin Sheen\" }),(michael:Person { name:\"Michael Douglas\" }), p = allShortestPaths((martin)-[*]-(michael))
 RETURN p
 ".
 "
@@ -1169,7 +1169,7 @@ RETURN n
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 "
-MATCH p =(begin)-[*..]->(END_4711 )
+MATCH p =(begin)-[*]->(END_4711 )
 WHERE begin.name='A' AND END_4711 .name='D'
 FOREACH (n IN nodes(p)| SET n.marked = TRUE )
 ".
@@ -1922,17 +1922,17 @@ MERGE (p)-[:FRIENDS_WITH]->(f)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 "
-MATCH (ms:Person { name:'Martin Sheen' }),(cs:Person { name:'Charlie Sheen' }), p = shortestPath((ms)-[rels:ACTED_IN*..]-(cs))
+MATCH (ms:Person { name:'Martin Sheen' }),(cs:Person { name:'Charlie Sheen' }), p = shortestPath((ms)-[rels:ACTED_IN*]-(cs))
 WHERE ALL (r IN rels WHERE exists(r.role))
 RETURN p
 ".
 "
-MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*..]-(ms))
+MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-(ms))
 WHERE length(p)> 1
 RETURN p
 ".
 "
-MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*..]-(ms))
+MATCH (cs:Person { name:'Charlie Sheen' }),(ms:Person { name:'Martin Sheen' }), p = shortestPath((cs)-[*]-(ms))
 WITH p
 WHERE length(p)> 1
 RETURN p

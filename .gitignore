@@ -15,3 +15,5 @@ src/ocparse.erl
 /ct/*.beam
 /test/wwe.tst
 /test/wwe.legacy
+/src/ocparse_legacy.erl
+/src/oclexer_legacy.erl

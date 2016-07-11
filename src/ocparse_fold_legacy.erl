@@ -403,7 +403,8 @@ fold(FType, Fun, Ctx, Lvl, {caseExpression, Expression_1, CaseAlternatives, Expr
 % clause
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fold(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
-    when Type == clause andalso (SubType == remove orelse SubType == set) orelse
+    when Type == clause andalso (SubType == create orelse SubType == createUnique orelse
+    SubType == remove orelse SubType == set) orelse
     Type == command andalso (SubType == create orelse SubType == drop) orelse
     Type == numberLiteral andalso (SubType == doubleLiteral orelse SubType == signedIntegerLiteral) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
@@ -421,7 +422,7 @@ fold(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
     RT;
 
 fold(FType, Fun, Ctx, Lvl, {clause, {Type, _, _} = Value} = ST)
-    when Type == create; Type == delete; Type == merge; Type == return; Type == start; Type == unwind ->
+    when Type == delete; Type == merge; Type == return; Type == start; Type == unwind ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -609,21 +610,37 @@ fold(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _, _} = Value} = ST)
     RT = {atom_to_list(Type) ++ " " ++ ValueNew, NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-fold(FType, Fun, Ctx, Lvl, {create, Unique, Pattern} = ST) ->
+fold(FType, Fun, Ctx, Lvl, {create, {pattern, _} = Value} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {PatternNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Pattern),
+    {ValueNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value),
     NewCtx2 = case FType of
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"create " ++ case length(Unique) of
-                           0 -> [];
-                           _ -> Unique ++ " "
-                       end ++ PatternNew, NewCtx2},
+    RT = {"create " ++ ValueNew, NewCtx2},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% createUnique
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {createUnique, {pattern, _} = Value} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ValueNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {"create unique " ++ ValueNew, NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 

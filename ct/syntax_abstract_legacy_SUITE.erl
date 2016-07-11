@@ -393,6 +393,7 @@ test_atoms_relationships_pattern(_Config) ->
     octest_legacy:ct_string("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? * ..] -> ( ) .property_4711 is unique"),
     octest_legacy:ct_string("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ * ..] -> ( ) .property_4711 is unique"),
     octest_legacy:ct_string("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 *.. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) .property_4711 is unique"),
+    octest_legacy:ct_string("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) .property_4711 is unique"),
     octest_legacy:ct_string("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * 1 ..99 {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) .property_4711 is unique"),
     octest_legacy:ct_string("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? :rel_1 * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) .property_4711 is unique"),
     octest_legacy:ct_string("CREATE CONSTRAINT ON (book:Book) ASSERT ( ) <- [ ? * .. {property_1:nOt 'test_1' .property_1 :label_1 is null oR 'test_1' .property_1 :label_1 is null} ] -> ( ) .property_4711 is unique"),
