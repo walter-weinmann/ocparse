@@ -11,7 +11,7 @@ Nonterminals
  atom
  char_opt
  char_question_mark_opt
- char_semicolon_opt 
+ char_semicolon_opt
  char_vertical_bar_expression
  char_vertical_bar_expression_opt
  clause
@@ -19,7 +19,6 @@ Nonterminals
  comparison
  create
  cypher
- decimal_integer
  delete
  detach_opt
  distinct_opt
@@ -75,7 +74,7 @@ Nonterminals
  filter_expression
  function_invocation
  function_name
- hex_integer
+ integer_literal
  id_in_coll
  label_name
  limit
@@ -91,7 +90,6 @@ Nonterminals
  node_labels
  node_pattern
  number_literal
- octal_integer
  optional_opt
  order
  order_opt
@@ -115,8 +113,6 @@ Nonterminals
  property_lookup_list
  query
  range_literal
- range_literal_left_opt
- range_literal_right_opt
  range_opt
  regular_query
  rel_type_name
@@ -137,7 +133,6 @@ Nonterminals
  set
  set_item
  set_item_commalist
- signed_integer_literal
  single_query
  skip
  skip_opt
@@ -148,8 +143,6 @@ Nonterminals
  union
  union_list
  union_list_opt
- unsigned_integer_literal
- unsigned_integer_literal_opt
  unwind
  variable
  where
@@ -171,11 +164,11 @@ Terminals
  CONTAINS
  COUNT
  CREATE
+ DECIMAL_INTEGER
  DELETE
  DESC
  DESCENDING
  DETACH
- DIGIT_STRING
  DISTINCT
  ENDS
  ESCAPED_SYMBOLIC_NAME
@@ -193,16 +186,15 @@ Terminals
  NONE
  NOT
  NULL
+ OCTAL_INTEGER
  ON
  OPTIONAL
  OR
  ORDER
+ REGULAR_DECIMAL_REAL
  REMOVE
  RETURN
  SET
- SIGNED_DECIMAL_INTEGER
- SIGNED_OCTAL_INTEGER
- SIGNED_REGULAR_DECIMAL_REAL
  SINGLE
  SKIP
  STARTS
@@ -210,9 +202,6 @@ Terminals
  TRUE
  UNESCAPED_SYMBOLIC_NAME
  UNION
- UNSIGNED_DECIMAL_INTEGER
- UNSIGNED_OCTAL_INTEGER
- UNSIGNED_REGULAR_DECIMAL_REAL
  UNWIND
  WHERE
  WITH
@@ -250,10 +239,11 @@ Terminals
  '..'
  '!'
  '?'
+ '$'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Rootsymbol 
+Rootsymbol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  cypher.
 
@@ -261,7 +251,7 @@ Rootsymbol
 Endsymbol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  '$end'.
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Operator precedences.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -280,6 +270,9 @@ Left        500 '^'.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cypher -> statement char_semicolon_opt                                                          : {cypher, {statement, '$1'}, '$2'}.
+
+% cypher -> atom                                                                                  : '$1'.
+cypher -> expression                                                                            : '$1'.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -516,14 +509,14 @@ relationship_detail_opt -> '$empty'                                             
 relationship_detail_opt -> relationship_detail                                                  : '$1'.
 %% =====================================================================================================================
 
-relationship_detail -> '[' variable char_question_mark_opt relationship_types_opt range_opt properties ']'     
+relationship_detail -> '[' variable char_question_mark_opt relationship_types_opt range_opt properties ']'
                                                                                                 : {relationshipDetail, '$2', '$3', '$4', '$5', '$6'}.
 
-relationship_detail -> '[' variable char_question_mark_opt relationship_types_opt range_opt ']'     
+relationship_detail -> '[' variable char_question_mark_opt relationship_types_opt range_opt ']'
                                                                                                 : {relationshipDetail, '$2', '$3', '$4', '$5', {}}.
-relationship_detail -> '[' char_question_mark_opt relationship_types_opt range_opt properties ']'     
-                                                                                                : {relationshipDetail, {}, '$2', '$3', '$4', '$5'}.
-relationship_detail -> '[' char_question_mark_opt relationship_types_opt range_opt ']'          : {relationshipDetail, {}, '$2', '$3', '$4', {}}.
+relationship_detail -> '['          char_question_mark_opt relationship_types_opt range_opt properties ']'
+                                                                                                : {relationshipDetail, {},   '$2', '$3', '$4', '$5'}.
+relationship_detail -> '['          char_question_mark_opt relationship_types_opt range_opt ']' : {relationshipDetail, {},   '$2', '$3', '$4', {}}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -549,20 +542,11 @@ node_labels -> node_label                                                       
 
 node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
 
-range_literal -> range_literal_left_opt range_literal_right_opt                                 : {rangeLiteral, '$1', '$2'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-range_literal_left_opt -> '$empty'                                                              : {}.
-range_literal_left_opt -> unsigned_integer_literal                                              : '$1'.
-
-range_literal_right_opt -> '$empty'                                                             : {}.
-range_literal_right_opt -> '..' unsigned_integer_literal_opt                                    : {"..", '$2'}.
-
-unsigned_integer_literal_opt -> '$empty'                                                        : {}.
-unsigned_integer_literal_opt -> unsigned_integer_literal                                        : '$1'.
-%% =====================================================================================================================
+range_literal ->                 '..'                                                           : {rangeLiteral, [],   "..", []}.
+range_literal ->                 '..' integer_literal                                           : {rangeLiteral, [],   "..", '$2'}.
+range_literal -> integer_literal                                                                : {rangeLiteral, '$1', [],   []}.
+range_literal -> integer_literal '..'                                                           : {rangeLiteral, '$1', "..", []}.
+range_literal -> integer_literal '..' integer_literal                                           : {rangeLiteral, '$1', "..", '$3'}.
 
 label_name -> symbolic_name                                                                     : {labelName, '$1'}.
 
@@ -822,7 +806,7 @@ char_opt -> '!'                                                                 
 variable -> symbolic_name                                                                       : {variable, '$1'}.
 
 number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
-number_literal -> signed_integer_literal                                                        : {numberLiteral, '$1'}.
+number_literal -> integer_literal                                                               : {numberLiteral, '$1'}.
 
 map_literal -> '{' property_key_name_expression_commalist_opt '}'                               : {mapLiteral, '$2'}.
 
@@ -839,8 +823,8 @@ property_key_name_expression_commalist -> property_key_name_expression ',' prope
 property_key_name_expression -> property_key_name ':' expression                                : {'$1', '$3'}.
 %% =====================================================================================================================
 
-parameter -> '{' symbolic_name '}'                                                              : {parameter, '$2'}.
-parameter -> '{' UNSIGNED_DECIMAL_INTEGER '}'                                                   : {parameter, unwrap('$2')}.
+parameter -> '$' symbolic_name                                                                  : {parameter, '$2'}.
+parameter -> '$' DECIMAL_INTEGER                                                                : {parameter, unwrap('$2')}.
 
 property_expression -> atom property_lookup_list                                                : {propertyExpression, '$1', '$2'}.
 
@@ -853,29 +837,12 @@ property_lookup_list -> property_lookup                                         
 
 property_key_name -> symbolic_name                                                              : {propertyKeyName, '$1'}.
 
-signed_integer_literal -> hex_integer                                                           : {signedIntegerLiteral, '$1'}.
-signed_integer_literal -> octal_integer                                                         : {signedIntegerLiteral, '$1'}.
-signed_integer_literal -> decimal_integer                                                       : {signedIntegerLiteral, '$1'}.
-
-unsigned_integer_literal -> UNSIGNED_DECIMAL_INTEGER                                            : {unsignedIntegerLiteral, unwrap('$1')}.
-
-hex_integer -> HEX_INTEGER                                                                      : {hexInteger, unwrap('$1')}.
-
-decimal_integer -> SIGNED_DECIMAL_INTEGER                                                       : {decimalInteger, unwrap('$1')}.
-decimal_integer -> UNSIGNED_DECIMAL_INTEGER                                                     : {decimalInteger, unwrap('$1')}.
-
-octal_integer -> SIGNED_OCTAL_INTEGER                                                           : {octalInteger, unwrap('$1')}.
-octal_integer -> UNSIGNED_OCTAL_INTEGER                                                         : {octalInteger, unwrap('$1')}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-decimal_integer -> DIGIT_STRING                                                                 : unwrap('$1').
-%% =====================================================================================================================
+integer_literal -> HEX_INTEGER                                                                  : {integerLiteral, {hexInteger, unwrap('$1')}}.
+integer_literal -> OCTAL_INTEGER                                                                : {integerLiteral, {octalInteger, unwrap('$1')}}.
+integer_literal -> DECIMAL_INTEGER                                                              : {integerLiteral, {decimalInteger, unwrap('$1')}}.
 
 double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, unwrap('$1')}.
-double_literal -> SIGNED_REGULAR_DECIMAL_REAL                                                   : {doubleLiteral, unwrap('$1')}.
-double_literal -> UNSIGNED_REGULAR_DECIMAL_REAL                                                 : {doubleLiteral, unwrap('$1')}.
+double_literal -> REGULAR_DECIMAL_REAL                                                          : {doubleLiteral, unwrap('$1')}.
 
 symbolic_name -> ESCAPED_SYMBOLIC_NAME                                                          : {symbolicName, unwrap('$1')}.
 symbolic_name -> UNESCAPED_SYMBOLIC_NAME                                                        : {symbolicName, unwrap('$1')}.
@@ -899,7 +866,7 @@ Erlang code.
 % parser and compiler interface
 -export([fold/3,
          fold_bu/3,
-         fold_td/3, 
+         fold_td/3,
          is_reserved/1,
          parsetree/1,
          parsetree_to_string/1,
@@ -915,7 +882,7 @@ Erlang code.
 begin
     io:format(user, "__ "??__Rule" (~p)~n", [__Production]),
     __Production
-end). 
+end).
 
 %%-----------------------------------------------------------------------------
 %%                          dummy application interface
@@ -926,9 +893,9 @@ start() ->
 stop() ->
     application:stop(?MODULE).
 
-start(_Type, _Args) -> 
+start(_Type, _Args) ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
-stop(_State) -> 
+stop(_State) ->
     ok.
 
 init([]) ->
@@ -938,7 +905,7 @@ init([]) ->
 %%                          parser helper functions
 %%-----------------------------------------------------------------------------
 
-unwrap({_,_,X}) -> 
+unwrap({_,_,X}) ->
     X.
 
 %%-----------------------------------------------------------------------------
@@ -1010,8 +977,8 @@ parsetree_to_string_td(PTree) ->
 -spec fold(fun(), term(), tuple()) ->
     {error, term()} | binary().
 fold(Fun, Ctx, PTree) when is_function(Fun, 2) ->
-    fold_td(Fun, Ctx, PTree). 
-    
+    fold_td(Fun, Ctx, PTree).
+
 -spec fold_bu(fun(), term(), tuple()) ->
     {error, term()} | binary().
 fold_bu(Fun, Ctx, PTree) when is_function(Fun, 2) ->
@@ -1028,9 +995,9 @@ fold_bu(Fun, Ctx, PTree) when is_function(Fun, 2) ->
 fold_td(Fun, Ctx, PTree) when is_function(Fun, 2) ->
     try ocparse_fold:fold(top_down, Fun, Ctx, 0, PTree) of
         {error,_} = Error -> Error;
-        {Cypher, null_fun = Ctx} -> 
+        {Cypher, null_fun = Ctx} ->
             list_to_binary(string:strip(Cypher));
-        {_Output, NewCtx} -> 
+        {_Output, NewCtx} ->
             NewCtx
     catch
         _:Error -> {error, Error}

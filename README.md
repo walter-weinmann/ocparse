@@ -273,6 +273,194 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ## 6. Release Notes
 
+### Version 1.1.2
+
+Release Date: 01.08.2016 - Grammar as of 31.07.2016
+
+#### Grammar changes
+
+- **VersionNumber** (Legacy)
+
+```
+New: VersionNumber = DecimalInteger, '.', DecimalInteger ;
+
+Old: VersionNumber = DigitString, '.', DigitString ;
+```
+
+- **PeriodicCommitHint** (Legacy)
+
+```
+New: PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP] ;
+
+Old: PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP, SignedIntegerLiteral] ;
+```
+
+
+- **IdentifiedIndexLookup** (Legacy)
+
+```
+New: IdentifiedIndexLookup = ':', SymbolicName, '(', SymbolicName, '=', (StringLiteral | LegacyParameter), ')' ;
+
+Old: IdentifiedIndexLookup = ':', SymbolicName, '(', SymbolicName, '=', (StringLiteral | Parameter), ')' ;
+```
+
+
+- **IndexQuery** (Legacy)
+
+```
+New: IndexQuery = ':', SymbolicName, '(', (StringLiteral | LegacyParameter), ')' ;
+
+Old: IndexQuery = ':', SymbolicName, '(', (StringLiteral | Parameter), ')' ;
+```
+
+
+- **IdLookup** (Legacy)
+
+```
+New: IdLookup = '(', (LiteralIds | LegacyParameter | '*'), ')' ;
+
+Old: IdLookup = '(', (LiteralIds | Parameter | '*'), ')' ;
+```
+
+
+- **LiteralIds** (Legacy)
+
+```
+New: LiteralIds = { WS, ',', WS } ;
+
+Old: LiteralIds = UnsignedIntegerLiteral, { WS, ',', WS, UnsignedIntegerLiteral } ;
+```
+
+- **Properties** (Legacy)
+
+```
+New: Properties = MapLiteral | Parameter | LegacyParameter ;
+
+Old: Properties = MapLiteral | Parameter ;
+```
+
+- **RangeLiteral** (openCypher & Legacy)
+
+```
+New: RangeLiteral = WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
+
+Old: RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntegerLiteral, WS]] ;
+```
+
+- **Atom** (Legacy)
+
+```
+New: Atom = ... | LegacyParameter | ...
+
+Old: n/a.
+```
+
+- **NumberLiteral** (openCypher & Legacy)
+
+```
+New: NumberLiteral = ... | IntegerLiteral
+                   
+Old: NumberLiteral = ... | SignedIntegerLiteral
+```
+
+- **LegacyParameter** (Legacy)
+
+```
+New: LegacyParameter = '{', WS, (SymbolicName | DecimalInteger), WS, '}' ;
+
+Old: n/a
+```
+
+- **Parameter** (openCypher & Legacy)
+
+```
+New: Parameter = '$', (SymbolicName | DecimalInteger) ;
+                   
+Old: Parameter = '{', WS, (SymbolicName | UnsignedDecimalInteger), WS, '}' ;
+```
+
+- **IntegerLiteral** (openCypher & Legacy)
+
+```
+New: IntegerLiteral = ...
+                   
+Old: SignedIntegerLiteral = ...
+```
+
+- **UnsignedIntegerLiteral** (openCypher & Legacy)
+
+```
+New: n/a
+                   
+Old: UnsignedIntegerLiteral = UnsignedDecimalInteger ;
+```
+
+- **HexInteger** (openCypher & Legacy)
+
+```
+New: HexInteger = ('0',X), HexString ;
+
+Old: RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntegerLiteral, WS]] ;
+```
+
+- **DecimalInteger** (openCypher & Legacy)
+
+```
+New: DecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
+                    | '0'
+
+Old: DecimalInteger = ['-'], UnsignedDecimalInteger ;
+```
+
+- **OctalInteger** (openCypher & Legacy)
+
+```
+New: OctalInteger = '0', OctalString ;
+
+Old: OctalInteger = ['-'], UnsignedOctalInteger ;
+```
+
+- **UnsignedHexInteger** (openCypher & Legacy)
+
+```
+New: n/a
+
+Old: UnsignedHexInteger = ('0',X), HexString ;
+```
+
+- **UnsignedDecimalInteger** (openCypher & Legacy)
+
+```
+New: n/a
+
+Old: UnsignedDecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
+                            | '0'
+```
+
+- **UnsignedOctalInteger** (openCypher & Legacy)
+
+```
+New: n/a
+
+Old: UnsignedOctalInteger = '0', OctalString ;
+```
+
+- **ExponentDecimalReal** (openCypher & Legacy)
+
+```
+New: ExponentDecimalReal = ({ Digit | '.' }- | DecimalInteger), ((E) | (E)), (DigitString | DecimalInteger) ;
+
+Old: ExponentDecimalReal = ['-'], { Digit | '.' }-, ((E) | (E)), ['-'], DigitString ;
+```
+
+- **RegularDecimalReal** (openCypher & Legacy)
+
+```
+New: RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | DecimalInteger) ;
+
+Old: RegularDecimalReal = ['-'], { Digit }, '.', DigitString ;
+```
+
 ### Version 1.1.1
 
 Release Date: 11.07.2016 - Grammar as of 10.07.2016

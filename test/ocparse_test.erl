@@ -4,6 +4,8 @@
 
 -export([test_cypher/3]).
 
+-define(TIMEOUT, 60).
+
 cypher_test_() ->
     WCard = case os:getenv("CYPHER") of
                 Cypher when is_list(Cypher) -> Cypher;
@@ -81,7 +83,7 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
             tests_gen(TestGroup, Tests, Logs, SelTests,
                 [{TestGroup, I,
                     fun() ->
-                        {timeout, 60, ?MODULE:test_cypher(TestGroup, T, Logs)}
+                        {timeout, ?TIMEOUT, ?MODULE:test_cypher(TestGroup, T, Logs)}
                     end} | Acc]);
         _ -> Acc
     end.

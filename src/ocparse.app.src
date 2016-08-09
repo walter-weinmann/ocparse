@@ -1,9 +1,9 @@
 {application, ocparse,
     [{description, "LALR grammar based Cypher parser using the grammar rules from the openCypher project"},
-        {vsn, "1.1.1"},
+        {vsn, "1.1.2"},
         {registered, []},
         {applications, [kernel, stdlib]},
         {mod, {ocparse, []}},
         {env, []},
-        {modules, [oclexer, ocparse, ocparse_fold, octest,
+        {modules, [generate_test_data, oclexer, ocparse, ocparse_fold, octest,
             oclexer_legacy, ocparse_legacy, ocparse_fold_legacy, octest_legacy]}]}.
