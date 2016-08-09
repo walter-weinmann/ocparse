@@ -3,7 +3,6 @@ Definitions.
 
 Rules.
 
-
 %% number literals
 ((([0-9]*\.)|([0-9]+))(e|E)[0-9]+)                        : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
 ([0-9]*\.[0-9]+)                                          : {token, {'REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
@@ -13,7 +12,7 @@ Rules.
 
 %% symbolic names
 (`([^`]*)*`)                                              : {token, {'ESCAPED_SYMBOLIC_NAME', TokenLine, TokenChars}}.
-([A-Za-z_@#][A-Za-z0-9_@#$]*)                             : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
+([A-Za-z_@#][A-Za-z0-9_@#\$]*)                            : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
 
 %% string literals
 (\'([^\\\']*)*\')                                         : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.

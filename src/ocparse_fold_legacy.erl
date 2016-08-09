@@ -2,7 +2,7 @@
 
 -export([fold/5]).
 
--define(NODEBUG, true).
+% -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -144,7 +144,7 @@ fold(FType, Fun, Ctx, Lvl, {Type, {Expression, _, _} = Value} = ST)
     RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% anonymousPatternPart / expression... / functionName / labelName / lookup / patternPart /  
+% anonymousPatternPart / expression... / functionName / labelName / lookup / patternPart /
 % propertyKeyName / relTypeName / statement / variable
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -746,7 +746,7 @@ fold(FType, Fun, Ctx, Lvl, {cypher, {queryOptions, _} = QueryOptions, {statement
     RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% decimalInteger / doubleLiteral / idLookup / mapLiteral/ relationshipPattern / stringLiteral / 
+% decimalInteger / doubleLiteral / idLookup / mapLiteral/ relationshipPattern / stringLiteral /
 % symbolicName / terminal / * (range)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -801,7 +801,7 @@ fold(FType, Fun, Ctx, Lvl, {delete, Detach, ExpressionCommalist} = ST) ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % expressionCommalist / patternPartCommalist / propertyKeyNameExpressionCommalist /
-% removeItemCommalist / returnItemCommalist / setItemCommalist / sortItemCommalist / 
+% removeItemCommalist / returnItemCommalist / setItemCommalist / sortItemCommalist /
 % startPointCommalist / variableCommalist
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -3386,10 +3386,10 @@ fold(FType, Fun, Ctx, Lvl, {set, Value} = ST) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, Lvl, {Type, Value_1, Value_2} = ST)
-    when Type == bulkImportQuery; 
-    Type == filterExpression; 
+    when Type == bulkImportQuery;
+    Type == filterExpression;
     Type == patternElementChain;
-    Type == removeItem; 
+    Type == removeItem;
     Type == setItem ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of

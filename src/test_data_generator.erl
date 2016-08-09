@@ -87,16 +87,19 @@ file_create_ct(Legacy, Rule) ->
     io:format(File, "~s~n", [""]),
     io:format(File, "~s~n", ["test_" ++ atom_to_list(Rule) ++ "(_Config) ->"]),
 
-    file_write_ct(File, Code).
+    file_write_ct(Legacy, File, Code).
 
-file_write_ct(File, []) ->
+file_write_ct(_Legacy, File, []) ->
     file:close(File);
-file_write_ct(File, [H | T]) ->
-    io:format(File, "~s~n", ["    octest:ct_string(\"" ++ H ++ "\")" ++ case T of
-                                                                            [] -> ".";
-                                                                            _ -> ","
-                                                                        end]),
-    file_write_ct(File, T).
+file_write_ct(Legacy, File, [H | T]) ->
+    io:format(File, "~s~n", ["    octest" ++ case Legacy of
+                                                 true -> "_legacy";
+                                                 _ -> []
+                                             end ++ ":ct_string(\"" ++ H ++ "\")" ++ case T of
+                                                                                         [] -> ".";
+                                                                                         _ -> ","
+                                                                                     end]),
+    file_write_ct(Legacy, File, T).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -197,7 +200,11 @@ create_code_templates(Legacy) ->
 %-------------------------------
 % LiteralIds = { WS, ',', WS } ;
 %-------------------------------
-    LiteralIds = [?WS ++ "," ++ ?WS],
+    LiteralIds = case Legacy of
+                     true ->
+                         [?WS ++ "," ++ ?WS];
+                     _ -> []
+                 end,
     insert_table(literal_ids, LiteralIds),
 % ---------------------------------
 % OctalInteger = '0', OctalString ;
@@ -219,6 +226,7 @@ create_code_templates(Legacy) ->
 %               | ("'", { ANY - ("'" | '\') | EscapedChar }, "'") ;
 % -----------------------------------------------------------------
     StringLiteral = ["\\\"This is a string\\\"", "'This is another string'"],
+    StringLiteral_Length = length(StringLiteral),
     insert_table(string_literal, StringLiteral),
 % -------------------------------------------------------------
 % UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
@@ -254,7 +262,11 @@ create_code_templates(Legacy) ->
 % -----------------------------------------------------
 % VersionNumber = DecimalInteger, '.', DecimalInteger ;
 % -----------------------------------------------------
-    VersionNumber = [lists:nth(crypto:rand_uniform(1, DecimalInteger_Length), DecimalInteger) ++ "." ++ lists:nth(crypto:rand_uniform(1, DecimalInteger_Length), DecimalInteger) || _ <- lists:seq(1, DecimalInteger_Length)],
+    VersionNumber = case Legacy of
+                        true ->
+                            [lists:nth(crypto:rand_uniform(1, DecimalInteger_Length), DecimalInteger) ++ "." ++ lists:nth(crypto:rand_uniform(1, DecimalInteger_Length), DecimalInteger) || _ <- lists:seq(1, DecimalInteger_Length)];
+                        _ -> []
+                    end,
     VersionNumber_Length = length(VersionNumber),
     insert_table(version_number, VersionNumber),
 
@@ -281,13 +293,13 @@ create_code_templates(Legacy) ->
 % ---------------------------------------------------------------------
 % LegacyParameter = '{', WS, (SymbolicName | DecimalInteger), WS, '}' ;
 % ---------------------------------------------------------------------
-    case Legacy of
-        true ->
-            LegacyParameter = ["{" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, SymbolicName_Length), SymbolicName) ++ ?WS ++ "}" || _ <- lists:seq(1, SymbolicName_Length)] ++
-                ["{" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, DecimalInteger_Length), DecimalInteger) ++ ?WS ++ "}" || _ <- lists:seq(1, DecimalInteger_Length)];
-        _ ->
-            LegacyParameter = []
-    end,
+    LegacyParameter = case Legacy of
+                          true ->
+                              ["{" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, SymbolicName_Length), SymbolicName) ++ ?WS ++ "}" || _ <- lists:seq(1, SymbolicName_Length)] ++
+                              ["{" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, DecimalInteger_Length), DecimalInteger) ++ ?WS ++ "}" || _ <- lists:seq(1, DecimalInteger_Length)];
+                          _ -> []
+                      end,
+    LegacyParameter_Length = length(LegacyParameter),
     insert_table(legacy_parameter, LegacyParameter),
 % --------------------------------
 % NumberLiteral = DoubleLiteral
@@ -305,6 +317,7 @@ create_code_templates(Legacy) ->
 % PropertyKeyName = SymbolicName ;
 % --------------------------------
     PropertyKeyName = SymbolicName,
+    PropertyKeyName_Length = length(PropertyKeyName),
     insert_table(property_key_name, PropertyKeyName),
 % ---------------------------------------------------------------------------
 % RangeLiteral = WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
@@ -359,37 +372,55 @@ create_code_templates(Legacy) ->
         AtomNull ++
         AtomCount ++
         Variable,
+    Atom_Part_1_Length = length(Atom_Part_1),
     insert_table(atom, Atom_Part_1),
 % --------------------------------------------------------------------------------
 % CypherOption = (C,Y,P,H,E,R), [SP, VersionNumber], { SP, ConfigurationOption } ;
 % --------------------------------------------------------------------------------
-    CypherOption = ["Cypher"] ++
-        ["Cypher" ++ case rand:uniform(?PRIME) rem 4 of
-                         3 ->
-                             ?SP ++ lists:nth(crypto:rand_uniform(1, VersionNumber_Length), VersionNumber) ++ ?SP ++ CO ++ ?SP ++ lists:nth(crypto:rand_uniform(1, ConfigurationOption_Length), ConfigurationOption);
-                         2 ->
-                             ?SP ++ CO ++ ?SP ++ lists:nth(crypto:rand_uniform(1, ConfigurationOption_Length), ConfigurationOption);
-                         1 ->
-                             ?SP ++ lists:nth(crypto:rand_uniform(1, VersionNumber_Length), VersionNumber) ++ ?SP ++ CO;
-                         _ -> ?SP ++ CO
-                     end || CO <- ConfigurationOption],
+    CypherOption = case Legacy of
+                       true ->
+                           ["Cypher"] ++
+                           ["Cypher" ++ case rand:uniform(?PRIME) rem 4 of
+                                            3 ->
+                                                ?SP ++ lists:nth(crypto:rand_uniform(1, VersionNumber_Length), VersionNumber) ++ ?SP ++ lists:nth(crypto:rand_uniform(1, ConfigurationOption_Length), ConfigurationOption) ++ ?SP ++ lists:nth(crypto:rand_uniform(1, ConfigurationOption_Length), ConfigurationOption);
+                                            2 ->
+                                                ?SP ++ lists:nth(crypto:rand_uniform(1, ConfigurationOption_Length), ConfigurationOption) ++ ?SP ++ lists:nth(crypto:rand_uniform(1, ConfigurationOption_Length), ConfigurationOption);
+                                            1 ->
+                                                ?SP ++ lists:nth(crypto:rand_uniform(1, VersionNumber_Length), VersionNumber) ++ ?SP ++ lists:nth(crypto:rand_uniform(1, ConfigurationOption_Length), ConfigurationOption);
+                                            _ ->
+                                                ?SP ++ lists:nth(crypto:rand_uniform(1, ConfigurationOption_Length), ConfigurationOption)
+                                        end || _ <- lists:seq(1, ConfigurationOption_Length)];
+                       _ -> []
+                   end,
     insert_table(cypher_option, CypherOption),
 % -----------------------------------------------------------------------------------------------------------
 % IdentifiedIndexLookup = ':', SymbolicName, '(', SymbolicName, '=', (StringLiteral | LegacyParameter), ')' ;
 % ------------------------------------------------------------------------------------------------------------
-    IdentifiedIndexLookup = [":" ++ SN ++ "(" ++ SN ++ "=" ++ SL ++ ")" || SN <- SymbolicName, SL <- StringLiteral] ++
-        [":" ++ SN ++ "(" ++ SN ++ "=" ++ LP ++ ")" || SN <- SymbolicName, LP <- LegacyParameter],
+    IdentifiedIndexLookup = case Legacy of
+                                true ->
+                                    [":" ++ lists:nth(crypto:rand_uniform(1, SymbolicName_Length), SymbolicName) ++ "(" ++ lists:nth(crypto:rand_uniform(1, SymbolicName_Length), SymbolicName) ++ "=" ++ lists:nth(crypto:rand_uniform(1, StringLiteral_Length), StringLiteral) ++ ")" || _ <- lists:seq(1, SymbolicName_Length + StringLiteral_Length)] ++
+                                    [":" ++ lists:nth(crypto:rand_uniform(1, SymbolicName_Length), SymbolicName) ++ "(" ++ lists:nth(crypto:rand_uniform(1, SymbolicName_Length), SymbolicName) ++ "=" ++ lists:nth(crypto:rand_uniform(1, LegacyParameter_Length), LegacyParameter) ++ ")" || _ <- lists:seq(1, SymbolicName_Length + LegacyParameter_Length)];
+                                _ -> []
+                            end,
     insert_table(identified_index_lookup, IdentifiedIndexLookup),
 % -----------------------------------------------------------
 % IdLookup = '(', (LiteralIds | LegacyParameter | '*'), ')' ;
 % -----------------------------------------------------------
-    IdLookup = ["(" ++ P ++ ")" || P <- LiteralIds ++ LegacyParameter ++ ["*"]],
+    IdLookup = case Legacy of
+                   true ->
+                       ["(" ++ P ++ ")" || P <- LiteralIds ++ LegacyParameter ++ ["*"]];
+                   _ -> []
+               end,
     insert_table(id_lookup, IdLookup),
 % ---------------------------------------------------------------------------
 % IndexQuery = ':', SymbolicName, '(', (StringLiteral | LegacyParameter), ')'
 % ---------------------------------------------------------------------------
-    IndexQuery = [":" ++ SN ++ "(" ++ SL ++ ")" || SN <- SymbolicName, SL <- StringLiteral] ++
-        [":" ++ SN ++ "(" ++ LP ++ ")" || SN <- SymbolicName, LP <- LegacyParameter],
+    IndexQuery = case Legacy of
+                     true ->
+                         [":" ++ lists:nth(crypto:rand_uniform(1, SymbolicName_Length), SymbolicName) ++ "(" ++ lists:nth(crypto:rand_uniform(1, StringLiteral_Length), StringLiteral) ++ ")" || _ <- lists:seq(1, SymbolicName_Length + StringLiteral_Length)] ++
+                         [":" ++ lists:nth(crypto:rand_uniform(1, SymbolicName_Length), SymbolicName) ++ "(" ++ lists:nth(crypto:rand_uniform(1, LegacyParameter_Length), LegacyParameter) ++ ")" || _ <- lists:seq(1, SymbolicName_Length + LegacyParameter_Length)];
+                     _ -> []
+                 end,
     insert_table(index_query, IndexQuery),
 % ----------------------------
 % NodeLabel = ':', LabelName ;
@@ -408,24 +439,25 @@ create_code_templates(Legacy) ->
 % ---------------------------------------------------------------------------
 % RelationshipTypes = ':', RelTypeName, { WS, '|', [':'], WS, RelTypeName } ;
 % ---------------------------------------------------------------------------
-    RelationshipTypes = [":" ++ RTN ++ case rand:uniform(?PRIME) rem 6 of
-                                           5 ->
-                                               ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName) ++ ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
-                                           4 ->
-                                               ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName) ++ ?WS ++ "|" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
-                                           3 ->
-                                               ?WS ++ "|" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName) ++ ?WS ++ "|" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
-                                           2 ->
-                                               ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
-                                           1 ->
-                                               ?WS ++ "|" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
-                                           _ -> []
-                                       end || RTN <- RelTypeName],
+    RelationshipTypes = [":" ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName) ++ case rand:uniform(?PRIME) rem 6 of
+                                                                                                          5 ->
+                                                                                                              ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName) ++ ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
+                                                                                                          4 ->
+                                                                                                              ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName) ++ ?WS ++ "|" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
+                                                                                                          3 ->
+                                                                                                              ?WS ++ "|" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName) ++ ?WS ++ "|" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
+                                                                                                          2 ->
+                                                                                                              ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
+                                                                                                          1 ->
+                                                                                                              ?WS ++ "|" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, RelTypeName_Length), RelTypeName);
+                                                                                                          _ -> []
+                                                                                                      end || _ <- lists:seq(1, RelTypeName_Length)],
     insert_table(relation_shiptypes, RelationshipTypes),
 % ----------------------------
 % RelType = ':', RelTypeName ;
 % ----------------------------
     RelType = [":" ++ RTN || RTN <- RelTypeName],
+    RelType_Length = length(RelType),
     insert_table(rel_type, RelType),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -444,18 +476,19 @@ create_code_templates(Legacy) ->
 %           | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { WS, ',', WS, Variable })
 %           | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)) ;
 % ----------------------------------------------------------------------------------------------
-    Hint = [?WS ++ "Using" ++ ?SP ++ "Index" ++ ?SP ++ V ++ NL ++ "(" ++ PKN ++ ")" || V <- Variable, NL <- NodeLabel, PKN <- PropertyKeyName] ++
-        [?WS ++ "Using" ++ ?SP ++ "Join" ++ ?SP ++ "On" ++ ?SP ++ V ++ case rand:uniform(?PRIME) rem 2 of
-                                                                           1 ->
-                                                                               ?WS ++ "," ++ ?WS ++ lists:nth(crypto:rand_uniform(1, Variable_Length), Variable);
-                                                                           _ -> []
-                                                                       end || V <- Variable] ++
-        [?WS ++ "Using" ++ ?SP ++ "Scan" ++ ?SP ++ V ++ NL || V <- Variable, NL <- NodeLabel],
+    Hint = [?WS ++ "Using" ++ ?SP ++ "Index" ++ ?SP ++ lists:nth(crypto:rand_uniform(1, Variable_Length), Variable) ++ lists:nth(crypto:rand_uniform(1, NodeLabel_Length), NodeLabel) ++ "(" ++ lists:nth(crypto:rand_uniform(1, PropertyKeyName_Length), PropertyKeyName) ++ ")" || _ <- lists:seq(1, Variable_Length + NodeLabel_Length + PropertyKeyName_Length)] ++
+        [?WS ++ "Using" ++ ?SP ++ "Join" ++ ?SP ++ "On" ++ ?SP ++ lists:nth(crypto:rand_uniform(1, Variable_Length), Variable) ++ case rand:uniform(?PRIME) rem 2 of
+                                                                                                                                      1 ->
+                                                                                                                                          ?WS ++ "," ++ ?WS ++ lists:nth(crypto:rand_uniform(1, Variable_Length), Variable);
+                                                                                                                                      _ ->
+                                                                                                                                          []
+                                                                                                                                  end || _ <- lists:seq(1, Variable_Length)] ++
+        [?WS ++ "Using" ++ ?SP ++ "Scan" ++ ?SP ++ lists:nth(crypto:rand_uniform(1, Variable_Length), Variable) ++ lists:nth(crypto:rand_uniform(1, NodeLabel_Length), NodeLabel) || _ <- lists:seq(1, Variable_Length + NodeLabel_Length)],
     insert_table(hint, Hint),
 % --------------------------------------------------------------------------
 % Index = (I,N,D,E,X), SP, (O,N), WS, NodeLabel, '(', PropertyKeyName, ')' ;
 % --------------------------------------------------------------------------
-    Index = ["Index" ++ ?SP ++ "On" ++ ?WS ++ NL ++ "(" ++ PKN ++ ")" || NL <- NodeLabel, PKN <- PropertyKeyName],
+    Index = ["Index" ++ ?SP ++ "On" ++ ?WS ++ lists:nth(crypto:rand_uniform(1, NodeLabel_Length), NodeLabel) ++ "(" ++ lists:nth(crypto:rand_uniform(1, PropertyKeyName_Length), PropertyKeyName) ++ ")" || _ <- lists:seq(1, NodeLabel_Length + PropertyKeyName_Length)],
     insert_table(index, Index),
 % -------------------------------------------
 % NodeLabels = NodeLabel, { WS, NodeLabel } ;
@@ -475,11 +508,12 @@ create_code_templates(Legacy) ->
 % ----------------------------------------------------
 % PropertyExpression = Atom, { WS, PropertyLookup }- ;
 % ----------------------------------------------------
-    PropertyExpression_Part_1 = sets:to_list(sets:from_list([A ++ ?WS ++ PL ++ case rand:uniform(?PRIME) rem 2 of
-                                                                                   1 ->
-                                                                                       ?WS ++ lists:nth(crypto:rand_uniform(1, PropertyLookup_Length), PropertyLookup);
-                                                                                   _ -> []
-                                                                               end || A <- Atom_Part_1, PL <- PropertyLookup])),
+    PropertyExpression_Part_1 = sets:to_list(sets:from_list([lists:nth(crypto:rand_uniform(1, Atom_Part_1_Length), Atom_Part_1) ++ ?WS ++ lists:nth(crypto:rand_uniform(1, PropertyLookup_Length), PropertyLookup) ++ case rand:uniform(?PRIME) rem 2 of
+                                                                                                                                                                                                                          1 ->
+                                                                                                                                                                                                                              ?WS ++ lists:nth(crypto:rand_uniform(1, PropertyLookup_Length), PropertyLookup);
+                                                                                                                                                                                                                          _ ->
+                                                                                                                                                                                                                              []
+                                                                                                                                                                                                                      end || _ <- lists:seq(1, Atom_Part_1_Length + PropertyLookup_Length)])),
     insert_table(property_expression, PropertyExpression_Part_1),
 % -------------------------------------------------------------------------------------------------------------
 % RelationshipLookup = ((R,E,L,A,T,I,O,N,S,H,I,P) | (R,E,L)), (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
@@ -496,12 +530,12 @@ create_code_templates(Legacy) ->
 % ----------------------------------------------------------------------------------------------------------------------------------
     RelationshipPatternSyntax = sets:to_list(sets:from_list(["(" ++ ?WS ++ ")" ++ case rand:uniform(?PRIME) rem 3 of
                                                                                       2 ->
-                                                                                          ?DASH ++ "[" ++ V ++ RT ++ "]" ++ ?DASH;
+                                                                                          ?DASH ++ "[" ++ lists:nth(crypto:rand_uniform(1, Variable_Length), Variable) ++ lists:nth(crypto:rand_uniform(1, RelType_Length), RelType) ++ "]" ++ ?DASH;
                                                                                       1 ->
-                                                                                          ?DASH ++ "[" ++ V ++ RT ++ "]" ++ ?DASH ++ ?RIGHT_ARROW_HEAD;
+                                                                                          ?DASH ++ "[" ++ lists:nth(crypto:rand_uniform(1, Variable_Length), Variable) ++ lists:nth(crypto:rand_uniform(1, RelType_Length), RelType) ++ "]" ++ ?DASH ++ ?RIGHT_ARROW_HEAD;
                                                                                       _ ->
-                                                                                          ?LEFT_ARROW_HEAD ++ ?DASH ++ "[" ++ V ++ RT ++ "]" ++ ?DASH
-                                                                                  end ++ "(" ++ ?WS ++ ")" || V <- Variable, RT <- RelType])),
+                                                                                          ?LEFT_ARROW_HEAD ++ ?DASH ++ "[" ++ lists:nth(crypto:rand_uniform(1, Variable_Length), Variable) ++ lists:nth(crypto:rand_uniform(1, RelType_Length), RelType) ++ "]" ++ ?DASH
+                                                                                  end ++ "(" ++ ?WS ++ ")" || _ <- lists:seq(1, Variable_Length + RelType_Length)])),
     insert_table(relationship_pattern_syntax, RelationshipPatternSyntax),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -838,7 +872,7 @@ create_expression12(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                    end,
     insert_table(expression, Expression12),
 
-    Expression2.
+    Expression12.
 
 insert_table(Rule, Code) ->
     %?debugFmt("wwe debugging insert_table/2 ===> Rule: ~p [~p]~n", [Rule, length(Code)]),
