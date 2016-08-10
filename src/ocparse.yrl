@@ -271,8 +271,7 @@ Left        500 '^'.
 
 cypher -> statement char_semicolon_opt                                                          : {cypher, {statement, '$1'}, '$2'}.
 
-% cypher -> atom                                                                                  : '$1'.
-cypher -> expression                                                                            : '$1'.
+% cypher -> expression                                                                            : '$1'.
 
 %% =====================================================================================================================
 %% Helper definitions.
