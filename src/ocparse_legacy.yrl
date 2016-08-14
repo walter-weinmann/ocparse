@@ -159,6 +159,7 @@ Nonterminals
  regular_query
  rel_type
  rel_type_name
+ rel_type_verticalbarlist
  relationship_detail
  relationship_detail_opt
  relationship_lookup
@@ -356,6 +357,7 @@ Left        500 '^'.
 
 cypher -> query_options statement char_semicolon_opt                                            : {cypher, '$1', {statement, '$2'}, '$3'}.
 
+cypher -> atom                                                                                  : '$1'.
 % cypher -> expression                                                                            : '$1'.
 
 query_options -> '$empty'                                                                       : {}.
@@ -773,7 +775,7 @@ char_question_mark_opt -> '$empty'                                              
 char_question_mark_opt -> '?'                                                                   : "?".
 
 relationship_types_opt -> '$empty'                                                              : [].
-relationship_types_opt -> relationship_types                                                    : {relationshipTypes, '$1'}.
+relationship_types_opt -> relationship_types                                                    : '$1'.
 
 range_opt -> '$empty'                                                                           : {}.
 range_opt -> '*' range_literal                                                                  : '$2'.
@@ -785,8 +787,17 @@ properties -> legacy_parameter                                                  
 
 rel_type -> ':' rel_type_name                                                                   : {relType, '$2'}.
 
-relationship_types -> ':' rel_type_name                                                         : ['$2'].
-relationship_types -> ':' rel_type_name '|' relationship_types                                  : ['$2' | '$4'].
+relationship_types -> ':' rel_type_name                                                         : {relationshipTypes, '$2', []}.
+relationship_types -> ':' rel_type_name rel_type_verticalbarlist                                : {relationshipTypes, '$2', '$3'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+rel_type_verticalbarlist -> rel_type_verticalbarlist '|' rel_type                               : '$1' ++ ['$3'].
+rel_type_verticalbarlist -> rel_type_verticalbarlist '|' rel_type_name                          : '$1' ++ ['$3'].
+rel_type_verticalbarlist -> '|' rel_type                                                        : ['$2'].
+rel_type_verticalbarlist -> '|' rel_type_name                                                   : ['$2'].
+%% =====================================================================================================================
 
 node_labels -> node_labels node_label                                                           : '$1' ++ ['$2'].
 node_labels -> node_label                                                                       : ['$1'].
@@ -946,13 +957,13 @@ expression_3_addon_list_opt -> expression_3_addon_list                          
 expression_3_addon_list -> expression_3_addon_list expression_3_addon                           : '$1' ++ ['$2'].
 expression_3_addon_list -> expression_3_addon                                                   : ['$1'].
 
-expression_3_addon -> '[' expression_opt '..' expression_opt ']'                                : {"[", '$2', '$4'}.
-expression_3_addon -> '[' expression ']'                                                        : {"[", '$2'}.
-expression_3_addon -> '=~' expression_2                                                         : {"=~", '$2'}.
-expression_3_addon -> IN expression_2                                                           : {"in", '$2'}.
+expression_3_addon -> '[' expression_opt '..' expression_opt ']'                                : {"[",           '$2', '$4'}.
+expression_3_addon -> '[' expression ']'                                                        : {"[",           '$2'}.
+expression_3_addon -> '=~' expression_2                                                         : {"=~",          '$2'}.
+expression_3_addon -> IN expression_2                                                           : {"in",          '$2'}.
 expression_3_addon -> STARTS WITH expression_2                                                  : {"starts with", '$3'}.
-expression_3_addon -> ENDS WITH expression_2                                                    : {"ends with", '$3'}.
-expression_3_addon -> CONTAINS expression_2                                                     : {"contains", '$2'}.
+expression_3_addon -> ENDS WITH expression_2                                                    : {"ends with",   '$3'}.
+expression_3_addon -> CONTAINS expression_2                                                     : {"contains",    '$2'}.
 expression_3_addon -> IS NOT NULL                                                               : {"is not null"}.
 expression_3_addon -> IS NULL                                                                   : {"is null"}.
 
@@ -987,14 +998,14 @@ atom -> COUNT '(' '*' ')'                                                       
 atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
-atom -> FILTER '(' filter_expression ')'                                                        : {atom, {'filter', '$3'}}.
+atom -> FILTER '(' filter_expression ')'                                                        : {atom, {'filter',  '$3'}}.
 atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
-atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3'}}.
+atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
 atom -> reduce                                                                                  : {atom, '$1'}.
-atom -> ALL '(' filter_expression ')'                                                           : {atom, {'all', '$3'}}.
-atom -> ANY '(' filter_expression ')'                                                           : {atom, {'any', '$3'}}.
-atom -> NONE '(' filter_expression ')'                                                          : {atom, {'none', '$3'}}.
-atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single', '$3'}}.
+atom -> ALL '(' filter_expression ')'                                                           : {atom, {'all',     '$3'}}.
+atom -> ANY '(' filter_expression ')'                                                           : {atom, {'any',     '$3'}}.
+atom -> NONE '(' filter_expression ')'                                                          : {atom, {'none',    '$3'}}.
+atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single',  '$3'}}.
 atom -> relationships_pattern                                                                   : {atom, '$1'}.
 atom -> shortest_path_pattern                                                                   : {atom, '$1'}.
 atom -> parenthesized_expression                                                                : {atom, '$1'}.
@@ -1019,6 +1030,7 @@ comparison -> '>='                                                              
 
 parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
 
+relationships_pattern -> node_pattern                                                           : {relationshipsPattern, '$1', []}.
 relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
 
 filter_expression -> id_in_coll where_opt                                                       : {filterExpression, '$1', '$2'}.
