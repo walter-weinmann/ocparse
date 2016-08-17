@@ -63,7 +63,6 @@ Erlang code.
     {"^(?i)(ELSE)$",             'ELSE'},
     {"^(?i)(END)$",              'END'},
     {"^(?i)(ENDS)$",             'ENDS'},
-    {"^(?i)(EXISTS)$",           'EXISTS'},
     {"^(?i)(EXPLAIN)$",          'EXPLAIN'},
     {"^(?i)(EXTRACT)$",          'EXTRACT'},
     {"^(?i)(FALSE)$",            'FALSE'},

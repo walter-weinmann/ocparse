@@ -358,7 +358,7 @@ Left        500 '^'.
 cypher -> query_options statement char_semicolon_opt                                            : {cypher, '$1', {statement, '$2'}, '$3'}.
 
 cypher -> atom                                                                                  : '$1'.
-% cypher -> expression                                                                            : '$1'.
+cypher -> expression                                                                            : '$1'.
 
 query_options -> '$empty'                                                                       : {}.
 query_options -> any_cypher_option_list                                                         : {queryOptions, '$1'}.
