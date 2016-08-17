@@ -2197,6 +2197,25 @@ fold(FType, Fun, Ctx, Lvl, {relationshipTypes, RelType, RelTypeVerticalbarlist} 
     RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% relTypeName
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {{relTypeName, {Value, Colon}}} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ValueNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {Colon ++ ValueNew, NewCtx2},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % relTypeVerticalbarlist
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2208,9 +2227,12 @@ fold(FType, Fun, Ctx, Lvl, {relTypeVerticalbarlist, Values} = ST)
                  bottom_up -> Ctx
              end,
     {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
-        ?debugFmt("wwe debugging fold/5 ===> ~n F: ~p~n", [F]),
-        {SubAcc, CtxAcc1} = fold(FType, Fun, CtxAcc, Lvl + 1, F),
-        {Acc ++ "|" ++ SubAcc, CtxAcc1}
+        case F of
+            {{relTypeName, _} = RTN, Colon} ->
+                ?debugFmt("wwe debugging fold/5 ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = fold(FType, Fun, CtxAcc, Lvl + 1, RTN),
+                {Acc ++ "|" ++ Colon ++ SubAcc, CtxAcc1}
+        end
                                       end,
         {[], NewCtx},
         Values),

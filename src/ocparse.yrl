@@ -77,7 +77,11 @@ Nonterminals
  pattern_element_chain_list
  pattern_part
  pattern_part_commalist
- properties
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+ % properties
+%% =====================================================================================================================
  property_expression
  property_key_name
  property_key_name_expression
@@ -244,7 +248,7 @@ cypher -> statement ';'                                                         
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
 cypher -> expression                                                                            : '$1'.
-cypher -> node_pattern                                                                          : '$1'.
+cypher -> limit                                                                                 : '$1'.
 %% =====================================================================================================================
 
 statement -> query                                                                              : {statement, '$1'}.
@@ -419,13 +423,26 @@ pattern_element_chain_list -> pattern_element_chain                             
 %% =====================================================================================================================
 
 node_pattern -> '('                                 ')'                                         : {nodePattern, [],   [],   []}.
-node_pattern -> '('                      properties ')'                                         : {nodePattern, [],   [],   '$2'}.
 node_pattern -> '('          node_labels            ')'                                         : {nodePattern, [],   '$2', []}.
-node_pattern -> '('          node_labels properties ')'                                         : {nodePattern, [],   '$2', '$3'}.
 node_pattern -> '(' variable                        ')'                                         : {nodePattern, '$2', [],   []}.
-node_pattern -> '(' variable             properties ')'                                         : {nodePattern, '$2', [],   '$3'}.
 node_pattern -> '(' variable node_labels            ')'                                         : {nodePattern, '$2', '$3', []}.
-node_pattern -> '(' variable node_labels properties ')'                                         : {nodePattern, '$2', '$3', '$4'}.
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+node_pattern -> '('                      map_literal ')'                                        : {nodePattern, [],   [],   '$2'}.
+node_pattern -> '('          node_labels map_literal ')'                                        : {nodePattern, [],   '$2', '$3'}.
+node_pattern -> '(' variable             map_literal ')'                                        : {nodePattern, '$2', [],   '$3'}.
+node_pattern -> '(' variable node_labels map_literal ')'                                        : {nodePattern, '$2', '$3', '$4'}.
+node_pattern -> '('                      parameter   ')'                                        : {nodePattern, [],   [],   '$2'}.
+node_pattern -> '('          node_labels parameter   ')'                                        : {nodePattern, [],   '$2', '$3'}.
+node_pattern -> '(' variable             parameter   ')'                                        : {nodePattern, '$2', [],   '$3'}.
+node_pattern -> '(' variable node_labels parameter   ')'                                        : {nodePattern, '$2', '$3', '$4'}.
+% node_pattern -> '('                      properties ')'                                         : {nodePattern, [],   [],   '$2'}.
+% node_pattern -> '('          node_labels properties ')'                                         : {nodePattern, [],   '$2', '$3'}.
+% node_pattern -> '(' variable             properties ')'                                         : {nodePattern, '$2', [],   '$3'}.
+% node_pattern -> '(' variable node_labels properties ')'                                         : {nodePattern, '$2', '$3', '$4'}.
+%% =====================================================================================================================
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
@@ -439,40 +456,81 @@ relationship_pattern ->     '--'                                                
 relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
 
 relationship_detail -> '['                                                              ']'     : {relationshipDetail, [],   [],   [],   [],   []}.
-relationship_detail -> '['                                                   properties ']'     : {relationshipDetail, [],   [],   [],   [],   '$2'}.
 relationship_detail -> '['                                 '*' range_literal            ']'     : {relationshipDetail, [],   [],   [],   '$3', []}.
-relationship_detail -> '['                                 '*' range_literal properties ']'     : {relationshipDetail, [],   [],   [],   '$3', '$4'}.
 relationship_detail -> '['              relationship_types                              ']'     : {relationshipDetail, [],   [],   '$2', [],   []}.
-relationship_detail -> '['              relationship_types                   properties ']'     : {relationshipDetail, [],   [],   '$2', [],   '$3'}.
 relationship_detail -> '['              relationship_types '*' range_literal            ']'     : {relationshipDetail, [],   [],   '$2', '$4', []}.
-relationship_detail -> '['              relationship_types '*' range_literal properties ']'     : {relationshipDetail, [],   [],   '$2', '$4', '$5'}.
 relationship_detail -> '['          '?'                                                 ']'     : {relationshipDetail, [],   "?",  [],   [],   []}.
-relationship_detail -> '['          '?'                                      properties ']'     : {relationshipDetail, [],   "?",  [],   [],   '$3'}.
 relationship_detail -> '['          '?'                    '*' range_literal            ']'     : {relationshipDetail, [],   "?",  [],   '$4', []}.
-relationship_detail -> '['          '?'                    '*' range_literal properties ']'     : {relationshipDetail, [],   "?",  [],   '$4', '$5'}.
 relationship_detail -> '['          '?' relationship_types                              ']'     : {relationshipDetail, [],   "?",  '$3', [],   []}.
-relationship_detail -> '['          '?' relationship_types                   properties ']'     : {relationshipDetail, [],   "?",  '$3', [],   '$4'}.
 relationship_detail -> '['          '?' relationship_types '*' range_literal            ']'     : {relationshipDetail, [],   "?",  '$3', '$5', []}.
-relationship_detail -> '['          '?' relationship_types '*' range_literal properties ']'     : {relationshipDetail, [],   "?",  '$3', '$5', '$6'}.
 relationship_detail -> '[' variable                                                     ']'     : {relationshipDetail, '$2', [],   [],   [],   []}.
-relationship_detail -> '[' variable                                          properties ']'     : {relationshipDetail, '$2', [],   [],   [],   '$3'}.
 relationship_detail -> '[' variable                        '*' range_literal            ']'     : {relationshipDetail, '$2', [],   [],   '$4', []}.
-relationship_detail -> '[' variable                        '*' range_literal properties ']'     : {relationshipDetail, '$2', [],   [],   '$4', '$5'}.
 relationship_detail -> '[' variable     relationship_types                              ']'     : {relationshipDetail, '$2', [],   '$3', [],   []}.
-relationship_detail -> '[' variable     relationship_types                   properties ']'     : {relationshipDetail, '$2', [],   '$3', [],   '$4'}.
 relationship_detail -> '[' variable     relationship_types '*' range_literal            ']'     : {relationshipDetail, '$2', [],   '$3', '$5', []}.
-relationship_detail -> '[' variable     relationship_types '*' range_literal properties ']'     : {relationshipDetail, '$2', [],   '$3', '$5', '$6'}.
 relationship_detail -> '[' variable '?'                                                 ']'     : {relationshipDetail, '$2', "?",  [],   [],   []}.
-relationship_detail -> '[' variable '?'                                      properties ']'     : {relationshipDetail, '$2', "?",  [],   [],   '$4'}.
 relationship_detail -> '[' variable '?'                    '*' range_literal            ']'     : {relationshipDetail, '$2', "?",  [],   '$5', []}.
-relationship_detail -> '[' variable '?'                    '*' range_literal properties ']'     : {relationshipDetail, '$2', "?",  [],   '$5', '$6'}.
 relationship_detail -> '[' variable '?' relationship_types                              ']'     : {relationshipDetail, '$2', "?",  '$4', [],   []}.
-relationship_detail -> '[' variable '?' relationship_types                   properties ']'     : {relationshipDetail, '$2', "?",  '$4', [],   '$5'}.
 relationship_detail -> '[' variable '?' relationship_types '*' range_literal            ']'     : {relationshipDetail, '$2', "?",  '$4', '$6', []}.
-relationship_detail -> '[' variable '?' relationship_types '*' range_literal properties ']'     : {relationshipDetail, '$2', "?",  '$4', '$6', '$7'}.
 
-properties -> map_literal                                                                       : {properties, '$1'}.
-properties -> parameter                                                                         : {properties, '$1'}.
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+relationship_detail -> '['                                                   map_literal ']'    : {relationshipDetail, [],   [],   [],   [],   '$2'}.
+relationship_detail -> '['                                 '*' range_literal map_literal ']'    : {relationshipDetail, [],   [],   [],   '$3', '$4'}.
+relationship_detail -> '['              relationship_types                   map_literal ']'    : {relationshipDetail, [],   [],   '$2', [],   '$3'}.
+relationship_detail -> '['              relationship_types '*' range_literal map_literal ']'    : {relationshipDetail, [],   [],   '$2', '$4', '$5'}.
+relationship_detail -> '['          '?'                                      map_literal ']'    : {relationshipDetail, [],   "?",  [],   [],   '$3'}.
+relationship_detail -> '['          '?'                    '*' range_literal map_literal ']'    : {relationshipDetail, [],   "?",  [],   '$4', '$5'}.
+relationship_detail -> '['          '?' relationship_types                   map_literal ']'    : {relationshipDetail, [],   "?",  '$3', [],   '$4'}.
+relationship_detail -> '['          '?' relationship_types '*' range_literal map_literal ']'    : {relationshipDetail, [],   "?",  '$3', '$5', '$6'}.
+relationship_detail -> '[' variable                                          map_literal ']'    : {relationshipDetail, '$2', [],   [],   [],   '$3'}.
+relationship_detail -> '[' variable                        '*' range_literal map_literal ']'    : {relationshipDetail, '$2', [],   [],   '$4', '$5'}.
+relationship_detail -> '[' variable     relationship_types                   map_literal ']'    : {relationshipDetail, '$2', [],   '$3', [],   '$4'}.
+relationship_detail -> '[' variable     relationship_types '*' range_literal map_literal ']'    : {relationshipDetail, '$2', [],   '$3', '$5', '$6'}.
+relationship_detail -> '[' variable '?'                                      map_literal ']'    : {relationshipDetail, '$2', "?",  [],   [],   '$4'}.
+relationship_detail -> '[' variable '?'                    '*' range_literal map_literal ']'    : {relationshipDetail, '$2', "?",  [],   '$5', '$6'}.
+relationship_detail -> '[' variable '?' relationship_types                   map_literal ']'    : {relationshipDetail, '$2', "?",  '$4', [],   '$5'}.
+relationship_detail -> '[' variable '?' relationship_types '*' range_literal map_literal ']'    : {relationshipDetail, '$2', "?",  '$4', '$6', '$7'}.
+relationship_detail -> '['                                                   parameter   ']'    : {relationshipDetail, [],   [],   [],   [],   '$2'}.
+relationship_detail -> '['                                 '*' range_literal parameter   ']'    : {relationshipDetail, [],   [],   [],   '$3', '$4'}.
+relationship_detail -> '['              relationship_types                   parameter   ']'    : {relationshipDetail, [],   [],   '$2', [],   '$3'}.
+relationship_detail -> '['              relationship_types '*' range_literal parameter   ']'    : {relationshipDetail, [],   [],   '$2', '$4', '$5'}.
+relationship_detail -> '['          '?'                                      parameter   ']'    : {relationshipDetail, [],   "?",  [],   [],   '$3'}.
+relationship_detail -> '['          '?'                    '*' range_literal parameter   ']'    : {relationshipDetail, [],   "?",  [],   '$4', '$5'}.
+relationship_detail -> '['          '?' relationship_types                   parameter   ']'    : {relationshipDetail, [],   "?",  '$3', [],   '$4'}.
+relationship_detail -> '['          '?' relationship_types '*' range_literal parameter   ']'    : {relationshipDetail, [],   "?",  '$3', '$5', '$6'}.
+relationship_detail -> '[' variable                                          parameter   ']'    : {relationshipDetail, '$2', [],   [],   [],   '$3'}.
+relationship_detail -> '[' variable                        '*' range_literal parameter   ']'    : {relationshipDetail, '$2', [],   [],   '$4', '$5'}.
+relationship_detail -> '[' variable     relationship_types                   parameter   ']'    : {relationshipDetail, '$2', [],   '$3', [],   '$4'}.
+relationship_detail -> '[' variable     relationship_types '*' range_literal parameter   ']'    : {relationshipDetail, '$2', [],   '$3', '$5', '$6'}.
+relationship_detail -> '[' variable '?'                                      parameter   ']'    : {relationshipDetail, '$2', "?",  [],   [],   '$4'}.
+relationship_detail -> '[' variable '?'                    '*' range_literal parameter   ']'    : {relationshipDetail, '$2', "?",  [],   '$5', '$6'}.
+relationship_detail -> '[' variable '?' relationship_types                   parameter   ']'    : {relationshipDetail, '$2', "?",  '$4', [],   '$5'}.
+relationship_detail -> '[' variable '?' relationship_types '*' range_literal parameter   ']'    : {relationshipDetail, '$2', "?",  '$4', '$6', '$7'}.
+% relationship_detail -> '['                                                   properties ']'     : {relationshipDetail, [],   [],   [],   [],   '$2'}.
+% relationship_detail -> '['                                 '*' range_literal properties ']'     : {relationshipDetail, [],   [],   [],   '$3', '$4'}.
+% relationship_detail -> '['              relationship_types                   properties ']'     : {relationshipDetail, [],   [],   '$2', [],   '$3'}.
+% relationship_detail -> '['              relationship_types '*' range_literal properties ']'     : {relationshipDetail, [],   [],   '$2', '$4', '$5'}.
+% relationship_detail -> '['          '?'                                      properties ']'     : {relationshipDetail, [],   "?",  [],   [],   '$3'}.
+% relationship_detail -> '['          '?'                    '*' range_literal properties ']'     : {relationshipDetail, [],   "?",  [],   '$4', '$5'}.
+% relationship_detail -> '['          '?' relationship_types                   properties ']'     : {relationshipDetail, [],   "?",  '$3', [],   '$4'}.
+% relationship_detail -> '['          '?' relationship_types '*' range_literal properties ']'     : {relationshipDetail, [],   "?",  '$3', '$5', '$6'}.
+% relationship_detail -> '[' variable                                          properties ']'     : {relationshipDetail, '$2', [],   [],   [],   '$3'}.
+% relationship_detail -> '[' variable                        '*' range_literal properties ']'     : {relationshipDetail, '$2', [],   [],   '$4', '$5'}.
+% relationship_detail -> '[' variable     relationship_types                   properties ']'     : {relationshipDetail, '$2', [],   '$3', [],   '$4'}.
+% relationship_detail -> '[' variable     relationship_types '*' range_literal properties ']'     : {relationshipDetail, '$2', [],   '$3', '$5', '$6'}.
+% relationship_detail -> '[' variable '?'                                      properties ']'     : {relationshipDetail, '$2', "?",  [],   [],   '$4'}.
+% relationship_detail -> '[' variable '?'                    '*' range_literal properties ']'     : {relationshipDetail, '$2', "?",  [],   '$5', '$6'}.
+% relationship_detail -> '[' variable '?' relationship_types                   properties ']'     : {relationshipDetail, '$2', "?",  '$4', [],   '$5'}.
+% relationship_detail -> '[' variable '?' relationship_types '*' range_literal properties ']'     : {relationshipDetail, '$2', "?",  '$4', '$6', '$7'}.
+%% =====================================================================================================================
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+% properties -> map_literal                                                                       : {properties, '$1'}.
+% properties -> parameter                                                                         : {properties, '$1'}.
+%% =====================================================================================================================
 
 rel_type -> ':' rel_type_name                                                                   : {relType, '$2'}.
 
@@ -660,24 +718,12 @@ expression_2_addon -> property_lookup                                           
 
 atom -> number_literal                                                                          : {atom, '$1'}.
 atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
-
-%% =====================================================================================================================
-%% Helper definitions - reduce/reduce conflict.
-%% ---------------------------------------------------------------------------------------------------------------------
-% atom -> parameter                                                                               : {atom, '$1'}.
-%% =====================================================================================================================
-
+atom -> parameter                                                                               : {atom, '$1'}.
 atom -> TRUE                                                                                    : {atom, {terminal, "true"}}.
 atom -> FALSE                                                                                   : {atom, {terminal, "false"}}.
 atom -> NULL                                                                                    : {atom, {terminal, "null"}}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, "count(*)"}}.
-
-%% =====================================================================================================================
-%% Helper definitions - reduce/reduce conflict.
-%% ---------------------------------------------------------------------------------------------------------------------
-% atom -> map_literal                                                                             : {atom, '$1'}.
-%% =====================================================================================================================
-
+atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
 atom -> FILTER '(' filter_expression ')'                                                        : {atom, {'filter',  '$3'}}.

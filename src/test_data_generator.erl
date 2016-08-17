@@ -4,14 +4,12 @@
 
 -define(ALL_ATOM, [number_literal,
     string_literal,
-    % reduce/reduce conflict
-    % parameter,
+    parameter,
     atom_true,
     atom_false,
     atom_null,
     atom_count,
-    % reduce/reduce conflict
-    % map_literal,
+    map_literal,
     list_comprehension,
     atom_square_bracket,
     atom_filter,
@@ -120,7 +118,9 @@ generate() ->
     create_code(false),
 
     ok = file_create_ct_all(false,
-        ?ALL_ATOM),
+        ?ALL_ATOM ++
+            ?ALL_CLAUSE ++
+            ?ALL_EXPRESSION),
 
 %%    ok = file_create_ct_all(false,
 %%        ?ALL_ATOM ++
@@ -131,7 +131,10 @@ generate() ->
 %%                statement]),
 
     ok = file_create_eunit_all(false,
-        ?ALL_ATOM),
+        ?ALL_ATOM ++
+            [limit] ++
+            ?ALL_CLAUSE ++
+            ?ALL_EXPRESSION),
 
 %%    ok = file_create_eunit_all(false,
 %%        [clause,
