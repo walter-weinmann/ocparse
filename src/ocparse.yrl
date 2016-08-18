@@ -232,10 +232,13 @@ Left        100 'OR'.
 Left        110 'XOR'.
 Left        120 'AND'.
 Left        130 'NOT'.
+
 Right       200 '='.
 Left        210 '<>' '!=' '<' '>' '<=' '>='.
+
 Left        300 '+' '-'.
 Left        310 '*' '/' '%'.
+
 Right       400 '^'.
 Right       410 expression_4_addon.
 Nonassoc    500 '=~' '..'.
@@ -250,8 +253,9 @@ cypher -> statement ';'                                                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-cypher -> expression                                                                            : '$1'.
-cypher -> limit                                                                                 : '$1'.
+% cypher -> expression                                                                            : '$1'.
+% cypher -> limit                                                                                 : '$1'.
+% cypher -> pattern_part                                                                          : '$1'.
 %% =====================================================================================================================
 
 statement -> query                                                                              : {statement, '$1'}.
@@ -437,7 +441,8 @@ node_pattern -> '('                      map_literal ')'                        
 node_pattern -> '('          node_labels map_literal ')'                                        : {nodePattern, [],   '$2', '$3'}.
 node_pattern -> '(' variable             map_literal ')'                                        : {nodePattern, '$2', [],   '$3'}.
 node_pattern -> '(' variable node_labels map_literal ')'                                        : {nodePattern, '$2', '$3', '$4'}.
-node_pattern -> '('                      parameter   ')'                                        : {nodePattern, [],   [],   '$2'}.
+% wwe ???
+% node_pattern -> '('                      parameter   ')'                                        : {nodePattern, [],   [],   '$2'}.
 node_pattern -> '('          node_labels parameter   ')'                                        : {nodePattern, [],   '$2', '$3'}.
 node_pattern -> '(' variable             parameter   ')'                                        : {nodePattern, '$2', [],   '$3'}.
 node_pattern -> '(' variable node_labels parameter   ')'                                        : {nodePattern, '$2', '$3', '$4'}.

@@ -12,7 +12,7 @@ Rules.
 
 %% symbolic names
 (`([^`]*)*`)                                              : {token, {'ESCAPED_SYMBOLIC_NAME', TokenLine, TokenChars}}.
-([A-Za-z_@#][A-Za-z0-9_@#\$]*)                            : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
+([A-Za-z_@#][A-Za-z0-9_@#]*)                              : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
 
 %% string literals
 (\'([^\\\']*)*\')                                         : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
