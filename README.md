@@ -230,6 +230,10 @@ The documentation for **ocparse** is available here: [Wiki](https://github.com/w
 
 The number of block comments (`/* ... */`) is limted to one per line.
 
+### ParenthesizedExpression
+
+`ParenthesizedExpression` is not supported due to a conflict with `NodePattern`.
+
 ### SymbolicName
 
 The following tokens may not be used as `SymbolicName`:
@@ -254,7 +258,6 @@ In the legacy version of the parser the following tokens are also excluded as `S
  REL, RELATIONSHIP, SCAN, SHORTESTPATH, START, THEN, UNIQUE, USING, WHEN
 ```
 
-
 ### Unicode
 
 Unicode is not supported with `Dash`, `LeftArrowHead`, `RightArrowHerad` or `UnescapedSymbolicName`. Hence `Dash` is limited to the hyphen (`-`), `LeftArrowHead` is limited to '`<`' and `RightArrowHead` is limited to '`>`'.
@@ -273,7 +276,7 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ## 6. Release Notes
 
-### Version 1.1.2
+### Version 1.2.0
 
 Release Date: 01.08.2016 - Grammar as of 31.07.2016
 
@@ -331,6 +334,14 @@ New: LiteralIds = { WS, ',', WS } ;
 Old: LiteralIds = UnsignedIntegerLiteral, { WS, ',', WS, UnsignedIntegerLiteral } ;
 ```
 
+- **Pattern** (openCypher & Legacy)
+
+```
+New: Pattern = PatternPart, { WS, ',', WS, PatternPart } ;
+
+Old: Pattern = PatternPart, { ',', PatternPart } ;
+```
+
 - **Properties** (Legacy)
 
 ```
@@ -352,7 +363,23 @@ Old: RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntege
 ```
 New: Atom = ... | LegacyParameter | ...
 
-Old: n/a.
+Old: n/a
+```
+
+- **Atom** (openCypher & Legacy)
+
+```
+New: Atom = ... | ParenthesizedExpression | ...
+
+Old: Atom = ... | parenthesizedExpression | ...
+```
+
+- **ParenthesizedExpression** (openCypher & Legacy)
+
+```
+New: ParenthesizedExpression = '(', WS, Expression, WS, ')' ;
+
+Old: parenthesizedExpression = '(', WS, Expression, WS, ')' ;
 ```
 
 - **NumberLiteral** (openCypher & Legacy)
@@ -400,7 +427,7 @@ Old: UnsignedIntegerLiteral = UnsignedDecimalInteger ;
 ```
 New: HexInteger = ('0',X), HexString ;
 
-Old: RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntegerLiteral, WS]] ;
+Old: HexInteger = ['-'], UnsignedHexInteger ;
 ```
 
 - **DecimalInteger** (openCypher & Legacy)

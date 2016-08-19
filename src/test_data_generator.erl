@@ -91,10 +91,13 @@
 -define(DASH, "-").
 -define(LEFT_ARROW_HEAD, "<").
 -define(MAX_BASE_VAR, 20).
--define(MAX_CLAUSE, 200).
--define(MAX_COMMAND, 200).
--define(MAX_RULE_ATOM, 200).
--define(MAX_RULE_EXPRESSION, 1000).
+-define(MAX_CLAUSE, 500).
+-define(MAX_CYPHER, 1000).
+-define(MAX_COMMAND, 1000).
+-define(MAX_QUERY, 1000).
+-define(MAX_RULE_ATOM, 1000).
+-define(MAX_RULE_EXPRESSION, 2000).
+-define(MAX_STATEMENT, 1000).
 -define(PATH_CT, "ct").
 -define(PATH_EUNIT, "test").
 -define(PRIME, 101).
@@ -118,26 +121,16 @@ generate() ->
     create_code(false),
 
     ok = file_create_ct_all(false,
-        ?ALL_CLAUSE),
-
-%%    ok = file_create_ct_all(false,
-%%        ?ALL_ATOM ++
-%%            ?ALL_CLAUSE ++
-%%            ?ALL_EXPRESSION ++
-%%            [cypher,
-%%                query,
-%%                statement]),
+        ?ALL_CLAUSE ++
+        [cypher,
+            query,
+            statement]),
 
     ok = file_create_eunit_all(false,
         ?ALL_CLAUSE ++
-        [node_pattern,
-            parenthesized_expression]),
-
-%%    ok = file_create_eunit_all(false,
-%%        [clause,
-%%            cypher,
-%%            query,
-%%            statement]),
+        [cypher,
+            query,
+            statement]),
 
     % ----------------------------------------------------------------------------------------------
     % Legacy version -------------------------------------------------------------------------------
@@ -145,10 +138,8 @@ generate() ->
     create_code(true),
 
 %%    ok = file_create_ct_all(true,
-%%        ?ALL_ATOM_LEGACY ++
 %%            ?ALL_CLAUSE_LEGACY ++
 %%            ?ALL_COMMAND ++
-%%            ?ALL_EXPRESSION ++
 %%            [cypher,
 %%                query,
 %%                statement]),
@@ -887,21 +878,12 @@ create_code(Legacy) ->
 % ----------------------------------------------------------
 % ParenthesizedExpression = '(', WS, Expression, WS, ')' ; ;
 % ----------------------------------------------------------
-    % wwe ??? - ignoring parameters
-    ParenthesizedExpression_Base = [E || E <- Expression_Part_1, string:str(E, "$") == 0],
-    ParenthesizedExpression_Base_Length = length(ParenthesizedExpression_Base),
     ParenthesizedExpression = sort_list_random([
             "(" ++ ?WS ++
-            lists:nth(rand:uniform(ParenthesizedExpression_Base_Length), ParenthesizedExpression_Base) ++
+            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
             ?WS ++ ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
-%%    ParenthesizedExpression = sort_list_random([
-%%            "(" ++ ?WS ++
-%%            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-%%            ?WS ++ ")"
-%%        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-%%    ]),
     insert_table(Legacy, parenthesized_expression, ParenthesizedExpression),
 % --------------------------------------------
 % StartPoint = Variable, WS, '=', WS, Lookup ;
@@ -1032,13 +1014,11 @@ create_code(Legacy) ->
                     lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?WS;
                 3 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
                     lists:nth(rand:uniform(Properties_Length), Properties) ++ ?WS;
-                % wwe ???
-                % 4 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP;
+                4 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP;
                 5 -> lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?WS ++
                     lists:nth(rand:uniform(Properties_Length), Properties) ++ ?WS;
                 6 -> lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?WS;
-                % wwe ???
-                % 7 -> lists:nth(rand:uniform(Properties_Length), Properties) ++ ?WS;
+                7 -> lists:nth(rand:uniform(Properties_Length), Properties) ++ ?WS;
                 _ -> []
             end ++
             ")"
@@ -1408,7 +1388,8 @@ create_code(Legacy) ->
                 _ -> []
             end ++
             RelationshipsPattern ++
-            ParenthesizedExpression ++
+            % wwe ???
+            % ParenthesizedExpression ++
             FunctionInvocation),
     insert_table(Legacy, atom, Atom),
     Atom_Length = length(Atom),
@@ -1621,9 +1602,6 @@ create_code(Legacy) ->
 % ------------------------------------------------------------
     SortItem_Targ = Expression_Length,
     SortItem = sort_list_random([
-        "*"
-    ] ++
-    [
             lists:nth(rand:uniform(Expression_Length), Expression) ++
             ?SP ++
             case rand:uniform(?PRIME) rem 4 of
@@ -1661,9 +1639,6 @@ create_code(Legacy) ->
 % ---------------------------------------------------------------------
     Order_Targ = SortItem_Length,
     Order = sort_list_random([
-        "*"
-    ] ++
-    [
             "Order" ++ ?SP ++ "By" ++ ?SP ++
             lists:nth(rand:uniform(SortItem_Length), SortItem) ++
             case rand:uniform(?PRIME) rem 3 of
@@ -1681,9 +1656,6 @@ create_code(Legacy) ->
 % ----------------------------------------------------------------
     ReturnBody_Targ = max(Limit_Length, max(Order_Length, max(ReturnItems_Length, Skip_Length))),
     ReturnBody = sort_list_random([
-        "*"
-    ] ++
-    [
             lists:nth(rand:uniform(ReturnItems_Length), ReturnItems) ++
             case rand:uniform(?PRIME) rem 8 of
                 1 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order) ++
@@ -2050,12 +2022,12 @@ create_code(Legacy) ->
                 _ -> []
             end,
     insert_table(Legacy, start, Start),
-% --------------------------------------------------------
-% (U,N,W,I,N,D), WS, Expression, SP, (A,S), SP, Variable ;
-% --------------------------------------------------------
+% -----------------------------------------------------------------
+% Unwind = (U,N,W,I,N,D), WS, Expression, SP, (A,S), SP, Variable ;
+% -----------------------------------------------------------------
 % wwe ???
-% (U,N,W,I,N,D), SP, Expression, SP, (A,S), SP, Variable ;
-% --------------------------------------------------------
+% Unwind = (U,N,W,I,N,D), SP, Expression, SP, (A,S), SP, Variable ;
+% -----------------------------------------------------------------
     Unwind = sort_list_random([
             "Unwind" ++ ?SP ++
             lists:nth(rand:uniform(Expression_Length), Expression) ++
@@ -2135,7 +2107,7 @@ create_code(Legacy) ->
 %         | CreateRelationshipPropertyExistenceConstraint
 %         | DropRelationshipPropertyExistenceConstraint ;
 % -------------------------------------------------------
-    Command = sort_list_random(
+    Command_Curr = sort_list_random(
         case Legacy of
             true -> CreateIndex ++
                 DropIndex ++
@@ -2147,6 +2119,11 @@ create_code(Legacy) ->
                 DropRelationshipPropertyExistenceConstraint;
             _ -> []
         end),
+    Command =
+        case length(Command_Curr) > ?MAX_COMMAND of
+            true -> lists:sublist(Command_Curr, 1, ?MAX_COMMAND);
+            _ -> Command_Curr
+        end,
     insert_table(Legacy, command, Command),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2257,12 +2234,15 @@ create_code(Legacy) ->
 % --------------------------------------
 % SingleQuery = Clause, { WS, Clause } ;
 % --------------------------------------
+% wwe ???
+% SingleQuery = Clause, { SP, Clause } ;
+% --------------------------------------
     SingleQuery = sort_list_random([
             C ++
             case rand:uniform(?PRIME) rem 3 of
-                1 -> ?WS ++ lists:nth(rand:uniform(Clause_Length), Clause) ++
-                    ?WS ++ lists:nth(rand:uniform(Clause_Length), Clause);
-                2 -> ?WS ++ lists:nth(rand:uniform(Clause_Length), Clause);
+                1 -> ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause) ++
+                    ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause);
+                2 -> ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause);
                 _ -> []
             end
         || C <- Clause
@@ -2285,13 +2265,17 @@ create_code(Legacy) ->
 % Union = ((U,N,I,O,N), SP, (A,L,L), SingleQuery)
 %       | ((U,N,I,O,N), SingleQuery) ;
 % -----------------------------------------------
+% wwe ???
+% Union = ((U,N,I,O,N), SP, (A,L,L), SP, SingleQuery)
+%       | ((U,N,I,O,N), SP, SingleQuery) ;
+% -----------------------------------------------
     Union = sort_list_random([
             "Union" ++
             case rand:uniform(?PRIME) rem 2 of
                 1 -> ?SP ++ "All";
                 _ -> []
             end ++
-            SQ
+            ?SP ++ SQ
         || SQ <- SingleQuery
     ]),
     Union_Length = length(Union),
@@ -2304,12 +2288,15 @@ create_code(Legacy) ->
 % -------------------------------------------
 % RegularQuery = SingleQuery, { WS, Union } ;
 % -------------------------------------------
+% wwe ???
+% RegularQuery = SingleQuery, { SP, Union } ;
+% -------------------------------------------
     RegularQuery = sort_list_random([
             SQ ++
             case rand:uniform(?PRIME) rem 3 of
-                1 -> ?WS ++ lists:nth(rand:uniform(Union_Length), Union) ++
-                    ?WS ++ lists:nth(rand:uniform(Union_Length), Union);
-                2 -> ?WS ++ lists:nth(rand:uniform(Union_Length), Union);
+                1 -> ?SP ++ lists:nth(rand:uniform(Union_Length), Union) ++
+                    ?SP ++ lists:nth(rand:uniform(Union_Length), Union);
+                2 -> ?SP ++ lists:nth(rand:uniform(Union_Length), Union);
                 _ -> []
             end
         || SQ <- SingleQuery
@@ -2324,12 +2311,16 @@ create_code(Legacy) ->
 % Query = RegularQuery
 %       | BulkImportQuery ;
 % -------------------------
-    Query = sort_list_random(
+    Query_Curr = sort_list_random(
         RegularQuery ++
         case Legacy of
             true -> BulkImportQuery;
             _ -> []
         end),
+    Query = case length(Query_Curr) > ?MAX_QUERY of
+                true -> lists:sublist(Query_Curr, 1, ?MAX_QUERY);
+                _ -> Query_Curr
+            end,
     insert_table(Legacy, query, Query),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2340,12 +2331,16 @@ create_code(Legacy) ->
 % Statement = Command
 %           | Query ;
 % -------------------
-    Statement = sort_list_random(
+    Statement_Curr = sort_list_random(
         case Legacy of
             true -> Command;
             _ -> []
         end ++
         Query),
+    Statement = case length(Statement_Curr) > ?MAX_STATEMENT of
+                    true -> lists:sublist(Statement_Curr, 1, ?MAX_STATEMENT);
+                    _ -> Statement_Curr
+                end,
     insert_table(Legacy, statement, Statement),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2355,7 +2350,7 @@ create_code(Legacy) ->
 % -----------------------------------------------------
 % Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
 % -----------------------------------------------------
-    Cypher = sort_list_random([
+    Cypher_Curr = sort_list_random([
             ?WS ++
             case Legacy of
                 true -> lists:nth(rand:uniform(QueryOptions_Length), QueryOptions);
@@ -2369,6 +2364,10 @@ create_code(Legacy) ->
             ++ ?WS
         || S <- Statement
     ]),
+    Cypher = case length(Cypher_Curr) > ?MAX_CYPHER of
+                 true -> lists:sublist(Cypher_Curr, 1, ?MAX_CYPHER);
+                 _ -> Cypher_Curr
+             end,
     insert_table(Legacy, cypher, Cypher),
 
     ok.
@@ -2388,7 +2387,7 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                            [{_, Expression2_Exist}] -> Expression2_Exist;
                            _ -> []
                        end,
-    Expression2_Curr = sets:to_list(sets:from_list(
+    Expression2_Curr = sort_list_random(sets:to_list(sets:from_list(
         Expression2_Prev ++
         [lists:nth(rand:uniform(Atom_Length), Atom) ++
             case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 7 of
@@ -2406,12 +2405,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
             end
             || _ <- lists:seq(1, Max)
         ]
-    )),
-    Expression2 = sort_list_random(
-        case length(Expression2_Curr) > Max of
-            true -> lists:sublist(Expression2_Curr, 1, Max);
-            _ -> Expression2_Curr
-        end),
+    ))),
+    Expression2 = case length(Expression2_Curr) > Max of
+                      true -> lists:sublist(Expression2_Curr, 1, Max);
+                      _ -> Expression2_Curr
+                  end,
     Expression2_Length = length(Expression2),
     insert_table(_Legacy, expression2, Expression2),
 % -----------------------------------------------------------------------------
@@ -2429,7 +2427,7 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                            [{_, Expression3_Exist}] -> Expression3_Exist;
                            _ -> []
                        end,
-    Expression3_Curr = sets:to_list(sets:from_list(
+    Expression3_Curr = sort_list_random(sets:to_list(sets:from_list(
         Expression3_Prev ++
         [lists:nth(rand:uniform(Expression2_Length), Expression2) ++
             case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 23 of
@@ -2476,12 +2474,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
             end
             || _ <- lists:seq(1, Max)
         ]
-    )),
-    Expression3 = sort_list_random(
-        case length(Expression3_Curr) > Max of
-            true -> lists:sublist(Expression3_Curr, 1, Max);
-            _ -> Expression3_Curr
-        end),
+    ))),
+    Expression3 = case length(Expression3_Curr) > Max of
+                      true -> lists:sublist(Expression3_Curr, 1, Max);
+                      _ -> Expression3_Curr
+                  end,
     Expression3_Length = length(Expression3),
     insert_table(_Legacy, expression3, Expression3),
 % ------------------------------------------------
@@ -2491,8 +2488,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                            [{_, Expression4_Exist}] -> Expression4_Exist;
                            _ -> []
                        end,
-    Expression4_Curr = Expression4_Prev ++
-        sets:to_list(sets:from_list([
+    Expression4_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression4_Prev ++
+        [
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 5 of
                     1 -> "+" ++ ?SP ++ "+" ++ ?SP;
                     2 -> "-" ++ ?SP ++ "-" ++ ?SP;
@@ -2502,12 +2500,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                 end ++
                 lists:nth(rand:uniform(Expression3_Length), Expression3)
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression4 = sort_list_random(
-        case length(Expression4_Curr) > Max of
-            true -> lists:sublist(Expression4_Curr, 1, Max);
-            _ -> Expression4_Curr
-        end),
+        ]))),
+    Expression4 = case length(Expression4_Curr) > Max of
+                      true -> lists:sublist(Expression4_Curr, 1, Max);
+                      _ -> Expression4_Curr
+                  end,
     Expression4_Length = length(Expression4),
     insert_table(_Legacy, expression4, Expression4),
 % ---------------------------------------------------------
@@ -2517,8 +2514,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                            [{_, Expression5_Exist}] -> Expression5_Exist;
                            _ -> []
                        end,
-    Expression5_Curr = Expression5_Prev ++
-        sets:to_list(sets:from_list([
+    Expression5_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression5_Prev ++
+        [
                 lists:nth(rand:uniform(Expression4_Length), Expression4) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 3 of
                     1 -> ?WS ++ "^" ++ ?WS ++ lists:nth(rand:uniform(Expression4_Length), Expression4) ++
@@ -2527,12 +2525,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression5 = sort_list_random(
-        case length(Expression5_Curr) > Max of
-            true -> lists:sublist(Expression5_Curr, 1, Max);
-            _ -> Expression5_Curr
-        end),
+        ]))),
+    Expression5 = case length(Expression5_Curr) > Max of
+                      true -> lists:sublist(Expression5_Curr, 1, Max);
+                      _ -> Expression5_Curr
+                  end,
     Expression5_Length = length(Expression5),
     insert_table(_Legacy, expression5, Expression5),
 % ---------------------------------------------------------------------------------------------------------------------
@@ -2542,8 +2539,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                            [{_, Expression6_Exist}] -> Expression6_Exist;
                            _ -> []
                        end,
-    Expression6_Curr = Expression6_Prev ++
-        sets:to_list(sets:from_list([
+    Expression6_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression6_Prev ++
+        [
                 lists:nth(rand:uniform(Expression5_Length), Expression5) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 7 of
                     1 -> ?WS ++ "*" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5) ++
@@ -2558,12 +2556,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression6 = sort_list_random(
-        case length(Expression6_Curr) > Max of
-            true -> lists:sublist(Expression6_Curr, 1, Max);
-            _ -> Expression6_Curr
-        end),
+        ]))),
+    Expression6 = case length(Expression6_Curr) > Max of
+                      true -> lists:sublist(Expression6_Curr, 1, Max);
+                      _ -> Expression6_Curr
+                  end,
     Expression6_Length = length(Expression6),
     insert_table(_Legacy, expression6, Expression6),
 % -----------------------------------------------------------------------------------------
@@ -2573,8 +2570,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                            [{_, Expression7_Exist}] -> Expression7_Exist;
                            _ -> []
                        end,
-    Expression7_Curr = Expression7_Prev ++
-        sets:to_list(sets:from_list([
+    Expression7_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression7_Prev ++
+        [
                 lists:nth(rand:uniform(Expression6_Length), Expression6) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 5 of
                     1 -> ?WS ++ "+" ++ ?WS ++ lists:nth(rand:uniform(Expression6_Length), Expression6) ++
@@ -2586,12 +2584,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression7 = sort_list_random(
-        case length(Expression7_Curr) > Max of
-            true -> lists:sublist(Expression7_Curr, 1, Max);
-            _ -> Expression7_Curr
-        end),
+        ]))),
+    Expression7 = case length(Expression7_Curr) > Max of
+                      true -> lists:sublist(Expression7_Curr, 1, Max);
+                      _ -> Expression7_Curr
+                  end,
     Expression7_Length = length(Expression7),
     insert_table(_Legacy, expression7, Expression7),
 % ----------------------------------------------------------------
@@ -2609,8 +2606,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                            [{_, Expression8_Exist}] -> Expression8_Exist;
                            _ -> []
                        end,
-    Expression8_Curr = Expression8_Prev ++
-        sets:to_list(sets:from_list([
+    Expression8_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression8_Prev ++
+        [
                 lists:nth(rand:uniform(Expression7_Length), Expression7) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 15 of
                     1 -> ?WS ++ "=" ++ ?WS ++ lists:nth(rand:uniform(Expression7_Length), Expression7) ++
@@ -2637,12 +2635,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression8 = sort_list_random(
-        case length(Expression8_Curr) > Max of
-            true -> lists:sublist(Expression8_Curr, 1, Max);
-            _ -> Expression8_Curr
-        end),
+        ]))),
+    Expression8 = case length(Expression8_Curr) > Max of
+                      true -> lists:sublist(Expression8_Curr, 1, Max);
+                      _ -> Expression8_Curr
+                  end,
     Expression8_Length = length(Expression8),
     insert_table(_Legacy, expression8, Expression8),
 % ------------------------------------------------
@@ -2652,8 +2649,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                            [{_, Expression9_Exist}] -> Expression9_Exist;
                            _ -> []
                        end,
-    Expression9_Curr = Expression9_Prev ++
-        sets:to_list(sets:from_list([
+    Expression9_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression9_Prev ++
+        [
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 3 of
                     1 -> ?SP ++ "Not" ++ ?SP ++ ?SP ++ "Not" ++ ?SP;
                     2 -> ?SP ++ "Not" ++ ?SP;
@@ -2661,12 +2659,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                 end ++
                 lists:nth(rand:uniform(Expression8_Length), Expression8)
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression9 = sort_list_random(
-        case length(Expression9_Curr) > Max of
-            true -> lists:sublist(Expression9_Curr, 1, Max);
-            _ -> Expression9_Curr
-        end),
+        ]))),
+    Expression9 = case length(Expression9_Curr) > Max of
+                      true -> lists:sublist(Expression9_Curr, 1, Max);
+                      _ -> Expression9_Curr
+                  end,
     Expression9_Length = length(Expression9),
     insert_table(_Legacy, expression9, Expression9),
 % --------------------------------------------------------------
@@ -2676,8 +2673,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                             [{_, Expression10_Exist}] -> Expression10_Exist;
                             _ -> []
                         end,
-    Expression10_Curr = Expression10_Prev ++
-        sets:to_list(sets:from_list([
+    Expression10_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression10_Prev ++
+        [
                 lists:nth(rand:uniform(Expression9_Length), Expression9) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 3 of
                     1 -> ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(Expression9_Length), Expression9) ++
@@ -2686,12 +2684,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression10 = sort_list_random(
-        case length(Expression10_Curr) > Max of
-            true -> lists:sublist(Expression10_Curr, 1, Max);
-            _ -> Expression10_Curr
-        end),
+        ]))),
+    Expression10 = case length(Expression10_Curr) > Max of
+                       true -> lists:sublist(Expression10_Curr, 1, Max);
+                       _ -> Expression10_Curr
+                   end,
     Expression10_Length = length(Expression10),
     insert_table(_Legacy, expression10, Expression10),
 % --------------------------------------------------------------
@@ -2701,8 +2698,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                             [{_, Expression11_Exist}] -> Expression11_Exist;
                             _ -> []
                         end,
-    Expression11_Curr = Expression11_Prev ++
-        sets:to_list(sets:from_list([
+    Expression11_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression11_Prev ++
+        [
                 lists:nth(rand:uniform(Expression10_Length), Expression10) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 3 of
                     1 -> ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(Expression10_Length), Expression10) ++
@@ -2711,12 +2709,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression11 = sort_list_random(
-        case length(Expression11_Curr) > Max of
-            true -> lists:sublist(Expression11_Curr, 1, Max);
-            _ -> Expression11_Curr
-        end),
+        ]))),
+    Expression11 = case length(Expression11_Curr) > Max of
+                       true -> lists:sublist(Expression11_Curr, 1, Max);
+                       _ -> Expression11_Curr
+                   end,
     Expression11_Length = length(Expression11),
     insert_table(_Legacy, expression11, Expression11),
 % ----------------------------------------------------------------
@@ -2726,8 +2723,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                             [{_, Expression12_Exist}] -> Expression12_Exist;
                             _ -> []
                         end,
-    Expression12_Curr = Expression12_Prev ++
-        sets:to_list(sets:from_list([
+    Expression12_Curr = sort_list_random(sets:to_list(sets:from_list(
+        Expression12_Prev ++
+        [
                 lists:nth(rand:uniform(Expression11_Length), Expression11) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR + 3 of
                     1 -> ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(Expression11_Length), Expression11) ++
@@ -2736,12 +2734,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
-        ])),
-    Expression12 = sort_list_random(
-        case length(Expression12_Curr) > Max of
-            true -> lists:sublist(Expression12_Curr, 1, Max);
-            _ -> Expression12_Curr
-        end),
+        ]))),
+    Expression12 = case length(Expression12_Curr) > Max of
+                       true -> lists:sublist(Expression12_Curr, 1, Max);
+                       _ -> Expression12_Curr
+                   end,
     insert_table(_Legacy, expression12, Expression12),
 % ---------------------------
 % Expression = Expression12 ;

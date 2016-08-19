@@ -69,7 +69,8 @@ Nonterminals
  number_literal
  order
  parameter
- parenthesized_expression
+ % wwe ???
+% parenthesized_expression
  partial_comparison_expression
  pattern
  pattern_element
@@ -251,11 +252,9 @@ cypher -> statement                                                             
 cypher -> statement ';'                                                                         : {cypher, '$1', ";"}.
 
 %% =====================================================================================================================
-%% Helper definitions.
+%% Helper definitions - test purposes.
 %% ---------------------------------------------------------------------------------------------------------------------
 % cypher -> expression                                                                            : '$1'.
-% cypher -> limit                                                                                 : '$1'.
-% cypher -> pattern_part                                                                          : '$1'.
 %% =====================================================================================================================
 
 statement -> query                                                                              : {statement, '$1'}.
@@ -441,8 +440,7 @@ node_pattern -> '('                      map_literal ')'                        
 node_pattern -> '('          node_labels map_literal ')'                                        : {nodePattern, [],   '$2', '$3'}.
 node_pattern -> '(' variable             map_literal ')'                                        : {nodePattern, '$2', [],   '$3'}.
 node_pattern -> '(' variable node_labels map_literal ')'                                        : {nodePattern, '$2', '$3', '$4'}.
-% wwe ???
-% node_pattern -> '('                      parameter   ')'                                        : {nodePattern, [],   [],   '$2'}.
+node_pattern -> '('                      parameter   ')'                                        : {nodePattern, [],   [],   '$2'}.
 node_pattern -> '('          node_labels parameter   ')'                                        : {nodePattern, [],   '$2', '$3'}.
 node_pattern -> '(' variable             parameter   ')'                                        : {nodePattern, '$2', [],   '$3'}.
 node_pattern -> '(' variable node_labels parameter   ')'                                        : {nodePattern, '$2', '$3', '$4'}.
@@ -742,7 +740,8 @@ atom -> ANY '(' filter_expression ')'                                           
 atom -> NONE '(' filter_expression ')'                                                          : {atom, {'none',    '$3'}}.
 atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single',  '$3'}}.
 atom -> relationships_pattern                                                                   : {atom, '$1'}.
-atom -> parenthesized_expression                                                                : {atom, '$1'}.
+% wwe ???
+% atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> function_invocation                                                                     : {atom, '$1'}.
 atom -> variable                                                                                : {atom, '$1'}.
 
@@ -754,7 +753,8 @@ partial_comparison_expression -> '>'  expression_7                              
 partial_comparison_expression -> '<=' expression_7                                              : {partialComparisonExpression, '$2', "<="}.
 partial_comparison_expression -> '>=' expression_7                                              : {partialComparisonExpression, '$2', ">="}.
 
-parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
+% wwe ???
+% parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
 
 relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
 
