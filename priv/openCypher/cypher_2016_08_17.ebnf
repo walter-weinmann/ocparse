@@ -1,13 +1,13 @@
 (*
  * Copyright (c) 2015-2016 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -99,7 +99,7 @@ SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
 
 Where = (W,H,E,R,E), SP, Expression ;
 
-Pattern = PatternPart, { ',', PatternPart } ;
+Pattern = PatternPart, { WS, ',', WS, PatternPart } ;
 
 PatternPart = (Variable, WS, '=', WS, AnonymousPatternPart)
             | AnonymousPatternPart
@@ -180,7 +180,7 @@ Atom = NumberLiteral
      | ((N,O,N,E), WS, '(', WS, FilterExpression, WS, ')')
      | ((S,I,N,G,L,E), WS, '(', WS, FilterExpression, WS, ')')
      | RelationshipsPattern
-     | parenthesizedExpression
+     | ParenthesizedExpression
      | FunctionInvocation
      | Variable
      ;
@@ -194,7 +194,7 @@ PartialComparisonExpression = ('=', WS, Expression7)
                             | ('>=', WS, Expression7)
                             ;
 
-parenthesizedExpression = '(', WS, Expression, WS, ')' ;
+ParenthesizedExpression = '(', WS, Expression, WS, ')' ;
 
 RelationshipsPattern = NodePattern, { WS, PatternElementChain }- ;
 

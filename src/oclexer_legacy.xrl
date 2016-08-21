@@ -5,14 +5,14 @@ Rules.
 
 %% number literals
 ((([0-9]*\.)|[0-9]+)(e|E)[0-9]+)                          : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
-([0-9]*\.[0-9]+)                                          : {token, {'REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
+([0-9]+\.[0-9]+)                                          : {token, {'REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
 (0(x|X)([0-9]|[A-Fa-f])+)                                 : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
 (0[0-7]+)                                                 : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
 (0|([1-9][0-9]*))                                         : {token, {'DECIMAL_INTEGER', TokenLine, TokenChars}}.
 
 %% symbolic names
 (`([^`]*)*`)                                              : {token, {'ESCAPED_SYMBOLIC_NAME', TokenLine, TokenChars}}.
-([A-Za-z_@#][A-Za-z0-9_@#\$]*)                            : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
+([A-Za-z_@#][A-Za-z0-9_@#]*)                              : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
 
 %% string literals
 (\'([^\\\']*)*\')                                         : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.

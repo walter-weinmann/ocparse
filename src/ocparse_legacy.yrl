@@ -6,7 +6,6 @@ Header "%% Copyright (C) Walter Weinmann"
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Nonterminals
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- all_opt
  anonymous_pattern_part
  any_cypher_option
  any_cypher_option_list
@@ -15,19 +14,11 @@ Nonterminals
  case_alternatives
  case_alternatives_list
  case_expression
- char_opt
- char_question_mark_opt
- char_semicolon_opt
- char_vertical_bar_expression
- char_vertical_bar_expression_opt
  clause
  clause_list
- clause_list_opt
  command
- comparison
  configuration_option
  configuration_option_list
- configuration_option_list_opt
  create
  create_index
  create_node_property_existence_constraint
@@ -37,71 +28,52 @@ Nonterminals
  cypher
  cypher_option
  delete
- detach_opt
- distinct_opt
  double_literal
  drop_index
  drop_node_property_existence_constraint
  drop_relationship_property_existence_constraint
  drop_unique_constraint
- else_expression
- else_expression_opt
  expression
  expression_commalist
- expression_commalist_opt
- expression_opt
  expression_10
  expression_10_addon
  expression_10_addon_list
- expression_10_addon_list_opt
  expression_11
  expression_11_addon
  expression_11_addon_list
- expression_11_addon_list_opt
  expression_12
  expression_12_addon
  expression_12_addon_list
- expression_12_addon_list_opt
  expression_2
  expression_2_addon
  expression_2_addon_list
- expression_2_addon_list_opt
  expression_3
  expression_3_addon
  expression_3_addon_list
- expression_3_addon_list_opt
  expression_4
  expression_4_addon
  expression_4_addon_list
- expression_4_addon_list_opt
  expression_5
  expression_5_addon
  expression_5_addon_list
- expression_5_addon_list_opt
  expression_6
  expression_6_addon
  expression_6_addon_list
- expression_6_addon_list_opt
  expression_7
  expression_7_addon
  expression_7_addon_list
- expression_7_addon_list_opt
  expression_8
  expression_8_addon
  expression_8_addon_list
- expression_8_addon_list_opt
  expression_9
  expression_9_addon
  expression_9_addon_list
- expression_9_addon_list_opt
- field_terminator_opt
  filter_expression
  for_each
  function_invocation
  function_name
  hint
  hint_list
- hint_list_opt
  id_in_coll
  id_lookup
  identified_index_lookup
@@ -111,7 +83,6 @@ Nonterminals
  label_name
  legacy_parameter
  limit
- limit_opt
  list_comprehension
  literal_ids
  load_csv
@@ -122,52 +93,50 @@ Nonterminals
  merge
  merge_action
  merge_action_list
- merge_action_list_opt
  node_label
+ node_label_list
  node_labels
  node_lookup
  node_pattern
  node_property_existence_constraint
  number_literal
- optional_opt
  order
- order_opt
  parameter
- parenthesized_expression
+ % wwe ???
+% parenthesized_expression
  partial_comparison_expression
  pattern
  pattern_element
  pattern_element_chain
  pattern_element_chain_list
- pattern_element_chain_list_opt
  pattern_part
  pattern_part_commalist
  periodic_commit_hint
- properties
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+ % properties
+%% =====================================================================================================================
  property_expression
  property_key_name
  property_key_name_expression
  property_key_name_expression_commalist
- property_key_name_expression_commalist_opt
  property_lookup
  property_lookup_list
  query
  query_options
  range_literal
- range_opt
  reduce
  regular_query
  rel_type
  rel_type_name
  rel_type_verticalbarlist
  relationship_detail
- relationship_detail_opt
  relationship_lookup
  relationship_pattern
  relationship_pattern_syntax
  relationship_property_existence_constraint
  relationship_types
- relationship_types_opt
  relationships_pattern
  remove
  remove_item
@@ -183,7 +152,6 @@ Nonterminals
  shortest_path_pattern
  single_query
  skip
- skip_opt
  sort_item
  sort_item_commalist
  start
@@ -193,17 +161,13 @@ Nonterminals
  symbolic_name
  union
  union_list
- union_list_opt
  unique_constraint
  unwind
  variable
  variable_commalist
  version_number
- version_number_opt
  where
- where_opt
  with
- with_headers_opt
  .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -303,10 +267,6 @@ Terminals
  '-'
  '+'
  '+='
- '<-->'
- '<--'
- '-->'
- '--'
  '*'
  '/'
  '%'
@@ -326,6 +286,10 @@ Terminals
  '!'
  '?'
  '$'
+ '<-->'
+ '<--'
+ '-->'
+ '--'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -342,33 +306,41 @@ Endsymbol
 %% Operator precedences.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Left        110 'OR'.
-Left        120 'XOR'.
-Left        130 'AND'.
-Left        140 'NOT'.
-Nonassoc    200 '=' '<>' '!=' '<' '>' '<=' '>='.        %% comparison.
+Left        100 'OR'.
+Left        110 'XOR'.
+Left        120 'AND'.
+Left        130 'NOT'.
+
+Right       200 '='.
+Left        210 '<>' '!=' '<' '>' '<=' '>='.
+
 Left        300 '+' '-'.
-Left        400 '*' '/' '%'.
-Left        500 '^'.
+Left        310 '*' '/' '%'.
+
+Right       400 '^'.
+Right       410 expression_4_addon.
+Nonassoc    500 '=~' '..'.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cypher -> query_options statement char_semicolon_opt                                            : {cypher, '$1', {statement, '$2'}, '$3'}.
+cypher ->               statement                                                               : {cypher, [],   '$1', []}.
+cypher ->               statement ';'                                                           : {cypher, [],   '$1', ";"}.
+cypher -> query_options statement                                                               : {cypher, '$1', '$2', []}.
+cypher -> query_options statement ';'                                                           : {cypher, '$1', '$2', ";"}.
 
-cypher -> atom                                                                                  : '$1'.
-cypher -> expression                                                                            : '$1'.
+%% =====================================================================================================================
+%% Helper definitions - test purposes.
+%% ---------------------------------------------------------------------------------------------------------------------
+% cypher -> expression                                                                            : '$1'.
+%% =====================================================================================================================
 
-query_options -> '$empty'                                                                       : {}.
 query_options -> any_cypher_option_list                                                         : {queryOptions, '$1'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-char_semicolon_opt -> '$empty'                                                                  : [].
-char_semicolon_opt -> ';'                                                                       : ";".
-
 any_cypher_option_list -> any_cypher_option_list any_cypher_option                              : '$1' ++ ['$2'].
 any_cypher_option_list -> any_cypher_option                                                     : ['$1'].
 %% =====================================================================================================================
@@ -377,39 +349,34 @@ any_cypher_option -> EXPLAIN                                                    
 any_cypher_option -> PROFILE                                                                    : {anyCypherOption, profile, []}.
 any_cypher_option -> cypher_option                                                              : {anyCypherOption, '$1'}.
 
-cypher_option -> CYPHER version_number_opt configuration_option_list_opt                        : {cypherOption, '$2', '$3'}.
+cypher_option -> CYPHER                                                                         : {cypherOption, [],   []}.
+cypher_option -> CYPHER                configuration_option_list                                : {cypherOption, [],   '$2'}.
+cypher_option -> CYPHER version_number                                                          : {cypherOption, '$2', []}.
+cypher_option -> CYPHER version_number configuration_option_list                                : {cypherOption, '$2', '$3'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-version_number_opt -> '$empty'                                                                  : {}.
-version_number_opt -> version_number                                                            : '$1'.
-
-configuration_option_list_opt -> '$empty'                                                       : [].
-configuration_option_list_opt -> configuration_option_list                                      : '$1'.
-
 configuration_option_list -> configuration_option_list configuration_option                     : '$1' ++ ['$2'].
 configuration_option_list -> configuration_option                                               : ['$1'].
 %% =====================================================================================================================
 
-version_number -> DECIMAL_INTEGER '.' DECIMAL_INTEGER                                           : {versionNumber, unwrap('$1'), unwrap('$3')}.
+version_number -> REGULAR_DECIMAL_REAL                                                          : {versionNumber, unwrap('$1')}.
 
 configuration_option -> symbolic_name '=' symbolic_name                                         : {configurationOption, '$1', '$3'}.
 
-statement -> command                                                                            : '$1'.
-statement -> query                                                                              : '$1'.
+statement -> command                                                                            : {statement, '$1'}.
+statement -> query                                                                              : {statement, '$1'}.
 
 query -> regular_query                                                                          : {query, '$1'}.
 query -> bulk_import_query                                                                      : {query, '$1'}.
 
-regular_query -> single_query union_list_opt                                                    : {regularQuery, '$1', '$2'}.
+regular_query -> single_query                                                                   : {regularQuery, '$1', []}.
+regular_query -> single_query union_list                                                        : {regularQuery, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-union_list_opt -> '$empty'                                                                      : [].
-union_list_opt -> union_list                                                                    : '$1'.
-
 union_list -> union_list union                                                                  : '$1' ++ ['$2'].
 union_list -> union                                                                             : ['$1'].
 %% =====================================================================================================================
@@ -427,23 +394,11 @@ clause_list -> clause                                                           
 
 periodic_commit_hint -> USING PERIODIC COMMIT                                                   : {periodicCommitHint}.
 
-load_csv_query -> load_csv clause_list_opt                                                      : {loadCSVQuery, '$1', '$2'}.
+load_csv_query -> load_csv                                                                      : {loadCSVQuery, '$1', []}.
+load_csv_query -> load_csv clause_list                                                          : {loadCSVQuery, '$1', '$2'}.
 
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-clause_list_opt -> '$empty'                                                                     : [].
-clause_list_opt -> clause_list                                                                  : '$1'.
-%% =====================================================================================================================
-
-union -> UNION all_opt single_query                                                             : {union, '$2', '$3'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-all_opt -> '$empty'                                                                             : [].
-all_opt -> ALL                                                                                  : "all".
-%% =====================================================================================================================
+union -> UNION     single_query                                                                 : {union, [],    '$2'}.
+union -> UNION ALL single_query                                                                 : {union, "all", '$3'}.
 
 clause -> load_csv                                                                              : {clause, '$1'}.
 clause -> start                                                                                 : {clause, '$1'}.
@@ -501,51 +456,40 @@ relationship_pattern_syntax -> '(' ')' '<' '-' '[' variable rel_type ']' '-'    
 relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-' '>' '(' ')'        : {relationshipPatternSyntax, [],  "-", '$5', '$6', "-", ">"}.
 relationship_pattern_syntax -> '(' ')'     '-' '[' variable rel_type ']' '-'     '(' ')'        : {relationshipPatternSyntax, [],  "-", '$5', '$6', "-", []}.
 
-load_csv -> LOAD CSV with_headers_opt FROM expression AS variable field_terminator_opt          : {loadCSV, '$3', '$5', '$7', '$8'}.
+load_csv -> LOAD CSV              FROM expression AS variable                                   : {loadCSV, [],             '$4', '$6', []}.
+load_csv -> LOAD CSV              FROM expression AS variable FIELDTERMINATOR STRING_LITERAL    : {loadCSV, [],             '$4', '$6', unwrap('$8')}.
+load_csv -> LOAD CSV WITH HEADERS FROM expression AS variable                                   : {loadCSV, "with headers", '$6', '$8', []}.
+load_csv -> LOAD CSV WITH HEADERS FROM expression AS variable FIELDTERMINATOR STRING_LITERAL    : {loadCSV, "with headers", '$6', '$8', unwrap('$10')}.
+
+match ->          MATCH pattern                                                                 : {match, [],         '$2', [],   []}.
+match ->          MATCH pattern           where                                                 : {match, [],         '$2', [],   '$3'}.
+match ->          MATCH pattern hint_list                                                       : {match, [],         '$2', '$3', []}.
+match ->          MATCH pattern hint_list where                                                 : {match, [],         '$2', '$3', '$4'}.
+match -> OPTIONAL MATCH pattern                                                                 : {match, "optional", '$3', [],   []}.
+match -> OPTIONAL MATCH pattern           where                                                 : {match, "optional", '$3', [],   '$4'}.
+match -> OPTIONAL MATCH pattern hint_list                                                       : {match, "optional", '$3', '$4', []}.
+match -> OPTIONAL MATCH pattern hint_list where                                                 : {match, "optional", '$3', '$4', '$5'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-with_headers_opt -> '$empty'                                                                    : [].
-with_headers_opt -> WITH HEADERS                                                                : "with headers".
-
-field_terminator_opt -> '$empty'                                                                : {}.
-field_terminator_opt -> FIELDTERMINATOR STRING_LITERAL                                          : unwrap('$2').
-%% =====================================================================================================================
-
-match -> optional_opt MATCH pattern hint_list_opt where_opt                                     : {match, '$1', '$3', '$4', '$5'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-optional_opt -> '$empty'                                                                        : [].
-optional_opt -> OPTIONAL                                                                        : "optional".
-
-hint_list_opt -> '$empty'                                                                       : [].
-hint_list_opt -> hint_list                                                                      : '$1'.
-
 hint_list -> hint_list hint                                                                     : '$1' ++ ['$2'].
 hint_list -> hint                                                                               : ['$1'].
-
-where_opt -> '$empty'                                                                           : {}.
-where_opt -> where                                                                              : '$1'.
 %% =====================================================================================================================
 
 unwind -> UNWIND expression AS variable                                                         : {unwind, '$2', '$4'}.
 
-merge -> MERGE pattern_part merge_action_list_opt                                               : {merge, '$2', '$3'}.
+merge -> MERGE pattern_part                                                                     : {merge, '$2', []}.
+merge -> MERGE pattern_part merge_action_list                                                   : {merge, '$2', '$3'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-merge_action_list_opt -> '$empty'                                                               : [].
-merge_action_list_opt -> merge_action_list                                                      : '$1'.
-
 merge_action_list -> merge_action_list merge_action                                             : '$1' ++ ['$2'].
 merge_action_list -> merge_action                                                               : ['$1'].
 %% ---------------------------------------------------------------------------------------------------------------------
 
-merge_action -> ON MATCH set                                                                    : {mergeAction, "match", '$3'}.
+merge_action -> ON MATCH  set                                                                   : {mergeAction, "match",  '$3'}.
 merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
 
 create -> CREATE pattern                                                                        : {create, '$2'}.
@@ -561,19 +505,17 @@ set_item_commalist -> set_item                                                  
 set_item_commalist -> set_item ',' set_item_commalist                                           : ['$1' | '$3'].
 %% ---------------------------------------------------------------------------------------------------------------------
 
-set_item -> property_expression '=' expression                                                  : {setItem, '$1', "=", '$3'}.
-set_item -> variable '=' expression                                                             : {setItem, '$1', "=", '$3'}.
-set_item -> variable '+=' expression                                                            : {setItem, '$1', "+=", '$3'}.
-set_item -> variable node_labels                                                                : {setItem, '$1', {nodeLabels, '$2'}}.
+set_item -> property_expression '='  expression                                                 : {setItem, '$1', "=",  '$3'}.
+set_item -> variable            '='  expression                                                 : {setItem, '$1', "=",  '$3'}.
+set_item -> variable            '+=' expression                                                 : {setItem, '$1', "+=", '$3'}.
+set_item -> variable                 node_labels                                                : {setItem, '$1', [],   '$2'}.
 
-delete -> detach_opt DELETE expression_commalist                                                : {delete, '$1', '$3'}.
+delete ->        DELETE expression_commalist                                                    : {delete, [],       '$2'}.
+delete -> DETACH DELETE expression_commalist                                                    : {delete, "detach", '$3'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-detach_opt -> '$empty'                                                                          : [].
-detach_opt -> DETACH                                                                            : "detach".
-
 expression_commalist -> expression                                                              : ['$1'].
 expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
 %% ---------------------------------------------------------------------------------------------------------------------
@@ -587,40 +529,31 @@ remove_item_commalist -> remove_item                                            
 remove_item_commalist -> remove_item ',' remove_item_commalist                                  : ['$1' | '$3'].
 %% ---------------------------------------------------------------------------------------------------------------------
 
-remove_item -> variable node_labels                                                             : {removeItem, '$1', {nodeLabels, '$2'}}.
+remove_item -> variable node_labels                                                             : {removeItem, '$1', '$2'}.
 remove_item -> property_expression                                                              : {removeItem, '$1'}.
 
 for_each -> FOREACH '(' variable IN expression '|' clause_list ')'                              : {forEach, '$3', '$5', '$7'}.
 
-with -> WITH distinct_opt return_body where_opt                                                 : {with, '$2', '$3', '$4'}.
+with -> WITH          return_body                                                               : {with, [],         '$2', []}.
+with -> WITH          return_body where                                                         : {with, [],         '$2', '$3'}.
+with -> WITH DISTINCT return_body                                                               : {with, "distinct", '$3', []}.
+with -> WITH DISTINCT return_body where                                                         : {with, "distinct", '$3', '$4'}.
 
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-distinct_opt -> '$empty'                                                                        : [].
-distinct_opt -> DISTINCT                                                                        : "distinct".
-%% =====================================================================================================================
+return -> RETURN          return_body                                                           : {return, [],         '$2'}.
+return -> RETURN DISTINCT return_body                                                           : {return, "distinct", '$3'}.
 
-return -> RETURN distinct_opt return_body                                                       : {return, '$2', '$3'}.
+return_body -> return_items                                                                     : {returnBody, '$1', [],   [],   []}.
+return_body -> return_items            limit                                                    : {returnBody, '$1', [],   [],   '$2'}.
+return_body -> return_items       skip                                                          : {returnBody, '$1', [],   '$2', []}.
+return_body -> return_items       skip limit                                                    : {returnBody, '$1', [],   '$2', '$3'}.
+return_body -> return_items order                                                               : {returnBody, '$1', '$2', [],   []}.
+return_body -> return_items order      limit                                                    : {returnBody, '$1', '$2', [],   '$3'}.
+return_body -> return_items order skip                                                          : {returnBody, '$1', '$2', '$3', []}.
+return_body -> return_items order skip limit                                                    : {returnBody, '$1', '$2', '$3', '$4'}.
 
-return_body -> return_items order_opt skip_opt limit_opt                                        : {returnBody, '$1', '$2', '$3', '$4'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-order_opt -> '$empty'                                                                           : {}.
-order_opt -> order                                                                              : '$1'.
-
-skip_opt -> '$empty'                                                                            : {}.
-skip_opt -> skip                                                                                : '$1'.
-
-limit_opt -> '$empty'                                                                           : {}.
-limit_opt -> limit                                                                              : '$1'.
-%% =====================================================================================================================
-
-return_items -> '*'                                                                             : {returnItems, "*", []}.
-return_items -> '*' ',' return_item_commalist                                                   : {returnItems, "*", '$3'}.
-return_items -> return_item_commalist                                                           : {returnItems, [], '$1'}.
+return_items -> '*'                                                                             : {returnItems, "*", [],  []}.
+return_items -> '*' ',' return_item_commalist                                                   : {returnItems, "*", ",", '$3'}.
+return_items ->         return_item_commalist                                                   : {returnItems, [],  [],  '$1'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -629,8 +562,8 @@ return_item_commalist -> return_item                                            
 return_item_commalist -> return_item ',' return_item_commalist                                  : ['$1' | '$3'].
 %% ---------------------------------------------------------------------------------------------------------------------
 
+return_item -> expression                                                                       : {returnItem, '$1', []}.
 return_item -> expression AS variable                                                           : {returnItem, '$1', '$3'}.
-return_item -> expression                                                                       : {returnItem, '$1'}.
 
 order -> ORDER BY sort_item_commalist                                                           : {order, '$3'}.
 
@@ -649,7 +582,7 @@ sort_item -> expression DESCENDING                                              
 sort_item -> expression DESC                                                                    : {sortItem, '$1', "desc"}.
 sort_item -> expression ASCENDING                                                               : {sortItem, '$1', "ascending"}.
 sort_item -> expression ASC                                                                     : {sortItem, '$1', "asc"}.
-sort_item -> expression                                                                         : {sortItem, '$1'}.
+sort_item -> expression                                                                         : {sortItem, '$1', []}.
 
 hint -> USING INDEX variable node_label '(' property_key_name ')'                               : {hint, '$3', '$4', '$6'}.
 hint -> USING JOIN ON variable_commalist                                                        : {hint, '$4'}.
@@ -662,7 +595,8 @@ variable_commalist -> variable                                                  
 variable_commalist -> variable ',' variable_commalist                                           : ['$1' | '$3'].
 %% =====================================================================================================================
 
-start -> START start_point_commalist where_opt                                                  : {start, '$2', '$3'}.
+start -> START start_point_commalist                                                            : {start, '$2', []}.
+start -> START start_point_commalist where                                                      : {start, '$2', '$3'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -680,9 +614,9 @@ node_lookup -> NODE identified_index_lookup                                     
 node_lookup -> NODE index_query                                                                 : {nodeLookup, '$2'}.
 node_lookup -> NODE id_lookup                                                                   : {nodeLookup, '$2'}.
 
-relationship_lookup -> REL identified_index_lookup                                              : {relationshipLookup, "rel", '$2'}.
-relationship_lookup -> REL index_query                                                          : {relationshipLookup, "rel", '$2'}.
-relationship_lookup -> REL id_lookup                                                            : {relationshipLookup, "rel", '$2'}.
+relationship_lookup -> REL          identified_index_lookup                                     : {relationshipLookup, "rel",          '$2'}.
+relationship_lookup -> REL          index_query                                                 : {relationshipLookup, "rel",          '$2'}.
+relationship_lookup -> REL          id_lookup                                                   : {relationshipLookup, "rel",          '$2'}.
 relationship_lookup -> RELATIONSHIP identified_index_lookup                                     : {relationshipLookup, "relationship", '$2'}.
 relationship_lookup -> RELATIONSHIP index_query                                                 : {relationshipLookup, "relationship", '$2'}.
 relationship_lookup -> RELATIONSHIP id_lookup                                                   : {relationshipLookup, "relationship", '$2'}.
@@ -697,7 +631,7 @@ id_lookup -> '(' literal_ids      ')'                                           
 id_lookup -> '(' legacy_parameter ')'                                                           : {idLookup, '$2'}.
 id_lookup -> '(' '*'              ')'                                                           : {idLookup, "(*)"}.
 
-literal_ids -> '{' ',' '}'                                                                      : {literalIds}.
+literal_ids -> ','                                                                              : {literalIds}.
 
 where -> WHERE expression                                                                       : {where, '$2'}.
 
@@ -710,80 +644,172 @@ pattern_part_commalist -> pattern_part                                          
 pattern_part_commalist -> pattern_part ',' pattern_part_commalist                               : ['$1' | '$3'].
 %% =====================================================================================================================
 
+pattern_part ->              anonymous_pattern_part                                             : {patternPart, [],   '$1'}.
 pattern_part -> variable '=' anonymous_pattern_part                                             : {patternPart, '$1', '$3'}.
-pattern_part -> anonymous_pattern_part                                                          : {patternPart, '$1'}.
 
 anonymous_pattern_part -> shortest_path_pattern                                                 : {anonymousPatternPart, '$1'}.
 anonymous_pattern_part -> pattern_element                                                       : {anonymousPatternPart, '$1'}.
 
-shortest_path_pattern -> SHORTESTPATH '(' pattern_element ')'                                   : {shortestPathPattern, "shortestpath", '$3'}.
+shortest_path_pattern -> SHORTESTPATH     '(' pattern_element ')'                               : {shortestPathPattern, "shortestpath",     '$3'}.
 shortest_path_pattern -> ALLSHORTESTPATHS '(' pattern_element ')'                               : {shortestPathPattern, "allshortestpaths", '$3'}.
 
-pattern_element -> node_pattern pattern_element_chain_list_opt                                  : {patternElement, '$1', '$2'}.
-pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2'}.
+pattern_element -> node_pattern                                                                 : {patternElement, '$1', []}.
+pattern_element -> node_pattern pattern_element_chain_list                                      : {patternElement, '$1', '$2'}.
+pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2', "("}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-pattern_element_chain_list_opt -> '$empty'                                                      : [].
-pattern_element_chain_list_opt -> pattern_element_chain_list                                    : '$1'.
-
 pattern_element_chain_list -> pattern_element_chain_list pattern_element_chain                  : '$1' ++ ['$2'].
 pattern_element_chain_list -> pattern_element_chain                                             : ['$1'].
 %% =====================================================================================================================
 
-node_pattern -> '(' variable node_labels properties ')'                                         : {nodePattern, '$2', {nodeLabels, '$3'}, '$4'}.
-node_pattern -> '(' variable node_labels ')'                                                    : {nodePattern, '$2', {nodeLabels, '$3'}, {}}.
-node_pattern -> '(' variable properties ')'                                                     : {nodePattern, '$2', {},                 '$3'}.
-node_pattern -> '(' variable ')'                                                                : {nodePattern, '$2', {},                 {}}.
-node_pattern -> '(' node_labels properties ')'                                                  : {nodePattern, {},   {nodeLabels, '$2'}, '$3'}.
-node_pattern -> '(' node_labels ')'                                                             : {nodePattern, {},   {nodeLabels, '$2'}, {}}.
-node_pattern -> '(' properties ')'                                                              : {nodePattern, {},   {},                 '$2'}.
-node_pattern -> '('  ')'                                                                        : {nodePattern, {},   {},                 {}}.
+node_pattern -> '('                                         ')'                                 : {nodePattern, [],   [],   []}.
+node_pattern -> '('          node_labels                    ')'                                 : {nodePattern, [],   '$2', []}.
+node_pattern -> '(' variable                                ')'                                 : {nodePattern, '$2', [],   []}.
+node_pattern -> '(' variable node_labels                    ')'                                 : {nodePattern, '$2', '$3', []}.
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+node_pattern -> '('                      map_literal        ')'                                 : {nodePattern, [],   [],   '$2'}.
+node_pattern -> '('          node_labels map_literal        ')'                                 : {nodePattern, [],   '$2', '$3'}.
+node_pattern -> '(' variable             map_literal        ')'                                 : {nodePattern, '$2', [],   '$3'}.
+node_pattern -> '(' variable node_labels map_literal        ')'                                 : {nodePattern, '$2', '$3', '$4'}.
+node_pattern -> '('                      parameter          ')'                                 : {nodePattern, [],   [],   '$2'}.
+node_pattern -> '('          node_labels parameter          ')'                                 : {nodePattern, [],   '$2', '$3'}.
+node_pattern -> '(' variable             parameter          ')'                                 : {nodePattern, '$2', [],   '$3'}.
+node_pattern -> '(' variable node_labels parameter          ')'                                 : {nodePattern, '$2', '$3', '$4'}.
+node_pattern -> '('                      legacy_parameter   ')'                                 : {nodePattern, [],   [],   '$2'}.
+node_pattern -> '('          node_labels legacy_parameter   ')'                                 : {nodePattern, [],   '$2', '$3'}.
+node_pattern -> '(' variable             legacy_parameter   ')'                                 : {nodePattern, '$2', [],   '$3'}.
+node_pattern -> '(' variable node_labels legacy_parameter   ')'                                 : {nodePattern, '$2', '$3', '$4'}.
+% node_pattern -> '('                      properties         ')'                                 : {nodePattern, [],   [],   '$2'}.
+% node_pattern -> '('          node_labels properties         ')'                                 : {nodePattern, [],   '$2', '$3'}.
+% node_pattern -> '(' variable             properties         ')'                                 : {nodePattern, '$2', [],   '$3'}.
+% node_pattern -> '(' variable node_labels properties         ')'                                 : {nodePattern, '$2', '$3', '$4'}.
+%% =====================================================================================================================
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
-relationship_pattern -> '<-->'                                                                  : {relationshipPattern, "<-->"}.
-relationship_pattern -> '<' '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, "<", "-", '$3', "-", ">"}.
-relationship_pattern -> '<--'                                                                   : {relationshipPattern, "<--"}.
-relationship_pattern -> '<' '-' relationship_detail_opt '-'                                     : {relationshipPattern, "<", "-", '$3', "-", []}.
-relationship_pattern ->  '-->'                                                                  : {relationshipPattern, "-->"}.
-relationship_pattern ->     '-' relationship_detail_opt '-' '>'                                 : {relationshipPattern, [],  "-", '$2', "-", ">"}.
-relationship_pattern ->  '--'                                                                   : {relationshipPattern, "--"}.
-relationship_pattern ->     '-' relationship_detail_opt '-'                                     : {relationshipPattern, [],  "-", '$2', "-", []}.
+relationship_pattern -> '<-->'                                                                  : {relationshipPattern, "<-->, [],   []"}.
+relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
+relationship_pattern -> '<--'                                                                   : {relationshipPattern, "<--", [],   [] }.
+relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
+relationship_pattern ->                               '-->'                                     : {relationshipPattern, "-->",  [],  []}.
+relationship_pattern ->     '-' relationship_detail '-' '>'                                     : {relationshipPattern, "-",   '$2', "->"}.
+relationship_pattern ->     '--'                                                                : {relationshipPattern, "--",  [],   []}.
+relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
+
+relationship_detail -> '['                                                              ']'     : {relationshipDetail, [],   [],   [],   [],   []}.
+relationship_detail -> '['                                 '*' range_literal            ']'     : {relationshipDetail, [],   [],   [],   '$3', []}.
+relationship_detail -> '['              relationship_types                              ']'     : {relationshipDetail, [],   [],   '$2', [],   []}.
+relationship_detail -> '['              relationship_types '*' range_literal            ']'     : {relationshipDetail, [],   [],   '$2', '$4', []}.
+relationship_detail -> '['          '?'                                                 ']'     : {relationshipDetail, [],   "?",  [],   [],   []}.
+relationship_detail -> '['          '?'                    '*' range_literal            ']'     : {relationshipDetail, [],   "?",  [],   '$4', []}.
+relationship_detail -> '['          '?' relationship_types                              ']'     : {relationshipDetail, [],   "?",  '$3', [],   []}.
+relationship_detail -> '['          '?' relationship_types '*' range_literal            ']'     : {relationshipDetail, [],   "?",  '$3', '$5', []}.
+relationship_detail -> '[' variable                                                     ']'     : {relationshipDetail, '$2', [],   [],   [],   []}.
+relationship_detail -> '[' variable                        '*' range_literal            ']'     : {relationshipDetail, '$2', [],   [],   '$4', []}.
+relationship_detail -> '[' variable     relationship_types                              ']'     : {relationshipDetail, '$2', [],   '$3', [],   []}.
+relationship_detail -> '[' variable     relationship_types '*' range_literal            ']'     : {relationshipDetail, '$2', [],   '$3', '$5', []}.
+relationship_detail -> '[' variable '?'                                                 ']'     : {relationshipDetail, '$2', "?",  [],   [],   []}.
+relationship_detail -> '[' variable '?'                    '*' range_literal            ']'     : {relationshipDetail, '$2', "?",  [],   '$5', []}.
+relationship_detail -> '[' variable '?' relationship_types                              ']'     : {relationshipDetail, '$2', "?",  '$4', [],   []}.
+relationship_detail -> '[' variable '?' relationship_types '*' range_literal            ']'     : {relationshipDetail, '$2', "?",  '$4', '$6', []}.
 
 %% =====================================================================================================================
-%% Helper definitions.
+%% Helper definitions - reduce/reduce conflict.
 %% ---------------------------------------------------------------------------------------------------------------------
-relationship_detail_opt -> '$empty'                                                             : {}.
-relationship_detail_opt -> relationship_detail                                                  : '$1'.
+relationship_detail -> '['                                                   map_literal ']'    : {relationshipDetail, [],   [],   [],   [],   '$2'}.
+relationship_detail -> '['                                 '*' range_literal map_literal ']'    : {relationshipDetail, [],   [],   [],   '$3', '$4'}.
+relationship_detail -> '['              relationship_types                   map_literal ']'    : {relationshipDetail, [],   [],   '$2', [],   '$3'}.
+relationship_detail -> '['              relationship_types '*' range_literal map_literal ']'    : {relationshipDetail, [],   [],   '$2', '$4', '$5'}.
+relationship_detail -> '['          '?'                                      map_literal ']'    : {relationshipDetail, [],   "?",  [],   [],   '$3'}.
+relationship_detail -> '['          '?'                    '*' range_literal map_literal ']'    : {relationshipDetail, [],   "?",  [],   '$4', '$5'}.
+relationship_detail -> '['          '?' relationship_types                   map_literal ']'    : {relationshipDetail, [],   "?",  '$3', [],   '$4'}.
+relationship_detail -> '['          '?' relationship_types '*' range_literal map_literal ']'    : {relationshipDetail, [],   "?",  '$3', '$5', '$6'}.
+relationship_detail -> '[' variable                                          map_literal ']'    : {relationshipDetail, '$2', [],   [],   [],   '$3'}.
+relationship_detail -> '[' variable                        '*' range_literal map_literal ']'    : {relationshipDetail, '$2', [],   [],   '$4', '$5'}.
+relationship_detail -> '[' variable     relationship_types                   map_literal ']'    : {relationshipDetail, '$2', [],   '$3', [],   '$4'}.
+relationship_detail -> '[' variable     relationship_types '*' range_literal map_literal ']'    : {relationshipDetail, '$2', [],   '$3', '$5', '$6'}.
+relationship_detail -> '[' variable '?'                                      map_literal ']'    : {relationshipDetail, '$2', "?",  [],   [],   '$4'}.
+relationship_detail -> '[' variable '?'                    '*' range_literal map_literal ']'    : {relationshipDetail, '$2', "?",  [],   '$5', '$6'}.
+relationship_detail -> '[' variable '?' relationship_types                   map_literal ']'    : {relationshipDetail, '$2', "?",  '$4', [],   '$5'}.
+relationship_detail -> '[' variable '?' relationship_types '*' range_literal map_literal ']'    : {relationshipDetail, '$2', "?",  '$4', '$6', '$7'}.
+relationship_detail -> '['                                                   parameter   ']'    : {relationshipDetail, [],   [],   [],   [],   '$2'}.
+relationship_detail -> '['                                 '*' range_literal parameter   ']'    : {relationshipDetail, [],   [],   [],   '$3', '$4'}.
+relationship_detail -> '['              relationship_types                   parameter   ']'    : {relationshipDetail, [],   [],   '$2', [],   '$3'}.
+relationship_detail -> '['              relationship_types '*' range_literal parameter   ']'    : {relationshipDetail, [],   [],   '$2', '$4', '$5'}.
+relationship_detail -> '['          '?'                                      parameter   ']'    : {relationshipDetail, [],   "?",  [],   [],   '$3'}.
+relationship_detail -> '['          '?'                    '*' range_literal parameter   ']'    : {relationshipDetail, [],   "?",  [],   '$4', '$5'}.
+relationship_detail -> '['          '?' relationship_types                   parameter   ']'    : {relationshipDetail, [],   "?",  '$3', [],   '$4'}.
+relationship_detail -> '['          '?' relationship_types '*' range_literal parameter   ']'    : {relationshipDetail, [],   "?",  '$3', '$5', '$6'}.
+relationship_detail -> '[' variable                                          parameter   ']'    : {relationshipDetail, '$2', [],   [],   [],   '$3'}.
+relationship_detail -> '[' variable                        '*' range_literal parameter   ']'    : {relationshipDetail, '$2', [],   [],   '$4', '$5'}.
+relationship_detail -> '[' variable     relationship_types                   parameter   ']'    : {relationshipDetail, '$2', [],   '$3', [],   '$4'}.
+relationship_detail -> '[' variable     relationship_types '*' range_literal parameter   ']'    : {relationshipDetail, '$2', [],   '$3', '$5', '$6'}.
+relationship_detail -> '[' variable '?'                                      parameter   ']'    : {relationshipDetail, '$2', "?",  [],   [],   '$4'}.
+relationship_detail -> '[' variable '?'                    '*' range_literal parameter   ']'    : {relationshipDetail, '$2', "?",  [],   '$5', '$6'}.
+relationship_detail -> '[' variable '?' relationship_types                   parameter   ']'    : {relationshipDetail, '$2', "?",  '$4', [],   '$5'}.
+relationship_detail -> '[' variable '?' relationship_types '*' range_literal parameter   ']'    : {relationshipDetail, '$2', "?",  '$4', '$6', '$7'}.
+relationship_detail -> '['                                                   legacy_parameter ']'
+                                                                                                : {relationshipDetail, [],   [],   [],   [],   '$2'}.
+relationship_detail -> '['                                 '*' range_literal legacy_parameter ']'
+                                                                                                : {relationshipDetail, [],   [],   [],   '$3', '$4'}.
+relationship_detail -> '['              relationship_types                   legacy_parameter ']'
+                                                                                                : {relationshipDetail, [],   [],   '$2', [],   '$3'}.
+relationship_detail -> '['              relationship_types '*' range_literal legacy_parameter ']'
+                                                                                                : {relationshipDetail, [],   [],   '$2', '$4', '$5'}.
+relationship_detail -> '['          '?'                                      legacy_parameter ']'
+                                                                                                : {relationshipDetail, [],   "?",  [],   [],   '$3'}.
+relationship_detail -> '['          '?'                    '*' range_literal legacy_parameter ']'
+                                                                                                : {relationshipDetail, [],   "?",  [],   '$4', '$5'}.
+relationship_detail -> '['          '?' relationship_types                   legacy_parameter ']'
+                                                                                                : {relationshipDetail, [],   "?",  '$3', [],   '$4'}.
+relationship_detail -> '['          '?' relationship_types '*' range_literal legacy_parameter ']'
+                                                                                                : {relationshipDetail, [],   "?",  '$3', '$5', '$6'}.
+relationship_detail -> '[' variable                                          legacy_parameter ']'
+                                                                                                : {relationshipDetail, '$2', [],   [],   [],   '$3'}.
+relationship_detail -> '[' variable                        '*' range_literal legacy_parameter ']'
+                                                                                                : {relationshipDetail, '$2', [],   [],   '$4', '$5'}.
+relationship_detail -> '[' variable     relationship_types                   legacy_parameter ']'
+                                                                                                : {relationshipDetail, '$2', [],   '$3', [],   '$4'}.
+relationship_detail -> '[' variable     relationship_types '*' range_literal legacy_parameter ']'
+                                                                                                : {relationshipDetail, '$2', [],   '$3', '$5', '$6'}.
+relationship_detail -> '[' variable '?'                                      legacy_parameter ']'
+                                                                                                : {relationshipDetail, '$2', "?",  [],   [],   '$4'}.
+relationship_detail -> '[' variable '?'                    '*' range_literal legacy_parameter ']'
+                                                                                                : {relationshipDetail, '$2', "?",  [],   '$5', '$6'}.
+relationship_detail -> '[' variable '?' relationship_types                   legacy_parameter ']'
+                                                                                                : {relationshipDetail, '$2', "?",  '$4', [],   '$5'}.
+relationship_detail -> '[' variable '?' relationship_types '*' range_literal legacy_parameter ']'
+                                                                                                : {relationshipDetail, '$2', "?",  '$4', '$6', '$7'}.
+% relationship_detail -> '['                                                   properties ']'     : {relationshipDetail, [],   [],   [],   [],   '$2'}.
+% relationship_detail -> '['                                 '*' range_literal properties ']'     : {relationshipDetail, [],   [],   [],   '$3', '$4'}.
+% relationship_detail -> '['              relationship_types                   properties ']'     : {relationshipDetail, [],   [],   '$2', [],   '$3'}.
+% relationship_detail -> '['              relationship_types '*' range_literal properties ']'     : {relationshipDetail, [],   [],   '$2', '$4', '$5'}.
+% relationship_detail -> '['          '?'                                      properties ']'     : {relationshipDetail, [],   "?",  [],   [],   '$3'}.
+% relationship_detail -> '['          '?'                    '*' range_literal properties ']'     : {relationshipDetail, [],   "?",  [],   '$4', '$5'}.
+% relationship_detail -> '['          '?' relationship_types                   properties ']'     : {relationshipDetail, [],   "?",  '$3', [],   '$4'}.
+% relationship_detail -> '['          '?' relationship_types '*' range_literal properties ']'     : {relationshipDetail, [],   "?",  '$3', '$5', '$6'}.
+% relationship_detail -> '[' variable                                          properties ']'     : {relationshipDetail, '$2', [],   [],   [],   '$3'}.
+% relationship_detail -> '[' variable                        '*' range_literal properties ']'     : {relationshipDetail, '$2', [],   [],   '$4', '$5'}.
+% relationship_detail -> '[' variable     relationship_types                   properties ']'     : {relationshipDetail, '$2', [],   '$3', [],   '$4'}.
+% relationship_detail -> '[' variable     relationship_types '*' range_literal properties ']'     : {relationshipDetail, '$2', [],   '$3', '$5', '$6'}.
+% relationship_detail -> '[' variable '?'                                      properties ']'     : {relationshipDetail, '$2', "?",  [],   [],   '$4'}.
+% relationship_detail -> '[' variable '?'                    '*' range_literal properties ']'     : {relationshipDetail, '$2', "?",  [],   '$5', '$6'}.
+% relationship_detail -> '[' variable '?' relationship_types                   properties ']'     : {relationshipDetail, '$2', "?",  '$4', [],   '$5'}.
+% relationship_detail -> '[' variable '?' relationship_types '*' range_literal properties ']'     : {relationshipDetail, '$2', "?",  '$4', '$6', '$7'}.
 %% =====================================================================================================================
 
-relationship_detail -> '[' variable char_question_mark_opt relationship_types_opt range_opt properties ']'
-                                                                                                : {relationshipDetail, '$2', '$3', '$4', '$5', '$6'}.
-
-relationship_detail -> '[' variable char_question_mark_opt relationship_types_opt range_opt ']'
-                                                                                                : {relationshipDetail, '$2', '$3', '$4', '$5', {}}.
-relationship_detail -> '[' char_question_mark_opt relationship_types_opt range_opt properties ']'
-                                                                                                : {relationshipDetail, {}, '$2', '$3', '$4', '$5'}.
-relationship_detail -> '[' char_question_mark_opt relationship_types_opt range_opt ']'          : {relationshipDetail, {}, '$2', '$3', '$4', {}}.
-
 %% =====================================================================================================================
-%% Helper definitions.
+%% Helper definitions - reduce/reduce conflict.
 %% ---------------------------------------------------------------------------------------------------------------------
-char_question_mark_opt -> '$empty'                                                              : [].
-char_question_mark_opt -> '?'                                                                   : "?".
-
-relationship_types_opt -> '$empty'                                                              : [].
-relationship_types_opt -> relationship_types                                                    : '$1'.
-
-range_opt -> '$empty'                                                                           : {}.
-range_opt -> '*' range_literal                                                                  : '$2'.
+% properties -> map_literal                                                                       : {properties, '$1'}.
+% properties -> parameter                                                                         : {properties, '$1'}.
+% properties -> legacy_parameter                                                                  : {properties, '$1'}.
 %% =====================================================================================================================
-
-properties -> map_literal                                                                       : {properties, '$1'}.
-properties -> parameter                                                                         : {properties, '$1'}.
-properties -> legacy_parameter                                                                  : {properties, '$1'}.
 
 rel_type -> ':' rel_type_name                                                                   : {relType, '$2'}.
 
@@ -793,14 +819,20 @@ relationship_types -> ':' rel_type_name rel_type_verticalbarlist                
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-rel_type_verticalbarlist -> rel_type_verticalbarlist '|' rel_type                               : '$1' ++ ['$3'].
-rel_type_verticalbarlist -> rel_type_verticalbarlist '|' rel_type_name                          : '$1' ++ ['$3'].
-rel_type_verticalbarlist -> '|' rel_type                                                        : ['$2'].
-rel_type_verticalbarlist -> '|' rel_type_name                                                   : ['$2'].
+rel_type_verticalbarlist -> rel_type_verticalbarlist '|' ':' rel_type_name                      : '$1' ++ [{'$4', ":"}].
+rel_type_verticalbarlist -> rel_type_verticalbarlist '|'     rel_type_name                      : '$1' ++ [{'$3', []}].
+rel_type_verticalbarlist -> '|' ':' rel_type_name                                               : [{'$3', ":"}].
+rel_type_verticalbarlist -> '|'     rel_type_name                                               : [{'$2', []}].
 %% =====================================================================================================================
 
-node_labels -> node_labels node_label                                                           : '$1' ++ ['$2'].
-node_labels -> node_label                                                                       : ['$1'].
+node_labels -> node_label_list                                                                  : {nodeLabels, '$1'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+node_label_list -> node_label_list node_label                                                   : '$1' ++ ['$2'].
+node_label_list -> node_label                                                                   : ['$1'].
+%% =====================================================================================================================
 
 node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
 
@@ -816,84 +848,72 @@ rel_type_name -> symbolic_name                                                  
 
 expression -> expression_12                                                                     : {expression, '$1'}.
 
-expression_12 -> expression_11 expression_12_addon_list_opt                                     : {expression12, '$1', '$2'}.
+expression_12 -> expression_11                                                                  : {expression12, '$1', []}.
+expression_12 -> expression_11 expression_12_addon_list                                         : {expression12, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_12_addon_list_opt -> '$empty'                                                        : [].
-expression_12_addon_list_opt -> expression_12_addon_list                                        : '$1'.
-
 expression_12_addon_list -> expression_12_addon_list expression_12_addon                        : '$1' ++ ['$2'].
 expression_12_addon_list -> expression_12_addon                                                 : ['$1'].
 
 expression_12_addon -> OR expression_11                                                         : {"or", '$2'}.
 %% =====================================================================================================================
 
-expression_11 -> expression_10 expression_11_addon_list_opt                                     : {expression11, '$1', '$2'}.
+expression_11 -> expression_10                                                                  : {expression11, '$1', []}.
+expression_11 -> expression_10 expression_11_addon_list                                         : {expression11, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_11_addon_list_opt -> '$empty'                                                        : [].
-expression_11_addon_list_opt -> expression_11_addon_list                                        : '$1'.
-
 expression_11_addon_list -> expression_11_addon_list expression_11_addon                        : '$1' ++ ['$2'].
 expression_11_addon_list -> expression_11_addon                                                 : ['$1'].
 
 expression_11_addon -> XOR expression_10                                                         : {"xor", '$2'}.
 %% =====================================================================================================================
 
-expression_10 -> expression_9 expression_10_addon_list_opt                                      : {expression10, '$1', '$2'}.
+expression_10 -> expression_9                                                                   : {expression10, '$1', []}.
+expression_10 -> expression_9 expression_10_addon_list                                          : {expression10, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_10_addon_list_opt -> '$empty'                                                        : [].
-expression_10_addon_list_opt -> expression_10_addon_list                                        : '$1'.
-
 expression_10_addon_list -> expression_10_addon_list expression_10_addon                        : '$1' ++ ['$2'].
 expression_10_addon_list -> expression_10_addon                                                 : ['$1'].
 
 expression_10_addon -> AND expression_9                                                         : {"and", '$2'}.
 %% =====================================================================================================================
 
-expression_9 -> expression_9_addon_list_opt expression_8                                        : {expression9, '$2', '$1'}.
+expression_9 ->                         expression_8                                            : {expression9, '$1', []}.
+expression_9 -> expression_9_addon_list expression_8                                            : {expression9, '$2', '$1'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_9_addon_list_opt -> '$empty'                                                         : [].
-expression_9_addon_list_opt -> expression_9_addon_list                                          : '$1'.
-
 expression_9_addon_list -> expression_9_addon_list expression_9_addon                           : '$1' ++ ['$2'].
 expression_9_addon_list -> expression_9_addon                                                   : ['$1'].
 
 expression_9_addon -> NOT                                                                       : {"not"}.
 %% =====================================================================================================================
 
-expression_8 -> expression_7 expression_8_addon_list_opt                                        : {expression8, '$1', '$2'}.
+expression_8 -> expression_7                                                                    : {expression8, '$1', []}.
+expression_8 -> expression_7 expression_8_addon_list                                            : {expression8, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_8_addon_list_opt -> '$empty'                                                         : [].
-expression_8_addon_list_opt -> expression_8_addon_list                                          : '$1'.
-
 expression_8_addon_list -> expression_8_addon_list expression_8_addon                           : '$1' ++ ['$2'].
 expression_8_addon_list -> expression_8_addon                                                   : ['$1'].
 
 expression_8_addon -> partial_comparison_expression                                             : '$1'.
 %% =====================================================================================================================
 
-expression_7 -> expression_6 expression_7_addon_list_opt                                        : {expression7, '$1', '$2'}.
+expression_7 -> expression_6                                                                    : {expression7, '$1', []}.
+expression_7 -> expression_6 expression_7_addon_list                                            : {expression7, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_7_addon_list_opt -> '$empty'                                                         : [].
-expression_7_addon_list_opt -> expression_7_addon_list                                          : '$1'.
-
 expression_7_addon_list -> expression_7_addon_list expression_7_addon                           : '$1' ++ ['$2'].
 expression_7_addon_list -> expression_7_addon                                                   : ['$1'].
 
@@ -901,14 +921,12 @@ expression_7_addon -> '+' expression_6                                          
 expression_7_addon -> '-' expression_6                                                          : {"-", '$2'}.
 %% =====================================================================================================================
 
-expression_6 -> expression_5 expression_6_addon_list_opt                                        : {expression6, '$1', '$2'}.
+expression_6 -> expression_5                                                                    : {expression6, '$1', []}.
+expression_6 -> expression_5 expression_6_addon_list                                            : {expression6, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_6_addon_list_opt -> '$empty'                                                         : [].
-expression_6_addon_list_opt -> expression_6_addon_list                                          : '$1'.
-
 expression_6_addon_list -> expression_6_addon_list expression_6_addon                           : '$1' ++ ['$2'].
 expression_6_addon_list -> expression_6_addon                                                   : ['$1'].
 
@@ -917,28 +935,24 @@ expression_6_addon -> '/' expression_5                                          
 expression_6_addon -> '%' expression_5                                                          : {"%", '$2'}.
 %% =====================================================================================================================
 
-expression_5 -> expression_4 expression_5_addon_list_opt                                        : {expression5, '$1', '$2'}.
+expression_5 -> expression_4                                                                    : {expression5, '$1', []}.
+expression_5 -> expression_4 expression_5_addon_list                                            : {expression5, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_5_addon_list_opt -> '$empty'                                                         : [].
-expression_5_addon_list_opt -> expression_5_addon_list                                          : '$1'.
-
 expression_5_addon_list -> expression_5_addon_list expression_5_addon                           : '$1' ++ ['$2'].
 expression_5_addon_list -> expression_5_addon                                                   : ['$1'].
 
 expression_5_addon -> '^' expression_4                                                          : {"^", '$2'}.
 %% =====================================================================================================================
 
-expression_4 -> expression_4_addon_list_opt expression_3                                        : {expression4, '$2', '$1'}.
+expression_4 ->                         expression_3                                            : {expression4, '$1', [] }.
+expression_4 -> expression_4_addon_list expression_3                                            : {expression4, '$2', '$1'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_4_addon_list_opt -> '$empty'                                                         : [].
-expression_4_addon_list_opt -> expression_4_addon_list                                          : '$1'.
-
 expression_4_addon_list -> expression_4_addon_list expression_4_addon                           : '$1' ++ ['$2'].
 expression_4_addon_list -> expression_4_addon                                                   : ['$1'].
 
@@ -946,18 +960,18 @@ expression_4_addon -> '+'                                                       
 expression_4_addon -> '-'                                                                       : {"-"}.
 %% =====================================================================================================================
 
-expression_3 -> expression_2 expression_3_addon_list_opt                                        : {expression3, '$1', '$2'}.
+expression_3 -> expression_2                                                                    : {expression3, '$1', []}.
+expression_3 -> expression_2 expression_3_addon_list                                            : {expression3, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_3_addon_list_opt -> '$empty'                                                         : [].
-expression_3_addon_list_opt -> expression_3_addon_list                                          : '$1'.
-
 expression_3_addon_list -> expression_3_addon_list expression_3_addon                           : '$1' ++ ['$2'].
 expression_3_addon_list -> expression_3_addon                                                   : ['$1'].
 
-expression_3_addon -> '[' expression_opt '..' expression_opt ']'                                : {"[",           '$2', '$4'}.
+expression_3_addon -> '['            '..'                ']'                                    : {"[",           [],   []}.
+expression_3_addon -> '['            '..' expression ']'                                        : {"[",           [],   '$3'}.
+expression_3_addon -> '[' expression '..'                ']'                                    : {"[",           '$2', []}.
 expression_3_addon -> '[' expression ']'                                                        : {"[",           '$2'}.
 expression_3_addon -> '=~' expression_2                                                         : {"=~",          '$2'}.
 expression_3_addon -> IN expression_2                                                           : {"in",          '$2'}.
@@ -966,24 +980,20 @@ expression_3_addon -> ENDS WITH expression_2                                    
 expression_3_addon -> CONTAINS expression_2                                                     : {"contains",    '$2'}.
 expression_3_addon -> IS NOT NULL                                                               : {"is not null"}.
 expression_3_addon -> IS NULL                                                                   : {"is null"}.
-
-expression_opt -> '$empty'                                                                      : {}.
-expression_opt -> expression                                                                    : '$1'.
 %% =====================================================================================================================
 
-expression_2 -> atom expression_2_addon_list_opt                                                : {expression2, '$1', '$2'}.
+expression_2 -> atom                                                                            : {expression2, '$1', []}.
+expression_2 -> atom expression_2_addon_list                                                    : {expression2, '$1', '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_2_addon_list_opt -> '$empty'                                                         : [].
-expression_2_addon_list_opt -> expression_2_addon_list                                          : '$1'.
-
 expression_2_addon_list -> expression_2_addon_list expression_2_addon                           : '$1' ++ ['$2'].
 expression_2_addon_list -> expression_2_addon                                                   : ['$1'].
 
-expression_2_addon -> node_labels                                                               : {nodeLabels, '$1'}.
-expression_2_addon -> property_lookup                                                           : '$1'.
+expression_2_addon -> node_labels                                                               : '$1'.
+% wwe ???
+% expression_2_addon -> property_lookup                                                           : '$1'.
 %% =====================================================================================================================
 
 atom -> number_literal                                                                          : {atom, '$1'}.
@@ -1008,80 +1018,66 @@ atom -> NONE '(' filter_expression ')'                                          
 atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single',  '$3'}}.
 atom -> relationships_pattern                                                                   : {atom, '$1'}.
 atom -> shortest_path_pattern                                                                   : {atom, '$1'}.
-atom -> parenthesized_expression                                                                : {atom, '$1'}.
+% wwe ???
+% atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> function_invocation                                                                     : {atom, '$1'}.
 atom -> variable                                                                                : {atom, '$1'}.
 
 reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'                  : {reduce, '$3', '$5', '$7', '$9'}.
 
-partial_comparison_expression -> comparison expression_7                                        : {partialComparisonExpression, '$2', '$1'}.
+partial_comparison_expression -> '='  expression_7                                              : {partialComparisonExpression, '$2', "="}.
+partial_comparison_expression -> '<>' expression_7                                              : {partialComparisonExpression, '$2', "<>"}.
+partial_comparison_expression -> '!=' expression_7                                              : {partialComparisonExpression, '$2', "!="}.
+partial_comparison_expression -> '<'  expression_7                                              : {partialComparisonExpression, '$2', "<"}.
+partial_comparison_expression -> '>'  expression_7                                              : {partialComparisonExpression, '$2', ">"}.
+partial_comparison_expression -> '<=' expression_7                                              : {partialComparisonExpression, '$2', "<="}.
+partial_comparison_expression -> '>=' expression_7                                              : {partialComparisonExpression, '$2', ">="}.
 
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-comparison -> '='                                                                               : "=".
-comparison -> '<>'                                                                              : "<>".
-comparison -> '!='                                                                              : "!=".
-comparison -> '<'                                                                               : "<".
-comparison -> '>'                                                                               : ">".
-comparison -> '<='                                                                              : "<=".
-comparison -> '>='                                                                              : ">=".
-%% =====================================================================================================================
+% wwe ???
+% parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
 
-parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
-
-relationships_pattern -> node_pattern                                                           : {relationshipsPattern, '$1', []}.
 relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
 
-filter_expression -> id_in_coll where_opt                                                       : {filterExpression, '$1', '$2'}.
+filter_expression -> id_in_coll                                                                 : {filterExpression, '$1', []}.
+filter_expression -> id_in_coll where                                                           : {filterExpression, '$1', '$2'}.
 
 id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
 
-function_invocation -> function_name '(' distinct_opt expression_commalist_opt ')'              : {functionInvocation, '$1', '$4', '$3'}.
+function_invocation -> function_name '('                               ')'                      : {functionInvocation, '$1', [],         []}.
+function_invocation -> function_name '('          expression_commalist ')'                      : {functionInvocation, '$1', [],         '$3'}.
+function_invocation -> function_name '(' DISTINCT                      ')'                      : {functionInvocation, '$1', "distinct", []}.
+function_invocation -> function_name '(' DISTINCT expression_commalist ')'                      : {functionInvocation, '$1', "distinct", '$4'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-function_invocation -> COUNT  '(' distinct_opt expression_commalist_opt ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}}, '$4', '$3'}.
-function_invocation -> EXISTS '(' distinct_opt expression_commalist_opt ')'                     : {functionInvocation, {functionName, {symbolicName, "exists"}}, '$4', '$3'}.
-
-expression_commalist_opt -> '$empty'                                                            : [].
-expression_commalist_opt -> expression_commalist                                                : '$1'.
+function_invocation -> COUNT         '('                               ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}},  [],         []}.
+function_invocation -> COUNT         '('          expression_commalist ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}},  [],         '$3'}.
+function_invocation -> COUNT         '(' DISTINCT                      ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}},  "distinct", []}.
+function_invocation -> COUNT         '(' DISTINCT expression_commalist ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}},  "distinct", '$4'}.
+function_invocation -> EXISTS        '('                               ')'                     : {functionInvocation, {functionName, {symbolicName, "exists"}}, [],         []}.
+function_invocation -> EXISTS        '('          expression_commalist ')'                     : {functionInvocation, {functionName, {symbolicName, "exists"}}, [],         '$3'}.
+function_invocation -> EXISTS        '(' DISTINCT                      ')'                     : {functionInvocation, {functionName, {symbolicName, "exists"}}, "distinct", []}.
+function_invocation -> EXISTS        '(' DISTINCT expression_commalist ')'                     : {functionInvocation, {functionName, {symbolicName, "exists"}}, "distinct", '$4'}.
 %% =====================================================================================================================
 
 function_name -> symbolic_name                                                                  : {functionName, '$1'}.
 
-list_comprehension -> '[' filter_expression char_vertical_bar_expression_opt ']'                : {listComprehension, '$2', '$3'}.
+list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.
+list_comprehension -> '[' filter_expression '|' expression ']'                                  : {listComprehension, '$2', '$4'}.
+
+property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', []}.
+property_lookup -> '.' property_key_name '?'                                                    : {propertyLookup, '$2', "?"}.
+property_lookup -> '.' property_key_name '!'                                                    : {propertyLookup, '$2', "!"}.
+
+case_expression -> CASE            case_alternatives_list                  END                  : {caseExpression, [],   '$2', []}.
+case_expression -> CASE            case_alternatives_list ELSE expression  END                  : {caseExpression, [],   '$2', '$4'}.
+case_expression -> CASE expression case_alternatives_list                  END                  : {caseExpression, '$2', '$3', []}.
+case_expression -> CASE expression case_alternatives_list ELSE expression  END                  : {caseExpression, '$2', '$3', '$5'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-char_vertical_bar_expression_opt -> '$empty'                                                    : {}.
-char_vertical_bar_expression_opt -> char_vertical_bar_expression                                : '$1'.
-
-char_vertical_bar_expression -> '|' expression                                                  : '$2'.
-%% =====================================================================================================================
-
-property_lookup -> '.' property_key_name char_opt                                               : {propertyLookup, '$2', '$3'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-char_opt -> '$empty'                                                                            : [].
-char_opt -> '?'                                                                                 : "?".
-char_opt -> '!'                                                                                 : "!".
-%% =====================================================================================================================
-
-case_expression -> CASE expression_opt case_alternatives_list else_expression_opt END           : {caseExpression, '$2', '$3', '$4'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-else_expression_opt -> '$empty'                                                                 : {}.
-else_expression_opt -> else_expression                                                          : '$1'.
-
-else_expression -> ELSE expression                                                              : '$2'.
-
 case_alternatives_list -> case_alternatives_list case_alternatives                              : '$1' ++ ['$2'].
 case_alternatives_list -> case_alternatives                                                     : ['$1'].
 %% =====================================================================================================================
@@ -1093,14 +1089,12 @@ variable -> symbolic_name                                                       
 number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
 number_literal -> integer_literal                                                               : {numberLiteral, '$1'}.
 
-map_literal -> '{' property_key_name_expression_commalist_opt '}'                               : {mapLiteral, '$2'}.
+map_literal -> '{'                                        '}'                                   : {mapLiteral, []}.
+map_literal -> '{' property_key_name_expression_commalist '}'                                   : {mapLiteral, '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-property_key_name_expression_commalist_opt -> '$empty'                                          : "{}".
-property_key_name_expression_commalist_opt -> property_key_name_expression_commalist            : '$1'.
-
 property_key_name_expression_commalist -> property_key_name_expression                          : ['$1'].
 property_key_name_expression_commalist -> property_key_name_expression ',' property_key_name_expression_commalist
                                                                                                 : ['$1' | '$3'].
@@ -1125,9 +1119,9 @@ property_lookup_list -> property_lookup                                         
 
 property_key_name -> symbolic_name                                                              : {propertyKeyName, '$1'}.
 
-integer_literal -> HEX_INTEGER                                                                  : {integerLiteral, {hexInteger, unwrap('$1')}}.
-integer_literal -> OCTAL_INTEGER                                                                : {integerLiteral, {octalInteger, unwrap('$1')}}.
-integer_literal -> DECIMAL_INTEGER                                                              : {integerLiteral, {decimalInteger, unwrap('$1')}}.
+integer_literal -> HEX_INTEGER                                                                  : {integerLiteral, unwrap('$1')}.
+integer_literal -> OCTAL_INTEGER                                                                : {integerLiteral, unwrap('$1')}.
+integer_literal -> DECIMAL_INTEGER                                                              : {integerLiteral, unwrap('$1')}.
 
 double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, unwrap('$1')}.
 double_literal -> REGULAR_DECIMAL_REAL                                                          : {doubleLiteral, unwrap('$1')}.

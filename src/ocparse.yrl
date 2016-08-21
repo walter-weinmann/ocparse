@@ -92,7 +92,6 @@ Nonterminals
  query
  range_literal
  regular_query
- rel_type
  rel_type_name
  rel_type_verticalbarlist
  relationship_detail
@@ -255,6 +254,7 @@ cypher -> statement ';'                                                         
 %% Helper definitions - test purposes.
 %% ---------------------------------------------------------------------------------------------------------------------
 % cypher -> expression                                                                            : '$1'.
+cypher -> atom                                                                                  : '$1'.
 %% =====================================================================================================================
 
 statement -> query                                                                              : {statement, '$1'}.
@@ -538,8 +538,6 @@ relationship_detail -> '[' variable '?' relationship_types '*' range_literal par
 % properties -> parameter                                                                         : {properties, '$1'}.
 %% =====================================================================================================================
 
-rel_type -> ':' rel_type_name                                                                   : {relType, '$2'}.
-
 relationship_types -> ':' rel_type_name                                                         : {relationshipTypes, '$2', []}.
 relationship_types -> ':' rel_type_name rel_type_verticalbarlist                                : {relationshipTypes, '$2', '$3'}.
 
@@ -773,7 +771,7 @@ function_invocation -> function_name '(' DISTINCT expression_commalist ')'      
 %% ---------------------------------------------------------------------------------------------------------------------
 function_invocation -> COUNT         '('                               ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}}, [],         []}.
 function_invocation -> COUNT         '('          expression_commalist ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}}, [],         '$3'}.
-function_invocation -> COUNT         '(' DISTINCT                      ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}}, "distinct", '$3'}.
+function_invocation -> COUNT         '(' DISTINCT                      ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}}, "distinct", []}.
 function_invocation -> COUNT         '(' DISTINCT expression_commalist ')'                     : {functionInvocation, {functionName, {symbolicName, "count"}}, "distinct", '$4'}.
 %% =====================================================================================================================
 
