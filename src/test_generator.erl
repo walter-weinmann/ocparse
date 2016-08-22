@@ -120,42 +120,36 @@ generate() ->
     % ----------------------------------------------------------------------------------------------
     create_code(false),
 
-%%    ok = file_create_ct_all(false,
-%%        ?ALL_CLAUSE ++
-%%        [cypher,
-%%            query,
-%%            statement]),
-
     ok = file_create_ct_all(false,
-        [remove]),
+        ?ALL_CLAUSE ++
+        [cypher,
+            query,
+            statement]),
 
     ok = file_create_eunit_all(false,
         ?ALL_CLAUSE ++
-            [property_expression,
-                property_lookup,
-                remove_item] ++
-            [cypher,
-                query,
-                statement]),
+        [cypher,
+            query,
+            statement]),
 
     % ----------------------------------------------------------------------------------------------
     % Legacy version -------------------------------------------------------------------------------
     % ----------------------------------------------------------------------------------------------
     create_code(true),
 
-%%    ok = file_create_ct_all(true,
-%%        ?ALL_CLAUSE_LEGACY ++
-%%            ?ALL_COMMAND ++
-%%            [cypher,
-%%                query,
-%%                statement]),
-%%
-%%    ok = file_create_eunit_all(true,
-%%        ?ALL_CLAUSE_LEGACY ++
-%%            ?ALL_COMMAND ++
-%%            [cypher,
-%%                query,
-%%                statement]),
+    ok = file_create_ct_all(true,
+        ?ALL_CLAUSE_LEGACY ++
+            ?ALL_COMMAND ++
+            [cypher,
+                query,
+                statement]),
+
+    ok = file_create_eunit_all(true,
+        ?ALL_CLAUSE_LEGACY ++
+            ?ALL_COMMAND ++
+            [cypher,
+                query,
+                statement]),
 
     ok.
 
