@@ -230,9 +230,21 @@ The documentation for **ocparse** is available here: [Wiki](https://github.com/w
 
 The number of block comments (`/* ... */`) is limted to one per line.
 
+### Expression3
+
+The variant `[..]` is not supported.
+
+### RangeLiteral
+
+A `RangeLiteral` without `IntegerLiteral` is not supported.
+
 ### ParenthesizedExpression
 
 `ParenthesizedExpression` is not supported due to a conflict with `NodePattern`.
+
+### RegularDecimalReal (Legacy)
+
+`RegularDecimalReal` requires at least one digit before the decimal point.
 
 ### SymbolicName
 
@@ -334,7 +346,7 @@ New: LiteralIds = { WS, ',', WS } ;
 Old: LiteralIds = UnsignedIntegerLiteral, { WS, ',', WS, UnsignedIntegerLiteral } ;
 ```
 
-- **Pattern** (openCypher & Legacy)
+- **Pattern**
 
 ```
 New: Pattern = PatternPart, { WS, ',', WS, PatternPart } ;
@@ -350,7 +362,7 @@ New: Properties = MapLiteral | Parameter | LegacyParameter ;
 Old: Properties = MapLiteral | Parameter ;
 ```
 
-- **RangeLiteral** (openCypher & Legacy)
+- **RangeLiteral**
 
 ```
 New: RangeLiteral = WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
@@ -366,7 +378,7 @@ New: Atom = ... | LegacyParameter | ...
 Old: n/a
 ```
 
-- **Atom** (openCypher & Legacy)
+- **Atom**
 
 ```
 New: Atom = ... | ParenthesizedExpression | ...
@@ -374,7 +386,7 @@ New: Atom = ... | ParenthesizedExpression | ...
 Old: Atom = ... | parenthesizedExpression | ...
 ```
 
-- **ParenthesizedExpression** (openCypher & Legacy)
+- **ParenthesizedExpression**
 
 ```
 New: ParenthesizedExpression = '(', WS, Expression, WS, ')' ;
@@ -382,7 +394,7 @@ New: ParenthesizedExpression = '(', WS, Expression, WS, ')' ;
 Old: parenthesizedExpression = '(', WS, Expression, WS, ')' ;
 ```
 
-- **NumberLiteral** (openCypher & Legacy)
+- **NumberLiteral**
 
 ```
 New: NumberLiteral = ... | IntegerLiteral
@@ -398,7 +410,7 @@ New: LegacyParameter = '{', WS, (SymbolicName | DecimalInteger), WS, '}' ;
 Old: n/a
 ```
 
-- **Parameter** (openCypher & Legacy)
+- **Parameter**
 
 ```
 New: Parameter = '$', (SymbolicName | DecimalInteger) ;
@@ -406,7 +418,7 @@ New: Parameter = '$', (SymbolicName | DecimalInteger) ;
 Old: Parameter = '{', WS, (SymbolicName | UnsignedDecimalInteger), WS, '}' ;
 ```
 
-- **IntegerLiteral** (openCypher & Legacy)
+- **IntegerLiteral**
 
 ```
 New: IntegerLiteral = ...
@@ -414,7 +426,7 @@ New: IntegerLiteral = ...
 Old: SignedIntegerLiteral = ...
 ```
 
-- **UnsignedIntegerLiteral** (openCypher & Legacy)
+- **UnsignedIntegerLiteral**
 
 ```
 New: n/a
@@ -422,7 +434,7 @@ New: n/a
 Old: UnsignedIntegerLiteral = UnsignedDecimalInteger ;
 ```
 
-- **HexInteger** (openCypher & Legacy)
+- **HexInteger**
 
 ```
 New: HexInteger = ('0',X), HexString ;
@@ -430,7 +442,7 @@ New: HexInteger = ('0',X), HexString ;
 Old: HexInteger = ['-'], UnsignedHexInteger ;
 ```
 
-- **DecimalInteger** (openCypher & Legacy)
+- **DecimalInteger**
 
 ```
 New: DecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
@@ -439,7 +451,7 @@ New: DecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [D
 Old: DecimalInteger = ['-'], UnsignedDecimalInteger ;
 ```
 
-- **OctalInteger** (openCypher & Legacy)
+- **OctalInteger**
 
 ```
 New: OctalInteger = '0', OctalString ;
@@ -447,7 +459,7 @@ New: OctalInteger = '0', OctalString ;
 Old: OctalInteger = ['-'], UnsignedOctalInteger ;
 ```
 
-- **UnsignedHexInteger** (openCypher & Legacy)
+- **UnsignedHexInteger**
 
 ```
 New: n/a
@@ -455,7 +467,7 @@ New: n/a
 Old: UnsignedHexInteger = ('0',X), HexString ;
 ```
 
-- **UnsignedDecimalInteger** (openCypher & Legacy)
+- **UnsignedDecimalInteger**
 
 ```
 New: n/a
@@ -464,7 +476,7 @@ Old: UnsignedDecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 
                             | '0'
 ```
 
-- **UnsignedOctalInteger** (openCypher & Legacy)
+- **UnsignedOctalInteger**
 
 ```
 New: n/a
@@ -472,7 +484,7 @@ New: n/a
 Old: UnsignedOctalInteger = '0', OctalString ;
 ```
 
-- **ExponentDecimalReal** (openCypher & Legacy)
+- **ExponentDecimalReal**
 
 ```
 New: ExponentDecimalReal = ({ Digit | '.' }- | DecimalInteger), ((E) | (E)), (DigitString | DecimalInteger) ;
@@ -480,7 +492,7 @@ New: ExponentDecimalReal = ({ Digit | '.' }- | DecimalInteger), ((E) | (E)), (Di
 Old: ExponentDecimalReal = ['-'], { Digit | '.' }-, ((E) | (E)), ['-'], DigitString ;
 ```
 
-- **RegularDecimalReal** (openCypher & Legacy)
+- **RegularDecimalReal**
 
 ```
 New: RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | DecimalInteger) ;
@@ -513,7 +525,7 @@ Old: Create = ((C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern)
             ;
 ```
     
-- **RelationshipDetail** (openCypher & Legacy)
+- **RelationshipDetail**
 
 ```
 New: RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*',  RangeLiteral],  [Properties], ']' ;
@@ -521,7 +533,7 @@ New: RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*',  Ra
 Old: RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', [RangeLiteral]], [Properties], ']' ;
 ```
 
-- **RangeLiteral** (openCypher & Legacy)
+- **RangeLiteral**
 
 ```
 New: RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntegerLiteral, WS]] ;

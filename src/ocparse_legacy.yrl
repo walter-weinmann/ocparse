@@ -102,8 +102,7 @@ Nonterminals
  number_literal
  order
  parameter
- % wwe ???
-% parenthesized_expression
+ parenthesized_expression
  partial_comparison_expression
  pattern
  pattern_element
@@ -836,7 +835,6 @@ node_label_list -> node_label                                                   
 
 node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
 
-range_literal ->                 '..'                                                           : {rangeLiteral, [],   "..", []}.
 range_literal ->                 '..' integer_literal                                           : {rangeLiteral, [],   "..", '$2'}.
 range_literal -> integer_literal                                                                : {rangeLiteral, '$1', [],   []}.
 range_literal -> integer_literal '..'                                                           : {rangeLiteral, '$1', "..", []}.
@@ -969,9 +967,9 @@ expression_3 -> expression_2 expression_3_addon_list                            
 expression_3_addon_list -> expression_3_addon_list expression_3_addon                           : '$1' ++ ['$2'].
 expression_3_addon_list -> expression_3_addon                                                   : ['$1'].
 
-expression_3_addon -> '['            '..'                ']'                                    : {"[",           [],   []}.
 expression_3_addon -> '['            '..' expression ']'                                        : {"[",           [],   '$3'}.
-expression_3_addon -> '[' expression '..'                ']'                                    : {"[",           '$2', []}.
+expression_3_addon -> '[' expression '..'            ']'                                        : {"[",           '$2', []}.
+expression_3_addon -> '[' expression '..' expression ']'                                        : {"[",           '$2', '$4'}.
 expression_3_addon -> '[' expression ']'                                                        : {"[",           '$2'}.
 expression_3_addon -> '=~' expression_2                                                         : {"=~",          '$2'}.
 expression_3_addon -> IN expression_2                                                           : {"in",          '$2'}.
@@ -992,7 +990,9 @@ expression_2_addon_list -> expression_2_addon_list expression_2_addon           
 expression_2_addon_list -> expression_2_addon                                                   : ['$1'].
 
 expression_2_addon -> node_labels                                                               : '$1'.
-% wwe ???
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
 % expression_2_addon -> property_lookup                                                           : '$1'.
 %% =====================================================================================================================
 
@@ -1018,8 +1018,7 @@ atom -> NONE '(' filter_expression ')'                                          
 atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single',  '$3'}}.
 atom -> relationships_pattern                                                                   : {atom, '$1'}.
 atom -> shortest_path_pattern                                                                   : {atom, '$1'}.
-% wwe ???
-% atom -> parenthesized_expression                                                                : {atom, '$1'}.
+atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> function_invocation                                                                     : {atom, '$1'}.
 atom -> variable                                                                                : {atom, '$1'}.
 
@@ -1033,8 +1032,7 @@ partial_comparison_expression -> '>'  expression_7                              
 partial_comparison_expression -> '<=' expression_7                                              : {partialComparisonExpression, '$2', "<="}.
 partial_comparison_expression -> '>=' expression_7                                              : {partialComparisonExpression, '$2', ">="}.
 
-% wwe ???
-% parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
+parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
 
 relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
 
