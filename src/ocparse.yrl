@@ -26,7 +26,6 @@ Nonterminals
  expression_12_addon
  expression_12_addon_list
  expression_2
- expression_2_addon
  expression_2_addon_list
  expression_3
  expression_3_addon
@@ -44,7 +43,6 @@ Nonterminals
  expression_7_addon
  expression_7_addon_list
  expression_8
- expression_8_addon
  expression_8_addon_list
  expression_9
  expression_9_addon
@@ -239,7 +237,8 @@ Left        300 '+' '-'.
 Left        310 '*' '/' '%'.
 
 Right       400 '^'.
-Right       410 expression_4_addon.
+Right       410 expression_4_addon.                                                             % Unary operator
+
 Nonassoc    500 '=~' '..'.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -265,8 +264,8 @@ regular_query -> single_query union_list                                        
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+union_list ->            union                                                                  :         ['$1'].
 union_list -> union_list union                                                                  : '$1' ++ ['$2'].
-union_list -> union                                                                             : ['$1'].
 %% =====================================================================================================================
 
 single_query -> clause_list                                                                     : {singleQuery, '$1'}.
@@ -274,8 +273,8 @@ single_query -> clause_list                                                     
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+clause_list ->             clause                                                               :         ['$1'].
 clause_list -> clause_list clause                                                               : '$1' ++ ['$2'].
-clause_list -> clause                                                                           : ['$1'].
 %% =====================================================================================================================
 
 union -> UNION     single_query                                                                 : {union, [],    '$2'}.
@@ -304,8 +303,8 @@ merge -> MERGE pattern_part merge_action_list                                   
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+merge_action_list ->                   merge_action                                             :         ['$1'].
 merge_action_list -> merge_action_list merge_action                                             : '$1' ++ ['$2'].
-merge_action_list -> merge_action                                                               : ['$1'].
 %% ---------------------------------------------------------------------------------------------------------------------
 
 merge_action -> ON MATCH  set                                                                   : {mergeAction, "match",  '$3'}.
@@ -410,8 +409,8 @@ pattern_part_commalist -> pattern_part                                          
 pattern_part_commalist -> pattern_part ',' pattern_part_commalist                               : ['$1' | '$3'].
 %% =====================================================================================================================
 
-pattern_part ->              anonymous_pattern_part                                             : {patternPart, [],   '$1'}.
 pattern_part -> variable '=' anonymous_pattern_part                                             : {patternPart, '$1', '$3'}.
+pattern_part ->              anonymous_pattern_part                                             : {patternPart, [],   '$1'}.
 
 anonymous_pattern_part -> pattern_element                                                       : {anonymousPatternPart, '$1'}.
 
@@ -422,8 +421,8 @@ pattern_element -> '(' pattern_element ')'                                      
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+pattern_element_chain_list ->                            pattern_element_chain                  :         ['$1'].
 pattern_element_chain_list -> pattern_element_chain_list pattern_element_chain                  : '$1' ++ ['$2'].
-pattern_element_chain_list -> pattern_element_chain                                             : ['$1'].
 %% =====================================================================================================================
 
 node_pattern -> '('                                 ')'                                         : {nodePattern, [],   [],   []}.
@@ -442,6 +441,7 @@ node_pattern -> '('                      parameter   ')'                        
 node_pattern -> '('          node_labels parameter   ')'                                        : {nodePattern, [],   '$2', '$3'}.
 node_pattern -> '(' variable             parameter   ')'                                        : {nodePattern, '$2', [],   '$3'}.
 node_pattern -> '(' variable node_labels parameter   ')'                                        : {nodePattern, '$2', '$3', '$4'}.
+
 % node_pattern -> '('                      properties ')'                                         : {nodePattern, [],   [],   '$2'}.
 % node_pattern -> '('          node_labels properties ')'                                         : {nodePattern, [],   '$2', '$3'}.
 % node_pattern -> '(' variable             properties ')'                                         : {nodePattern, '$2', [],   '$3'}.
@@ -451,12 +451,12 @@ node_pattern -> '(' variable node_labels parameter   ')'                        
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
 relationship_pattern -> '<-->'                                                                  : {relationshipPattern, "<-->, [],   []"}.
-relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
 relationship_pattern -> '<--'                                                                   : {relationshipPattern, "<--", [],   [] }.
+relationship_pattern ->  '-->'                                                                  : {relationshipPattern, "-->",  [],  []}.
+relationship_pattern ->  '--'                                                                   : {relationshipPattern, "--",  [],   []}.
+relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
 relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
-relationship_pattern ->                               '-->'                                     : {relationshipPattern, "-->",  [],  []}.
 relationship_pattern ->     '-' relationship_detail '-' '>'                                     : {relationshipPattern, "-",   '$2', "->"}.
-relationship_pattern ->     '--'                                                                : {relationshipPattern, "--",  [],   []}.
 relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
 
 relationship_detail -> '['                                                              ']'     : {relationshipDetail, [],   [],   [],   [],   []}.
@@ -542,10 +542,10 @@ relationship_types -> ':' rel_type_name rel_type_verticalbarlist                
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+rel_type_verticalbarlist ->                          '|' ':' rel_type_name                      : [{'$3', ":"}].
+rel_type_verticalbarlist ->                          '|'     rel_type_name                      : [{'$2', []}].
 rel_type_verticalbarlist -> rel_type_verticalbarlist '|' ':' rel_type_name                      : '$1' ++ [{'$4', ":"}].
 rel_type_verticalbarlist -> rel_type_verticalbarlist '|'     rel_type_name                      : '$1' ++ [{'$3', []}].
-rel_type_verticalbarlist -> '|' ':' rel_type_name                                               : [{'$3', ":"}].
-rel_type_verticalbarlist -> '|'     rel_type_name                                               : [{'$2', []}].
 %% =====================================================================================================================
 
 node_labels -> node_label_list                                                                  : {nodeLabels, '$1'}.
@@ -553,8 +553,8 @@ node_labels -> node_label_list                                                  
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+node_label_list ->                 node_label                                                   :         ['$1'].
 node_label_list -> node_label_list node_label                                                   : '$1' ++ ['$2'].
-node_label_list -> node_label                                                                   : ['$1'].
 %% =====================================================================================================================
 
 node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
@@ -576,8 +576,8 @@ expression_12 -> expression_11 expression_12_addon_list                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_12_addon_list ->                          expression_12_addon                        :         ['$1'].
 expression_12_addon_list -> expression_12_addon_list expression_12_addon                        : '$1' ++ ['$2'].
-expression_12_addon_list -> expression_12_addon                                                 : ['$1'].
 
 expression_12_addon -> OR expression_11                                                         : {"or", '$2'}.
 %% =====================================================================================================================
@@ -588,8 +588,8 @@ expression_11 -> expression_10 expression_11_addon_list                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_11_addon_list ->                          expression_11_addon                        :         ['$1'].
 expression_11_addon_list -> expression_11_addon_list expression_11_addon                        : '$1' ++ ['$2'].
-expression_11_addon_list -> expression_11_addon                                                 : ['$1'].
 
 expression_11_addon -> XOR expression_10                                                         : {"xor", '$2'}.
 %% =====================================================================================================================
@@ -600,8 +600,8 @@ expression_10 -> expression_9 expression_10_addon_list                          
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_10_addon_list ->                          expression_10_addon                        :         ['$1'].
 expression_10_addon_list -> expression_10_addon_list expression_10_addon                        : '$1' ++ ['$2'].
-expression_10_addon_list -> expression_10_addon                                                 : ['$1'].
 
 expression_10_addon -> AND expression_9                                                         : {"and", '$2'}.
 %% =====================================================================================================================
@@ -612,8 +612,8 @@ expression_9 -> expression_9_addon_list expression_8                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_9_addon_list ->                         expression_9_addon                           :         ['$1'].
 expression_9_addon_list -> expression_9_addon_list expression_9_addon                           : '$1' ++ ['$2'].
-expression_9_addon_list -> expression_9_addon                                                   : ['$1'].
 
 expression_9_addon -> NOT                                                                       : {"not"}.
 %% =====================================================================================================================
@@ -624,10 +624,8 @@ expression_8 -> expression_7 expression_8_addon_list                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_8_addon_list -> expression_8_addon_list expression_8_addon                           : '$1' ++ ['$2'].
-expression_8_addon_list -> expression_8_addon                                                   : ['$1'].
-
-expression_8_addon -> partial_comparison_expression                                             : '$1'.
+expression_8_addon_list ->                         partial_comparison_expression                :         ['$1'].
+expression_8_addon_list -> expression_8_addon_list partial_comparison_expression                : '$1' ++ ['$2'].
 %% =====================================================================================================================
 
 expression_7 -> expression_6                                                                    : {expression7, '$1', []}.
@@ -636,8 +634,8 @@ expression_7 -> expression_6 expression_7_addon_list                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_7_addon_list ->                         expression_7_addon                           :         ['$1'].
 expression_7_addon_list -> expression_7_addon_list expression_7_addon                           : '$1' ++ ['$2'].
-expression_7_addon_list -> expression_7_addon                                                   : ['$1'].
 
 expression_7_addon -> '+' expression_6                                                          : {"+", '$2'}.
 expression_7_addon -> '-' expression_6                                                          : {"-", '$2'}.
@@ -649,8 +647,8 @@ expression_6 -> expression_5 expression_6_addon_list                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_6_addon_list ->                         expression_6_addon                           :         ['$1'].
 expression_6_addon_list -> expression_6_addon_list expression_6_addon                           : '$1' ++ ['$2'].
-expression_6_addon_list -> expression_6_addon                                                   : ['$1'].
 
 expression_6_addon -> '*' expression_5                                                          : {"*", '$2'}.
 expression_6_addon -> '/' expression_5                                                          : {"/", '$2'}.
@@ -663,8 +661,8 @@ expression_5 -> expression_4 expression_5_addon_list                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_5_addon_list ->                         expression_5_addon                           :         ['$1'].
 expression_5_addon_list -> expression_5_addon_list expression_5_addon                           : '$1' ++ ['$2'].
-expression_5_addon_list -> expression_5_addon                                                   : ['$1'].
 
 expression_5_addon -> '^' expression_4                                                          : {"^", '$2'}.
 %% =====================================================================================================================
@@ -675,8 +673,8 @@ expression_4 -> expression_4_addon_list expression_3                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_4_addon_list ->                         expression_4_addon                           :         ['$1'].
 expression_4_addon_list -> expression_4_addon_list expression_4_addon                           : '$1' ++ ['$2'].
-expression_4_addon_list -> expression_4_addon                                                   : ['$1'].
 
 expression_4_addon -> '+'                                                                       : {"+"}.
 expression_4_addon -> '-'                                                                       : {"-"}.
@@ -688,20 +686,20 @@ expression_3 -> expression_2 expression_3_addon_list                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+expression_3_addon_list ->                         expression_3_addon                           :         ['$1'].
 expression_3_addon_list -> expression_3_addon_list expression_3_addon                           : '$1' ++ ['$2'].
-expression_3_addon_list -> expression_3_addon                                                   : ['$1'].
 
+expression_3_addon -> '[' expression ']'                                                        : {"[",           '$2'}.
 expression_3_addon -> '['            '..' expression ']'                                        : {"[",           [],   '$3'}.
 expression_3_addon -> '[' expression '..'            ']'                                        : {"[",           '$2', []}.
 expression_3_addon -> '[' expression '..' expression ']'                                        : {"[",           '$2', '$4'}.
-expression_3_addon -> '[' expression ']'                                                        : {"[",           '$2'}.
-expression_3_addon -> '=~' expression_2                                                         : {"=~",          '$2'}.
-expression_3_addon -> IN expression_2                                                           : {"in",          '$2'}.
+expression_3_addon -> '=~'        expression_2                                                  : {"=~",          '$2'}.
+expression_3_addon -> IN          expression_2                                                  : {"in",          '$2'}.
 expression_3_addon -> STARTS WITH expression_2                                                  : {"starts with", '$3'}.
-expression_3_addon -> ENDS WITH expression_2                                                    : {"ends with",   '$3'}.
-expression_3_addon -> CONTAINS expression_2                                                     : {"contains",    '$2'}.
-expression_3_addon -> IS NOT NULL                                                               : {"is not null"}.
+expression_3_addon -> ENDS WITH   expression_2                                                  : {"ends with",   '$3'}.
+expression_3_addon -> CONTAINS    expression_2                                                  : {"contains",    '$2'}.
 expression_3_addon -> IS NULL                                                                   : {"is null"}.
+expression_3_addon -> IS NOT NULL                                                               : {"is not null"}.
 %% =====================================================================================================================
 
 expression_2 -> atom                                                                            : {expression2, '$1', []}.
@@ -710,11 +708,10 @@ expression_2 -> atom expression_2_addon_list                                    
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_2_addon_list -> expression_2_addon_list expression_2_addon                           : '$1' ++ ['$2'].
-expression_2_addon_list -> expression_2_addon                                                   : ['$1'].
-
-expression_2_addon -> node_labels                                                               : '$1'.
-expression_2_addon -> property_lookup                                                           : '$1'.
+expression_2_addon_list ->                         node_labels                                  :         ['$1'].
+expression_2_addon_list ->                         property_lookup                              :         ['$1'].
+expression_2_addon_list -> expression_2_addon_list node_labels                                  : '$1' ++ ['$2'].
+expression_2_addon_list -> expression_2_addon_list property_lookup                              : '$1' ++ ['$2'].
 %% =====================================================================================================================
 
 atom -> number_literal                                                                          : {atom, '$1'}.
@@ -727,13 +724,13 @@ atom -> COUNT '(' '*' ')'                                                       
 atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> '[' expression_commalist ']'                                                            : {atom, '$2', "]"}.
-atom -> FILTER '(' filter_expression ')'                                                        : {atom, {'filter',  '$3'}}.
+atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
 atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
 atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
-atom -> ALL '(' filter_expression ')'                                                           : {atom, {'all',     '$3'}}.
-atom -> ANY '(' filter_expression ')'                                                           : {atom, {'any',     '$3'}}.
-atom -> NONE '(' filter_expression ')'                                                          : {atom, {'none',    '$3'}}.
-atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single',  '$3'}}.
+atom -> ALL     '(' filter_expression ')'                                                       : {atom, {'all',     '$3'}}.
+atom -> ANY     '(' filter_expression ')'                                                       : {atom, {'any',     '$3'}}.
+atom -> NONE    '(' filter_expression ')'                                                       : {atom, {'none',    '$3'}}.
+atom -> SINGLE  '(' filter_expression ')'                                                       : {atom, {'single',  '$3'}}.
 atom -> relationships_pattern                                                                   : {atom, '$1'}.
 atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> function_invocation                                                                     : {atom, '$1'}.
@@ -775,9 +772,9 @@ function_name -> symbolic_name                                                  
 list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.
 list_comprehension -> '[' filter_expression '|' expression ']'                                  : {listComprehension, '$2', '$4'}.
 
-property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', []}.
 property_lookup -> '.' property_key_name '?'                                                    : {propertyLookup, '$2', "?"}.
 property_lookup -> '.' property_key_name '!'                                                    : {propertyLookup, '$2', "!"}.
+property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2', []}.
 
 variable -> symbolic_name                                                                       : {variable, '$1'}.
 
@@ -805,8 +802,8 @@ property_expression -> atom property_lookup_list                                
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+property_lookup_list ->                      property_lookup                                    :         ['$1'].
 property_lookup_list -> property_lookup_list property_lookup                                    : '$1' ++ ['$2'].
-property_lookup_list -> property_lookup                                                         : ['$1'].
 %% =====================================================================================================================
 
 property_key_name -> symbolic_name                                                              : {propertyKeyName, '$1'}.

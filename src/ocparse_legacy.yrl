@@ -333,6 +333,7 @@ cypher -> query_options statement ';'                                           
 %% Helper definitions - test purposes.
 %% ---------------------------------------------------------------------------------------------------------------------
 % cypher -> expression                                                                            : '$1'.
+cypher -> atom                                                                                  : '$1'.
 %% =====================================================================================================================
 
 query_options -> any_cypher_option_list                                                         : {queryOptions, '$1'}.
@@ -999,11 +1000,9 @@ expression_2_addon -> node_labels                                               
 atom -> number_literal                                                                          : {atom, '$1'}.
 atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
 atom -> parameter                                                                               : {atom, '$1'}.
-atom -> legacy_parameter                                                                        : {atom, '$1'}.
 atom -> TRUE                                                                                    : {atom, {terminal, "true"}}.
 atom -> FALSE                                                                                   : {atom, {terminal, "false"}}.
 atom -> NULL                                                                                    : {atom, {terminal, "null"}}.
-atom -> case_expression                                                                         : {atom, '$1'}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, "count(*)"}}.
 atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
@@ -1011,16 +1010,18 @@ atom -> '[' expression_commalist ']'                                            
 atom -> FILTER '(' filter_expression ')'                                                        : {atom, {'filter',  '$3'}}.
 atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
 atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
-atom -> reduce                                                                                  : {atom, '$1'}.
 atom -> ALL '(' filter_expression ')'                                                           : {atom, {'all',     '$3'}}.
 atom -> ANY '(' filter_expression ')'                                                           : {atom, {'any',     '$3'}}.
 atom -> NONE '(' filter_expression ')'                                                          : {atom, {'none',    '$3'}}.
 atom -> SINGLE '(' filter_expression ')'                                                        : {atom, {'single',  '$3'}}.
 atom -> relationships_pattern                                                                   : {atom, '$1'}.
-atom -> shortest_path_pattern                                                                   : {atom, '$1'}.
 atom -> parenthesized_expression                                                                : {atom, '$1'}.
 atom -> function_invocation                                                                     : {atom, '$1'}.
 atom -> variable                                                                                : {atom, '$1'}.
+atom -> legacy_parameter                                                                        : {atom, '$1'}.
+atom -> case_expression                                                                         : {atom, '$1'}.
+atom -> reduce                                                                                  : {atom, '$1'}.
+atom -> shortest_path_pattern                                                                   : {atom, '$1'}.
 
 reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'                  : {reduce, '$3', '$5', '$7', '$9'}.
 
