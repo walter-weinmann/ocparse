@@ -17,13 +17,10 @@ Nonterminals
  expression
  expression_commalist
  expression_10
- expression_10_addon
  expression_10_addon_list
  expression_11
- expression_11_addon
  expression_11_addon_list
  expression_12
- expression_12_addon
  expression_12_addon_list
  expression_2
  expression_2_addon_list
@@ -34,18 +31,14 @@ Nonterminals
  expression_4_addon
  expression_4_addon_list
  expression_5
- expression_5_addon
  expression_5_addon_list
  expression_6
- expression_6_addon
  expression_6_addon_list
  expression_7
- expression_7_addon
  expression_7_addon_list
  expression_8
  expression_8_addon_list
  expression_9
- expression_9_addon
  expression_9_addon_list
  filter_expression
  function_invocation
@@ -576,10 +569,8 @@ expression_12 -> expression_11 expression_12_addon_list                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_12_addon_list ->                          expression_12_addon                        :         ['$1'].
-expression_12_addon_list -> expression_12_addon_list expression_12_addon                        : '$1' ++ ['$2'].
-
-expression_12_addon -> OR expression_11                                                         : {"or", '$2'}.
+expression_12_addon_list ->                          OR expression_11                           :         [{"or", '$2'}].
+expression_12_addon_list -> expression_12_addon_list OR expression_11                           : '$1' ++ [{"or", '$3'}].
 %% =====================================================================================================================
 
 expression_11 -> expression_10                                                                  : {expression11, '$1', []}.
@@ -588,10 +579,8 @@ expression_11 -> expression_10 expression_11_addon_list                         
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_11_addon_list ->                          expression_11_addon                        :         ['$1'].
-expression_11_addon_list -> expression_11_addon_list expression_11_addon                        : '$1' ++ ['$2'].
-
-expression_11_addon -> XOR expression_10                                                         : {"xor", '$2'}.
+expression_11_addon_list ->                          XOR expression_10                           :         [{"xor", '$2'}].
+expression_11_addon_list -> expression_11_addon_list XOR expression_10                           : '$1' ++ [{"xor", '$3'}].
 %% =====================================================================================================================
 
 expression_10 -> expression_9                                                                   : {expression10, '$1', []}.
@@ -600,10 +589,8 @@ expression_10 -> expression_9 expression_10_addon_list                          
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_10_addon_list ->                          expression_10_addon                        :         ['$1'].
-expression_10_addon_list -> expression_10_addon_list expression_10_addon                        : '$1' ++ ['$2'].
-
-expression_10_addon -> AND expression_9                                                         : {"and", '$2'}.
+expression_10_addon_list ->                          AND expression_9                           :         [{"and", '$2'}].
+expression_10_addon_list -> expression_10_addon_list AND expression_9                           : '$1' ++ [{"and", '$3'}].
 %% =====================================================================================================================
 
 expression_9 ->                         expression_8                                            : {expression9, '$1', []}.
@@ -612,10 +599,8 @@ expression_9 -> expression_9_addon_list expression_8                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_9_addon_list ->                         expression_9_addon                           :         ['$1'].
-expression_9_addon_list -> expression_9_addon_list expression_9_addon                           : '$1' ++ ['$2'].
-
-expression_9_addon -> NOT                                                                       : {"not"}.
+expression_9_addon_list ->                         NOT                                          :         [{"not"}].
+expression_9_addon_list -> expression_9_addon_list NOT                                          : '$1' ++ [{"not"}].
 %% =====================================================================================================================
 
 expression_8 -> expression_7                                                                    : {expression8, '$1', []}.
@@ -634,11 +619,10 @@ expression_7 -> expression_6 expression_7_addon_list                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_7_addon_list ->                         expression_7_addon                           :         ['$1'].
-expression_7_addon_list -> expression_7_addon_list expression_7_addon                           : '$1' ++ ['$2'].
-
-expression_7_addon -> '+' expression_6                                                          : {"+", '$2'}.
-expression_7_addon -> '-' expression_6                                                          : {"-", '$2'}.
+expression_7_addon_list ->                         '+' expression_6                             :         [{"+", '$2'}].
+expression_7_addon_list ->                         '-' expression_6                             :         [{"-", '$2'}].
+expression_7_addon_list -> expression_7_addon_list '+' expression_6                             : '$1' ++ [{"+", '$3'}].
+expression_7_addon_list -> expression_7_addon_list '-' expression_6                             : '$1' ++ [{"-", '$3'}].
 %% =====================================================================================================================
 
 expression_6 -> expression_5                                                                    : {expression6, '$1', []}.
@@ -647,12 +631,12 @@ expression_6 -> expression_5 expression_6_addon_list                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_6_addon_list ->                         expression_6_addon                           :         ['$1'].
-expression_6_addon_list -> expression_6_addon_list expression_6_addon                           : '$1' ++ ['$2'].
-
-expression_6_addon -> '*' expression_5                                                          : {"*", '$2'}.
-expression_6_addon -> '/' expression_5                                                          : {"/", '$2'}.
-expression_6_addon -> '%' expression_5                                                          : {"%", '$2'}.
+expression_6_addon_list ->                         '*' expression_5                             :         [{"*", '$2'}].
+expression_6_addon_list ->                         '/' expression_5                             :         [{"/", '$2'}].
+expression_6_addon_list ->                         '%' expression_5                             :         [{"%", '$2'}].
+expression_6_addon_list -> expression_6_addon_list '*' expression_5                             : '$1' ++ [{"*", '$3'}].
+expression_6_addon_list -> expression_6_addon_list '/' expression_5                             : '$1' ++ [{"/", '$3'}].
+expression_6_addon_list -> expression_6_addon_list '%' expression_5                             : '$1' ++ [{"%", '$3'}].
 %% =====================================================================================================================
 
 expression_5 -> expression_4                                                                    : {expression5, '$1', []}.
@@ -661,10 +645,8 @@ expression_5 -> expression_4 expression_5_addon_list                            
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-expression_5_addon_list ->                         expression_5_addon                           :         ['$1'].
-expression_5_addon_list -> expression_5_addon_list expression_5_addon                           : '$1' ++ ['$2'].
-
-expression_5_addon -> '^' expression_4                                                          : {"^", '$2'}.
+expression_5_addon_list ->                         '^' expression_4                             :         [{"^", '$2'}].
+expression_5_addon_list -> expression_5_addon_list '^' expression_4                             : '$1' ++ [{"^", '$3'}].
 %% =====================================================================================================================
 
 expression_4 ->                         expression_3                                            : {expression4, '$1', [] }.
