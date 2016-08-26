@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/walter-weinmann/ocparse.svg?branch=master)](https://travis-ci.org/walter-weinmann/ocparse)
 
-**ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang.  **ocparse** is closely aligned to the [openCypher](https://github.com/opencypher/openCypher) project and in future will be adapted on a regular basis as the [openCypher](https://github.com/opencypher/openCypher) project evolves. The [openCypher project](http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](https://neo4j.com/docs/developer-manual/current/#cypher-query-lang). And, with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the project provides the basis for the definition of the LALR grammar. 
+**ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang.  **ocparse** is closely aligned to the [openCypher](https://github.com/opencypher/openCypher) project and in future will be adapted on a regular basis as the [openCypher](https://github.com/opencypher/openCypher) project evolves. The [openCypher project](http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](https://neo4j.com/docs/developer-manual/current/#cypher-query-lang). And, with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the project provides the basis for the definition of the LALR grammar.
 
 ### Legacy version:
 
@@ -13,8 +13,8 @@ Not all grammar rules of Cypher the language will be standardised in their curre
 ### Example code:
 
 ```
-MATCH (m:Movie) 
-WHERE m.title = 'The Matrix' 
+MATCH (m:Movie)
+WHERE m.title = 'The Matrix'
 RETURN m
 ```
 
@@ -24,7 +24,7 @@ RETURN m
 1> {ok, {ParseTree, Tokens}} = ocparse:parsetree_with_tokens("MATCH (m:Movie) WHERE m.title = 'The Matrix' RETURN m").
 
 {ok,
- {{cypher,{},
+ {{cypher,
    {statement,
     {query,
      {regularQuery,
@@ -32,15 +32,16 @@ RETURN m
        [{clause,
          {match,[],
           {pattern,
-           [{patternPart,
+           [{patternPart,[],
              {anonymousPatternPart,{patternElement,{...},...}}}]},
-          [],
-          {where,{expression,{expression12,{expression11,...},[]}}}}},
+          {where,
+           {expression,
+            {expression12,{expression11,{expression10,...},[]},[]}}}}},
         {clause,
          {return,[],
           {returnBody,
-           {returnItems,[],[{returnItem,{...}}]},
-           {},{},{}}}}]},
+           {returnItems,[],[],[{returnItem,{...},...}]},
+           [],[],[]}}}]},
       []}}},
    []},
   [{'MATCH',1},
@@ -57,14 +58,14 @@ RETURN m
    {'STRING_LITERAL',1,"'The Matrix'"},
    {'RETURN',1},
    {'UNESCAPED_SYMBOLIC_NAME',1,"m"}]}}
-````   
+````
 
 ### Access the parse tree of the example code:
 
 ```erlang
 2> ParseTree.
 
-{cypher,{},
+{cypher,
  {statement,
   {query,
    {regularQuery,
@@ -72,26 +73,25 @@ RETURN m
      [{clause,
        {match,[],
         {pattern,
-         [{patternPart,
+         [{patternPart,[],
            {anonymousPatternPart,
             {patternElement,
              {nodePattern,{variable,...},{...},...},
              []}}}]},
-        [],
         {where,
          {expression,
           {expression12,
-           {expression11,{expression10,{...},...},[]},
+           {expression11,{expression10,{expression9,{...},...},[]},[]},
            []}}}}},
       {clause,
        {return,[],
         {returnBody,
-         {returnItems,[],
-          [{returnItem,{expression,{expression12,...}}}]},
-         {},{},{}}}}]},
+         {returnItems,[],[],
+          [{returnItem,{expression,{expression12,...}},[]}]},
+         [],[],[]}}}]},
     []}}},
  []}
-```    
+```
 
 ### Access the token list of the example code:
 
@@ -112,22 +112,22 @@ RETURN m
  {'STRING_LITERAL',1,"'The Matrix'"},
  {'RETURN',1},
  {'UNESCAPED_SYMBOLIC_NAME',1,"m"}]
-``` 
+```
 
 ### Compile the code from a parse tree:
 
 ```erlang
 4> ocparse:parsetree_to_string(ParseTree).
 
-<<"match (m:Movie) where m .title = 'The Matrix' return m">>
-``` 
+<<"match (m :Movie) where m .title = 'The Matrix' return m">>
+```
 
 ### Complete parse tree:
 
 The output of the parse tree in the Erlang shell is shortened (cause not known). The complete parse tree of the example code looks as follows:
 
 ```erlang
-{cypher,{},
+{cypher,
  {statement,
   {query,
    {regularQuery,
@@ -135,16 +135,15 @@ The output of the parse tree in the Erlang shell is shortened (cause not known).
      [{clause,
        {match,[],
         {pattern,
-         [{patternPart,
+         [{patternPart,[],
            {anonymousPatternPart,
             {patternElement,
              {nodePattern,
               {variable,{symbolicName,"m"}},
               {nodeLabels,
                [{nodeLabel,{labelName,{symbolicName,"Movie"}}}]},
-              {}},
+              []},
              []}}}]},
-        [],
         {where,
          {expression,
           {expression12,
@@ -189,7 +188,7 @@ The output of the parse tree in the Erlang shell is shortened (cause not known).
       {clause,
        {return,[],
         {returnBody,
-         {returnItems,[],
+         {returnItems,[],[],
           [{returnItem,
             {expression,
              {expression12,
@@ -214,11 +213,12 @@ The output of the parse tree in the Erlang shell is shortened (cause not known).
                  []},
                 []},
                []},
-              []}}}]},
-         {},{},{}}}}]},
+              []}},
+            []}]},
+         [],[],[]}}}]},
     []}}},
  []}
-``` 
+```
 
 ## 2. Documentation
 
@@ -229,6 +229,10 @@ The documentation for **ocparse** is available here: [Wiki](https://github.com/w
 ### Comment
 
 The number of block comments (`/* ... */`) is limted to one per line.
+
+### Expression3
+
+The variant `[..]` is not supported.
 
 ### ParenthesizedExpression
 
@@ -243,12 +247,12 @@ The number of block comments (`/* ... */`) is limted to one per line.
 The following tokens may not be used as `SymbolicName`:
 
 ```
- ALL, AND, ANY, AS, ASC, ASCENDING, BY, CONTAINS, COUNT, CREATE, DELETE, DESC, DESCENDING, 
- DETACH, DIGIT_STRING, DISTINCT, ENDS, ESCAPED_SYMBOLIC_NAME, EXISTS, EXPONENT_DECIMAL_REAL, 
- EXTRACT, FALSE, FILTER, HEX_INTEGER, IN, IS, LIMIT, MATCH, MERGE, NONE, NOT, NULL, ON, 
- OPTIONAL, OR, ORDER, REMOVE, RETURN, SET, SIGNED_DECIMAL_INTEGER, SIGNED_OCTAL_INTEGER, 
- SIGNED_REGULAR_DECIMAL_REAL, SINGLE, SKIP, STARTS, STRING_LITERAL, TRUE, UNESCAPED_SYMBOLIC_NAME, 
- UNION, UNSIGNED_DECIMAL_INTEGER, UNSIGNED_OCTAL_INTEGER, UNSIGNED_REGULAR_DECIMAL_REAL, UNWIND, 
+ ALL, AND, ANY, AS, ASC, ASCENDING, BY, CONTAINS, COUNT, CREATE, DELETE, DESC, DESCENDING,
+ DETACH, DIGIT_STRING, DISTINCT, ENDS, ESCAPED_SYMBOLIC_NAME, EXISTS, EXPONENT_DECIMAL_REAL,
+ EXTRACT, FALSE, FILTER, HEX_INTEGER, IN, IS, LIMIT, MATCH, MERGE, NONE, NOT, NULL, ON,
+ OPTIONAL, OR, ORDER, REMOVE, RETURN, SET, SIGNED_DECIMAL_INTEGER, SIGNED_OCTAL_INTEGER,
+ SIGNED_REGULAR_DECIMAL_REAL, SINGLE, SKIP, STARTS, STRING_LITERAL, TRUE, UNESCAPED_SYMBOLIC_NAME,
+ UNION, UNSIGNED_DECIMAL_INTEGER, UNSIGNED_OCTAL_INTEGER, UNSIGNED_REGULAR_DECIMAL_REAL, UNWIND,
  WHERE, WITH, XOR
 ```
 
@@ -257,8 +261,8 @@ An exception is the use of the tokens `COUNT` and `EXISTS` as `FunctionName`.
 In the legacy version of the parser the following tokens are also excluded as `SymbolicName`:
 
 ```
- ALLSHORTESTPATHS, ASSERT, CASE, COMMIT, CONSTRAINT, CSV, CYPHER, DROP, ELSE, END, EXPLAIN, 
- FIELDTERMINATOR, FOREACH, FROM, HEADERS, INDEX, JOIN, LOAD, NODE, PERIODIC, PROFILE, REDUCE, 
+ ALLSHORTESTPATHS, ASSERT, CASE, COMMIT, CONSTRAINT, CSV, CYPHER, DROP, ELSE, END, EXPLAIN,
+ FIELDTERMINATOR, FOREACH, FROM, HEADERS, INDEX, JOIN, LOAD, NODE, PERIODIC, PROFILE, REDUCE,
  REL, RELATIONSHIP, SCAN, SHORTESTPATH, START, THEN, UNIQUE, USING, WHEN
 ```
 
@@ -410,7 +414,7 @@ Old: CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), Expr
 
 ```
 New: NumberLiteral = ... | IntegerLiteral
-                   
+
 Old: NumberLiteral = ... | SignedIntegerLiteral
 ```
 
@@ -426,7 +430,7 @@ Old: n/a
 
 ```
 New: Parameter = '$', (SymbolicName | DecimalInteger) ;
-                   
+
 Old: Parameter = '{', WS, (SymbolicName | UnsignedDecimalInteger), WS, '}' ;
 ```
 
@@ -434,7 +438,7 @@ Old: Parameter = '{', WS, (SymbolicName | UnsignedDecimalInteger), WS, '}' ;
 
 ```
 New: IntegerLiteral = ...
-                   
+
 Old: SignedIntegerLiteral = ...
 ```
 
@@ -442,7 +446,7 @@ Old: SignedIntegerLiteral = ...
 
 ```
 New: n/a
-                   
+
 Old: UnsignedIntegerLiteral = UnsignedDecimalInteger ;
 ```
 
@@ -533,18 +537,18 @@ New: Clause = ... Create CreateUnique Set ... ;
 
 Old: Clause = ... Create Set ... ;
 ```
-    
+
 - **CreateUnique** (Legacy)
 
 ```
 New: Create = (C,R,E,A,T,E), WS, Pattern ;
      CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern ;
-     
+
 Old: Create = ((C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern)
-            | ((C,R,E,A,T,E), WS, Pattern) 
+            | ((C,R,E,A,T,E), WS, Pattern)
             ;
 ```
-    
+
 - **RelationshipDetail**
 
 ```

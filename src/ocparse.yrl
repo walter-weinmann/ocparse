@@ -198,6 +198,7 @@ Terminals
  '<--'
  '-->'
  '--'
+ '[..]'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -615,7 +616,6 @@ expression_3_addon_list ->                         expression_3_addon           
 expression_3_addon_list -> expression_3_addon_list expression_3_addon                           : '$1' ++ ['$2'].
 
 expression_3_addon -> '[' expression ']'                                                        : {"[",           '$2'}.
-expression_3_addon -> '['            '..'            ']'                                        : {"[",           [],   []}.
 expression_3_addon -> '['            '..' expression ']'                                        : {"[",           [],   '$3'}.
 expression_3_addon -> '[' expression '..'            ']'                                        : {"[",           '$2', []}.
 expression_3_addon -> '[' expression '..' expression ']'                                        : {"[",           '$2', '$4'}.

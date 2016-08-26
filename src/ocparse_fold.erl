@@ -23,19 +23,6 @@ fold(FType, Fun, Ctx, Lvl, {"[" = Type, {expression, _} = Value} = ST) ->
     RT = {Type ++ ValueNew ++ "]", NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-fold(FType, Fun, Ctx, _Lvl, {"[", [], []} = ST) ->
-    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    NewCtx1 = case FType of
-                  top_down -> NewCtx;
-                  bottom_up -> Fun(ST, NewCtx)
-              end,
-    RT = {"[..]", NewCtx1},
-    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
-    RT;
 fold(FType, Fun, Ctx, Lvl, {"[", [], {expression, _} = Value} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of

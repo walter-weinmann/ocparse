@@ -2528,7 +2528,6 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                        end,
     Expression3_Curr = sort_list_random(sets:to_list(sets:from_list(
         Expression3_Prev ++
-            ["[..]"] ++
             [lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                 case rand:uniform(?PRIME) rem 23 of
                     1 -> ?WS ++ "[" ++
