@@ -139,7 +139,6 @@ test_cypher(TestGroup, Test, Logs) ->
                 ParseTree = NPTree
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_cypher/3 ===> ~n NPTree: ~p~n NToks: ~p~n", [NPTree, NToks]),
                     ?D_("~n > ~p", [NPTree]),
                     ?D_("~n > ~p", [Tokens]),
                     ?D_("~n > ~p", [NToks])

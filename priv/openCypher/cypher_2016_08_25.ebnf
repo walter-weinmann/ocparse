@@ -121,7 +121,7 @@ RelationshipPattern = (LeftArrowHead, WS, Dash, WS, [RelationshipDetail], WS, Da
                     | (Dash, WS, [RelationshipDetail], WS, Dash)
                     ;
 
-RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', RangeLiteral], [Properties], ']' ;
+RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], [RangeLiteral], [Properties], ']' ;
 
 Properties = MapLiteral
            | Parameter
@@ -133,7 +133,7 @@ NodeLabels = NodeLabel, { WS, NodeLabel } ;
 
 NodeLabel = ':', LabelName ;
 
-RangeLiteral = WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
+RangeLiteral = '*', WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
 
 LabelName = SymbolicName ;
 
@@ -202,7 +202,7 @@ FilterExpression = IdInColl, [WS, Where] ;
 
 IdInColl = Variable, SP, (I,N), SP, Expression ;
 
-FunctionInvocation = FunctionName, WS, '(', WS, [D,I,S,T,I,N,C,T], [Expression, { ',', WS, Expression }], WS, ')' ;
+FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
 
 FunctionName = SymbolicName ;
 

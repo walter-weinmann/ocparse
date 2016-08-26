@@ -230,14 +230,6 @@ The documentation for **ocparse** is available here: [Wiki](https://github.com/w
 
 The number of block comments (`/* ... */`) is limted to one per line.
 
-### Expression3
-
-The variant `[..]` is not supported.
-
-### RangeLiteral
-
-A `RangeLiteral` without `IntegerLiteral` is not supported.
-
 ### ParenthesizedExpression
 
 `ParenthesizedExpression` is not supported due to a conflict with `NodePattern`.
@@ -290,7 +282,7 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ### Version 1.2.0
 
-Release Date: 01.08.2016 - Grammar as of 31.07.2016
+Release Date: 01.08.2016 - Grammar as of 25.08.2016
 
 #### Grammar changes
 
@@ -310,7 +302,6 @@ New: PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T),
 Old: PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP, SignedIntegerLiteral] ;
 ```
 
-
 - **IdentifiedIndexLookup** (Legacy)
 
 ```
@@ -318,7 +309,6 @@ New: IdentifiedIndexLookup = ':', SymbolicName, '(', SymbolicName, '=', (StringL
 
 Old: IdentifiedIndexLookup = ':', SymbolicName, '(', SymbolicName, '=', (StringLiteral | Parameter), ')' ;
 ```
-
 
 - **IndexQuery** (Legacy)
 
@@ -328,7 +318,6 @@ New: IndexQuery = ':', SymbolicName, '(', (StringLiteral | LegacyParameter), ')'
 Old: IndexQuery = ':', SymbolicName, '(', (StringLiteral | Parameter), ')' ;
 ```
 
-
 - **IdLookup** (Legacy)
 
 ```
@@ -336,7 +325,6 @@ New: IdLookup = '(', (LiteralIds | LegacyParameter | '*'), ')' ;
 
 Old: IdLookup = '(', (LiteralIds | Parameter | '*'), ')' ;
 ```
-
 
 - **LiteralIds** (Legacy)
 
@@ -354,6 +342,14 @@ New: Pattern = PatternPart, { WS, ',', WS, PatternPart } ;
 Old: Pattern = PatternPart, { ',', PatternPart } ;
 ```
 
+- **RelationshipDetail**
+
+```
+New: RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], [RangeLiteral], [Properties], ']' ;
+
+Old: RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', RangeLiteral], [Properties], ']' ;
+```
+
 - **Properties** (Legacy)
 
 ```
@@ -365,7 +361,7 @@ Old: Properties = MapLiteral | Parameter ;
 - **RangeLiteral**
 
 ```
-New: RangeLiteral = WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
+New: RangeLiteral = '*', WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
 
 Old: RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntegerLiteral, WS]] ;
 ```
@@ -392,6 +388,22 @@ Old: Atom = ... | parenthesizedExpression | ...
 New: ParenthesizedExpression = '(', WS, Expression, WS, ')' ;
 
 Old: parenthesizedExpression = '(', WS, Expression, WS, ')' ;
+```
+
+- **FunctionInvocation**
+
+```
+New: FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
+
+Old: FunctionInvocation = FunctionName, WS, '(', WS, [D,I,S,T,I,N,C,T], [Expression, { ',', WS, Expression }], WS, ')' ;
+```
+
+- **CaseExpression** (Legacy)
+
+```
+New: CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), WS, Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
+
+Old: CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
 ```
 
 - **NumberLiteral**
@@ -499,6 +511,14 @@ New: RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | Deci
 
 Old: RegularDecimalReal = ['-'], { Digit }, '.', DigitString ;
 ```
+
+#### New features
+
+1. Support of the legacy grammar.
+
+#### New features
+
+1. Support of the legacy grammar.
 
 ### Version 1.1.1
 

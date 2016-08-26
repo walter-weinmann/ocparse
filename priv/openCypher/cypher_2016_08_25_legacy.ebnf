@@ -225,7 +225,7 @@ RelationshipPattern = (LeftArrowHead, WS, Dash, WS, [RelationshipDetail], WS, Da
                     | (Dash, WS, [RelationshipDetail], WS, Dash)
                     ;
 
-RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', RangeLiteral], [Properties], ']' ;
+RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], [RangeLiteral], [Properties], ']' ;
 
 Properties = MapLiteral
            | Parameter
@@ -240,7 +240,7 @@ NodeLabels = NodeLabel, { WS, NodeLabel } ;
 
 NodeLabel = ':', LabelName ;
 
-RangeLiteral = WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
+RangeLiteral = '*', WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
 
 LabelName = SymbolicName ;
 
@@ -315,7 +315,7 @@ FilterExpression = IdInColl, [WS, Where] ;
 
 IdInColl = Variable, SP, (I,N), SP, Expression ;
 
-FunctionInvocation = FunctionName, WS, '(', WS, [D,I,S,T,I,N,C,T], [Expression, { ',', WS, Expression }], WS, ')' ;
+FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
 
 FunctionName = SymbolicName ;
 
@@ -323,7 +323,7 @@ ListComprehension = '[', FilterExpression, [WS, '|', Expression], ']' ;
 
 PropertyLookup = WS, '.', WS, ((PropertyKeyName, ('?' | '!')) | PropertyKeyName) ;
 
-CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
+CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), WS, Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
 
 CaseAlternatives = (W,H,E,N), WS, Expression, WS, (T,H,E,N), WS, Expression ;
 

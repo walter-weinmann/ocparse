@@ -123,12 +123,17 @@ generate() ->
 
     create_code(false),
 
+    % generic common tests
     ok = file_create_ct_all(false,
-        ?ALL_CLAUSE ++
+        ?ALL_CLAUSE),
+
+    % performance common tests
+    ok = file_create_ct_all(false,
         [cypher,
             query,
             statement]),
 
+    % generic eunit tests
     ok = file_create_eunit_all(false,
         ?ALL_CLAUSE ++
         [atom,
@@ -142,14 +147,19 @@ generate() ->
 
     create_code(true),
 
+    % generic common tests
     ok = file_create_ct_all(true,
         ?ALL_CLAUSE_LEGACY ++
-            ?ALL_COMMAND ++
-            [command,
-                cypher,
-                query,
-                statement]),
+        ?ALL_COMMAND),
 
+    % performance common tests
+    ok = file_create_ct_all(true,
+        [command,
+            cypher,
+            query,
+            statement]),
+
+    % generic eunit tests
     ok = file_create_eunit_all(true,
         ?ALL_CLAUSE_LEGACY ++
             ?ALL_COMMAND ++
@@ -458,19 +468,21 @@ create_code(Legacy) ->
     PropertyKeyName = SymbolicName,
     PropertyKeyName_Length = length(PropertyKeyName),
     insert_table(Legacy, property_key_name, PropertyKeyName),
-% ---------------------------------------------------------------------------
-% RangeLiteral = WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
-% ---------------------------------------------------------------------------
-    RangeLiteral = sort_list_random([
-            ?SP ++ case rand:uniform(?PRIME) rem 4 of
-                       1 -> IL ++ ?WS ++ ".." ++ ?WS ++
-                           lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++ ?WS;
-                       2 -> IL ++ ?WS ++ ".." ++ ?WS;
-                       3 -> IL ++ ?WS;
-                       _ -> ".." ++ ?WS ++ IL ++ ?WS
-                   end
-        || IL <- IntegerLiteral
-    ]),
+% --------------------------------------------------------------------------------
+% RangeLiteral = '*', WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
+% --------------------------------------------------------------------------------
+    RangeLiteral = sort_list_random(
+        ["*", "*.."] ++
+        [
+                ?SP ++ case rand:uniform(?PRIME) rem 4 of
+                           1 -> "*" ++ IL ++ ?WS ++ ".." ++ ?WS ++
+                               lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++ ?WS;
+                           2 -> "*" ++ IL ++ ?WS ++ ".." ++ ?WS;
+                           3 -> "*" ++ IL ++ ?WS;
+                           _ -> "*" ++ ".." ++ ?WS ++ IL ++ ?WS
+                       end
+            || IL <- IntegerLiteral
+        ]),
     RangeLiteral_Length = length(RangeLiteral),
     insert_table(Legacy, range_literal, RangeLiteral),
 % ----------------------------
@@ -874,25 +886,25 @@ create_code(Legacy) ->
                        end,
     CaseAlternatives_Length = length(CaseAlternatives),
     insert_table(Legacy, case_alternatives, CaseAlternatives),
-% -------------------------------------------------------------------------------------------------------------------
-% FunctionInvocation = FunctionName, WS, '(', WS, [D,I,S,T,I,N,C,T], [Expression, { ',', WS, Expression }], WS, ')' ;
-% -------------------------------------------------------------------------------------------------------------------
+% -------------------------------------------------------------------------------------------------------------------------
+% FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
+% -------------------------------------------------------------------------------------------------------------------------
     FunctionInvocation = sort_list_random([
             lists:nth(rand:uniform(FunctionName_Length), FunctionName) ++ ?WS ++
             "(" ++ ?WS ++
             case rand:uniform(?PRIME) rem 6 of
                 1 -> "Distinct" ++ ?SP ++
                     lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                    "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
+                    "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS;
                 2 -> "Distinct" ++ ?SP ++
                     lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
                 3 -> "Distinct";
                 4 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                    "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
+                    "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS;
                 5 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
                 _ -> []
             end ++
-            ?WS ++ ")"
+            ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, function_invocation, FunctionInvocation),
@@ -962,15 +974,15 @@ create_code(Legacy) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % --------------------------------------------------------------------------------------------------------------------------------------------------------------
-% CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
+% CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), WS, Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
 % --------------------------------------------------------------------------------------------------------------------------------------------------------------
 % wwe
-% CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), Expression, { WS, CaseAlternatives }-)), [SP, (E,L,S,E), SP, Expression], WS, (E,N,D) ;
+% CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), WS, Expression, { WS, CaseAlternatives }-)), [SP, (E,L,S,E), SP, Expression], WS, (E,N,D) ;
 % --------------------------------------------------------------------------------------------------------------------------------------------------------------
     CaseExpression_Targ = CaseAlternatives_Length,
     CaseExpression = case Legacy of
                          true -> sort_list_random([
-                                 "Case" ++
+                                 "Case" ++ ?WS ++
                                  case rand:uniform(?PRIME) rem 8 of
                                      1 ->
                                          ?SP ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
@@ -1104,9 +1116,9 @@ create_code(Legacy) ->
     ]),
     NodePattern_Length = length(NodePattern),
     insert_table(Legacy, node_pattern, NodePattern),
-% ----------------------------------------------------------------------------------------------------------
-% RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', RangeLiteral], [Properties], ']' ;
-% ----------------------------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------------------------
+% RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], [RangeLiteral], [Properties], ']' ;
+% -----------------------------------------------------------------------------------------------------
     RelationshipDetail = sort_list_random(
         [
             "[?]"
@@ -1117,12 +1129,12 @@ create_code(Legacy) ->
                     1 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         "?" ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     2 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         "?" ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
                     3 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         "?" ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
@@ -1132,11 +1144,11 @@ create_code(Legacy) ->
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes);
                     5 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         "?" ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     6 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         "?" ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
                     7 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         "?" ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
@@ -1144,55 +1156,55 @@ create_code(Legacy) ->
                     "?";
                     9 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     10 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
                     11 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     12 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                     lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes);
                     13 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     14 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
+                    lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
                     15 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
                     lists:nth(rand:uniform(Properties_Length), Properties);
                     16 -> lists:nth(rand:uniform(Variable_Length), Variable);
                     17 -> "?" ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     18 -> "?" ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
                     19 -> "?" ++
                         lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     20 -> "?" ++
                     lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes);
                     21 -> "?" ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     22 -> "?" ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
+                    lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
                     23 -> "?" ++
                     lists:nth(rand:uniform(Properties_Length), Properties);
                     24 -> "?";
                     25 -> lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
                         lists:nth(rand:uniform(Properties_Length), Properties);
                     26 -> lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
-                        "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
+                    lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
                     27 -> lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++
                     lists:nth(rand:uniform(Properties_Length), Properties);
                     28 -> lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes);
-                    29 -> "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
-                        lists:nth(rand:uniform(Properties_Length), Properties);
-                    30 -> "*" ++ lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
+                    29 -> lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                    lists:nth(rand:uniform(Properties_Length), Properties);
+                    30 -> lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral);
                     31 -> lists:nth(rand:uniform(Properties_Length), Properties);
                     _ -> []
                 end ++
@@ -1470,8 +1482,8 @@ create_code(Legacy) ->
                 _ -> []
             end ++
             RelationshipsPattern ++
-            % wwe ???
-            % ParenthesizedExpression ++
+% wwe ???
+% ParenthesizedExpression ++
             FunctionInvocation),
     insert_table(Legacy, atom, Atom),
     Atom_Length = length(Atom),
@@ -2516,90 +2528,91 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                        end,
     Expression3_Curr = sort_list_random(sets:to_list(sets:from_list(
         Expression3_Prev ++
-        [lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-            case rand:uniform(?PRIME) rem 23 of
-                1 -> ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]" ++
-                    ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]";
-                2 -> ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ".." ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]" ++
-                    ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ".." ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]";
-                3 -> ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ".." ++ "]" ++
-                    ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ".." ++ "]";
-                4 -> ?WS ++ "[" ++ ".." ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]" ++
-                    ?WS ++ "[" ++ ".." ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]";
-                5 -> ?SP ++ "=~" ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ?SP ++ "=~" ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                6 -> ?SP ++ "In" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ?SP ++ "In" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                7 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                8 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                9 -> ?SP ++ "Contains" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ?SP ++ "Contains" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                10 -> ?SP ++ "Is" ++ ?SP ++ "Null" ++
-                    ?SP ++ "Is" ++ ?SP ++ "Null";
-                11 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null" ++
-                    ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
-                12 -> ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]";
-                13 -> ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ".." ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]";
-                14 -> ?WS ++ "[" ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ".." ++ "]";
-                15 -> ?WS ++ "[" ++
-                    ".." ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    "]";
-                16 -> ?SP ++ "=~" ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                17 -> ?SP ++ "In" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                18 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                19 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                20 -> ?SP ++ "Contains" ++ ?SP ++ ?WS ++
-                    lists:nth(rand:uniform(Expression2_Length), Expression2);
-                21 -> ?SP ++ "Is" ++ ?SP ++ "Null";
-                22 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
-                _ -> []
-            end
-            || _ <- lists:seq(1, Max)
-        ]
+            ["[..]"] ++
+            [lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                case rand:uniform(?PRIME) rem 23 of
+                    1 -> ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]" ++
+                        ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]";
+                    2 -> ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ".." ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]" ++
+                        ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ".." ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]";
+                    3 -> ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ".." ++ "]" ++
+                        ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ".." ++ "]";
+                    4 -> ?WS ++ "[" ++ ".." ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]" ++
+                        ?WS ++ "[" ++ ".." ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]";
+                    5 -> ?SP ++ "=~" ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ?SP ++ "=~" ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    6 -> ?SP ++ "In" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ?SP ++ "In" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    7 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    8 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    9 -> ?SP ++ "Contains" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ?SP ++ "Contains" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    10 -> ?SP ++ "Is" ++ ?SP ++ "Null" ++
+                        ?SP ++ "Is" ++ ?SP ++ "Null";
+                    11 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null" ++
+                        ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
+                    12 -> ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]";
+                    13 -> ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ".." ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]";
+                    14 -> ?WS ++ "[" ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        ".." ++ "]";
+                    15 -> ?WS ++ "[" ++
+                        ".." ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                        "]";
+                    16 -> ?SP ++ "=~" ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    17 -> ?SP ++ "In" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    18 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    19 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    20 -> ?SP ++ "Contains" ++ ?SP ++ ?WS ++
+                        lists:nth(rand:uniform(Expression2_Length), Expression2);
+                    21 -> ?SP ++ "Is" ++ ?SP ++ "Null";
+                    22 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
+                    _ -> []
+                end
+                || _ <- lists:seq(1, Max)
+            ]
     ))),
     Expression3 = case length(Expression3_Curr) > Max of
                       true -> lists:sublist(Expression3_Curr, 1, Max);

@@ -280,11 +280,12 @@ CYPHER 2.2
 START n=node:nodes(name = \"A\")
 RETURN n
 ".
-"
-CYPHER 1.9
-START n=node(42)
-RETURN n
-".
+% wwe ??? parenthesized expression
+%"
+%CYPHER 1.9
+%START n=node(42)
+%RETURN n
+%".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 6.2 Expressions
@@ -931,8 +932,9 @@ USING PERIODIC COMMIT
 LOAD CSV FROM 'http://neo4j.com/docs/3.0.3/csv/artists.csv' AS line
 CREATE (:Artist { name: line[1], year: toInt(line[2])})
 ".
+% wwe ??? syntax change
 "
-USING PERIODIC COMMIT 500
+USING PERIODIC COMMIT
 LOAD CSV FROM 'http://neo4j.com/docs/3.0.3/csv/artists.csv' AS line
 CREATE (:Artist { name: line[1], year: toInt(line[2])})
 ".
@@ -1233,8 +1235,9 @@ CREATE CONSTRAINT ON (person:Person) ASSERT person.id IS UNIQUE
 "
 CREATE CONSTRAINT ON (movie:Movie) ASSERT movie.id IS UNIQUE
 ".
+% wwe ??? syntax change
 "
-USING PERIODIC COMMIT 500
+USING PERIODIC COMMIT
 LOAD CSV WITH HEADERS FROM \"http://neo4j.com/docs/3.0.1/csv/import/roles.csv\" AS csvLine
 MATCH (person:Person { id: toInt(csvLine.personId)}),(movie:Movie { id: toInt(csvLine.movieId)})
 CREATE (person)-[:PLAYED { role: csvLine.role }]->(movie)
@@ -1794,11 +1797,12 @@ MATCH (other:Person)
 WHERE (other)-[:FRIENDS_WITH]->() OR (other)-[:WORKS_IN]->()
 RETURN other.name
 ".
-"
-MATCH (other:Person)
-WHERE NOT ((other)-[:FRIENDS_WITH]->()) OR (other)-[:WORKS_IN]->()
-RETURN other.name
-".
+% wwe ??? parenthesized expression
+%"
+%MATCH (other:Person)
+%WHERE NOT ((other)-[:FRIENDS_WITH]->()) OR (other)-[:WORKS_IN]->()
+%RETURN other.name
+%".
 "
 MATCH (other:Person)
 WHERE other.age > 25 OR (other)-[:FRIENDS_WITH]->()
@@ -1911,11 +1915,12 @@ CREATE (:Person)
 CYPHER planner=rule
 CREATE (:Person { name: \"Alistair\" })
 ".
-"
-CYPHER planner=rule
-MATCH (p:Person { name: \"me\" }),(f:Person { name: \"Andres\" })
-MERGE (p)-[:FRIENDS_WITH]->(f)
-".
+% wwe ??? parenthesized expression
+%"
+%CYPHER planner=rule
+%MATCH (p:Person { name: \"me\" }),(f:Person { name: \"Andres\" })
+%MERGE (p)-[:FRIENDS_WITH]->(f)
+%".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 13.6 Shortest path planning
