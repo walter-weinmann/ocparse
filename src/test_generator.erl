@@ -131,9 +131,8 @@ generate() ->
 
     ok = file_create_eunit_all(false,
         ?ALL_CLAUSE ++
-        [cypher,
-            query,
-            statement]),
+        [atom,
+            expression]),
 
     % ----------------------------------------------------------------------------------------------
     % Legacy version -------------------------------------------------------------------------------
@@ -146,16 +145,16 @@ generate() ->
     ok = file_create_ct_all(true,
         ?ALL_CLAUSE_LEGACY ++
             ?ALL_COMMAND ++
-            [cypher,
+            [command,
+                cypher,
                 query,
                 statement]),
 
     ok = file_create_eunit_all(true,
         ?ALL_CLAUSE_LEGACY ++
             ?ALL_COMMAND ++
-            [cypher,
-                query,
-                statement]),
+            [atom,
+                expression]),
 
     ?debugFmt("wwe debugging generate/0 ===> End ~n", []),
 
@@ -2519,21 +2518,27 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
         Expression3_Prev ++
         [lists:nth(rand:uniform(Expression2_Length), Expression2) ++
             case rand:uniform(?PRIME) rem 23 of
-                1 -> ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                1 -> ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     "]" ++
-                    ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     "]";
-                2 -> ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                2 -> ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     ".." ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     "]" ++
-                    ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     ".." ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     "]";
-                3 -> ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                3 -> ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     ".." ++ "]" ++
-                    ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     ".." ++ "]";
                 4 -> ?WS ++ "[" ++ ".." ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2) ++
@@ -2541,10 +2546,14 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     ?WS ++ "[" ++ ".." ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     "]";
-                5 -> ?SP ++ "=~" ++ ?WS ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ?SP ++ "=~" ++ ?WS ++ lists:nth(rand:uniform(Expression2_Length), Expression2);
-                6 -> ?SP ++ "In" ++ ?SP ++ ?WS ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                    ?SP ++ "In" ++ ?SP ++ ?WS ++ lists:nth(rand:uniform(Expression2_Length), Expression2);
+                5 -> ?SP ++ "=~" ++ ?WS ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?SP ++ "=~" ++ ?WS ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                6 -> ?SP ++ "In" ++ ?SP ++ ?WS ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?SP ++ "In" ++ ?SP ++ ?WS ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
                 7 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
@@ -2557,26 +2566,34 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                     lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     ?SP ++ "Contains" ++ ?SP ++ ?WS ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2);
-                10 -> ?SP ++ "Is" ++ ?SP ++ "Null" ++ ?SP ++ "Is" ++ ?SP ++ "Null";
-                11 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null" ++ ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
-                12 -> ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                10 -> ?SP ++ "Is" ++ ?SP ++ "Null" ++
+                    ?SP ++ "Is" ++ ?SP ++ "Null";
+                11 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null" ++
+                    ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
+                12 -> ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     "]";
-                13 -> ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                13 -> ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     ".." ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     "]";
-                14 -> ?WS ++ "[" ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                14 -> ?WS ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     ".." ++ "]";
                 15 -> ?WS ++ "[" ++
                     ".." ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
                     "]";
-                16 -> ?SP ++ "=~" ++ ?WS ++ lists:nth(rand:uniform(Expression2_Length), Expression2);
-                17 -> ?SP ++ "In" ++ ?SP ++ ?WS ++ lists:nth(rand:uniform(Expression2_Length), Expression2);
+                16 -> ?SP ++ "=~" ++ ?WS ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                17 -> ?SP ++ "In" ++ ?SP ++ ?WS ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
                 18 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2);
                 19 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
                     lists:nth(rand:uniform(Expression2_Length), Expression2);
-                20 -> ?SP ++ "Contains" ++ ?SP ++ ?WS ++ lists:nth(rand:uniform(Expression2_Length), Expression2);
+                20 -> ?SP ++ "Contains" ++ ?SP ++ ?WS ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
                 21 -> ?SP ++ "Is" ++ ?SP ++ "Null";
                 22 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
                 _ -> []
@@ -2924,10 +2941,13 @@ file_create_ct(Legacy, Rule) ->
                                                                                                      true -> "/ legacy";
                                                                                                      _ -> []
                                                                                                  end]),
-    FileName = "generic_" ++ atom_to_list(Rule) ++ case Legacy of
-                                                       true -> "_legacy";
-                                                       _ -> []
-                                                   end ++ "_SUITE",
+    FileName = case lists:member(Rule, [command, cypher, query, statement]) of
+                   true -> "performance_";
+                   _ -> "generic_"
+               end ++ atom_to_list(Rule) ++ case Legacy of
+                                                true -> "_legacy";
+                                                _ -> []
+                                            end ++ "_SUITE",
     {ok, File, _} = file:path_open([?PATH_CT], FileName ++ ".erl", [write]),
 
     {{Current_Year, Current_Month, Current_Day}, _} = calendar:local_time(),
