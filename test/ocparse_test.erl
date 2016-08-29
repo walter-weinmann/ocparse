@@ -4,6 +4,8 @@
 
 -export([test_cypher/3]).
 
+-define(TIMEOUT, 60).
+
 cypher_test_() ->
     WCard = case os:getenv("CYPHER") of
                 Cypher when is_list(Cypher) -> Cypher;
@@ -81,7 +83,7 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
             tests_gen(TestGroup, Tests, Logs, SelTests,
                 [{TestGroup, I,
                     fun() ->
-                        {timeout, 60, ?MODULE:test_cypher(TestGroup, T, Logs)}
+                        {timeout, ?TIMEOUT, ?MODULE:test_cypher(TestGroup, T, Logs)}
                     end} | Acc]);
         _ -> Acc
     end.
@@ -137,7 +139,6 @@ test_cypher(TestGroup, Test, Logs) ->
                 ParseTree = NPTree
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_cypher/3 ===> ~n NPTree: ~p~n NToks: ~p~n", [NPTree, NToks]),
                     ?D_("~n > ~p", [NPTree]),
                     ?D_("~n > ~p", [Tokens]),
                     ?D_("~n > ~p", [NToks])

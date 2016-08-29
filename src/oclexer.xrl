@@ -3,21 +3,16 @@ Definitions.
 
 Rules.
 
-
 %% number literals
-(-?[0-9]*[0-9\.](e|E)-?[0-9]+)                            : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
-([0-9]*\.[0-9]+)                                          : {token, {'UNSIGNED_REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
-(-[0-9]*\.[0-9]+)                                         : {token, {'SIGNED_REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
-(-?0X([0-9]|[A-F])+)                                      : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
-(0[0-7]+)                                                 : {token, {'UNSIGNED_OCTAL_INTEGER', TokenLine, TokenChars}}.
-(-?0[0-7]+)                                               : {token, {'SIGNED_OCTAL_INTEGER', TokenLine, TokenChars}}.
-(0|([1-9][0-9]*))                                         : {token, {'UNSIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
-(-[0-9]+)                                                 : {token, {'SIGNED_DECIMAL_INTEGER', TokenLine, TokenChars}}.
-([0-9]+)                                                  : {token, {'DIGIT_STRING', TokenLine, TokenChars}}.
+((([0-9]*\.)|[0-9]+)(e|E)[0-9]+)                          : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
+([0-9]*\.[0-9]+)                                          : {token, {'REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
+(0(x|X)([0-9]|[A-Fa-f])+)                                 : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
+(0[0-7]+)                                                 : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
+(0|([1-9][0-9]*))                                         : {token, {'DECIMAL_INTEGER', TokenLine, TokenChars}}.
 
 %% symbolic names
 (`([^`]*)*`)                                              : {token, {'ESCAPED_SYMBOLIC_NAME', TokenLine, TokenChars}}.
-([A-Za-z_@#\$][A-Za-z0-9_@#\$]*)                          : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
+([A-Za-z_@#][A-Za-z0-9_@#]*)                              : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
 
 %% string literals
 (\'([^\\\']*)*\')                                         : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
@@ -28,10 +23,10 @@ Rules.
 ((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
 
 %% punctuation
-(\.\.|\-\-|\+=|<\-\->|<\-\-|\-\->)                        : {token, {list_to_atom(TokenChars), TokenLine}}.
-(=~|<>|!=|<=|>=|0X)                                       : {token, {list_to_atom(TokenChars), TokenLine}}.
+(\.\.|\-\-|\+=|\<\-\-\>|\<\-\-|\-\-\>)                    : {token, {list_to_atom(TokenChars), TokenLine}}.
+(=~|\<\>|!=|\<=|\>=)                                      : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([\^\.\|\?\*\+\(\)\[\]\{\}\-])                            : {token, {list_to_atom(TokenChars), TokenLine}}.
-([=<>/%:,;!0])                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
+([=\<\>/%:,;!0\$])                                        : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% white space
 ([\n\r\s\t]+)                                             : skip_token.
@@ -68,7 +63,6 @@ Erlang code.
     {"^(?i)(ELSE)$",             'ELSE'},
     {"^(?i)(END)$",              'END'},
     {"^(?i)(ENDS)$",             'ENDS'},
-    {"^(?i)(EXISTS)$",           'EXISTS'},
     {"^(?i)(EXPLAIN)$",          'EXPLAIN'},
     {"^(?i)(EXTRACT)$",          'EXTRACT'},
     {"^(?i)(FALSE)$",            'FALSE'},
@@ -134,8 +128,8 @@ match_any(TokenChars, TokenLen, _TokenLine, []) ->
     {token, {'UNESCAPED_SYMBOLIC_NAME', TokenLen, TokenChars}};
 match_any(TokenChars, TokenLen, TokenLine, [{P,T}|TPs]) ->
     case re:run(TokenChars, P, [{capture, first, list}]) of
-        {match,[_]} -> 
+        {match,[_]} ->
             {token, {T, TokenLine}};
-        nomatch -> 
+        nomatch ->
             match_any(TokenChars, TokenLen, TokenLine, TPs)
     end.

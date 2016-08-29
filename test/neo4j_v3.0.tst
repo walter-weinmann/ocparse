@@ -207,53 +207,63 @@ RETURN friend_of_a_friend.name AS fofName
 %% 5.5 Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% wwe ??? parameter
 "
 MATCH (n)
-WHERE n.name = { name }
+WHERE n.name = $name
 RETURN n
 ".
+% wwe ??? parameter
 "
-MATCH (n { name: { name }})
+MATCH (n { name: $name})
 RETURN n
 ".
+% wwe ??? parameter
 "
 MATCH (n)
-WHERE n.name =~ { regex }
+WHERE n.name =~ $regex
 RETURN n.name
 ".
+% wwe ??? parameter
 "
 MATCH (n)
-WHERE n.name STARTS WITH { name }
+WHERE n.name STARTS WITH $name
 RETURN n.name
 ".
+% wwe ??? parameter
 "
-CREATE ({ props })
+CREATE ($props)
 ".
+% wwe ??? parameter
 "
-UNWIND { props } AS properties
+UNWIND $props AS properties
 CREATE (n:Person)
 SET n = properties
 RETURN n
 ".
+% wwe ??? parameter
 "
 MATCH (n)
 WHERE n.name='Michaela'
-SET n = { props }
+SET n = $props
 ".
+% wwe ??? parameter
 "
 MATCH (n)
 RETURN n.name
-SKIP { s }
-LIMIT { l }
+SKIP $s
+LIMIT $l
 ".
+% wwe ??? parameter
 "
 MATCH (n)
-WHERE id(n)= { id }
+WHERE id(n)= $id
 RETURN n.name
 ".
+% wwe ??? parameter
 "
 MATCH (n)
-WHERE id(n) IN { ids }
+WHERE id(n) IN $ids
 RETURN n.name
 ".
 
@@ -312,12 +322,15 @@ RETURN range(0,10)[3]
 "
 RETURN range(0,10)[-3]
 ".
-"
-RETURN range(0,10)[0..3]
-".
-"
-RETURN range(0,10)[0..-5]
-".
+% wwe ??? range literal
+%"
+%RETURN range(0,10)[0..3]
+%".
+% wwe ??? signed integer
+% wwe ??? range literal
+%"
+%RETURN range(0,10)[0..5]
+%".
 "
 RETURN range(0,10)[-5..]
 ".
@@ -327,12 +340,14 @@ RETURN range(0,10)[..4]
 "
 RETURN range(0,10)[15]
 ".
-"
-RETURN range(0,10)[5..15]
-".
-"
-RETURN size(range(0,10)[0..3])
-".
+% wwe ??? range literal
+%"
+%RETURN range(0,10)[5..15]
+%".
+% wwe ??? range literal
+%"
+%RETURN size(range(0,10)[0..3])
+%".
 "
 RETURN [x IN range(0,10) WHERE x % 2 = 0 | x^3] AS result
 ".
@@ -491,8 +506,9 @@ WITH [1,1,2,2] AS coll UNWIND coll AS x
 WITH DISTINCT x
 RETURN collect(x) AS SET_4711
 ".
+% wwe ??? parameter
 "
-UNWIND { events } AS event
+UNWIND $events AS event
 MERGE (y:Year { year:event.year })
 MERGE (y)<-[:IN_4711]-(e:Event { id:event.id })
 RETURN e.id AS x
@@ -643,7 +659,11 @@ RETURN r
 %% 8.3 Where
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% wwe "MATCH (n) WHERE n.name = 'Peter' XOR (n.age < 30 AND n.name = \"Tobias\") OR NOT (n.name = \"Tobias\" OR n.name=\"Peter\") RETURN n".
+% wwe ??? parenthesized expression
+"
+MATCH (n)
+WHERE n.name = 'Peter' XOR n.age < 30 AND n.name = \"Tobias\" OR NOT n.name = \"Tobias\" OR n.name=\"Peter\"
+RETURN n".
 "
 MATCH (n)
 WHERE n:Swedish
@@ -659,9 +679,10 @@ MATCH (n)-[k:KNOWS]->(f)
 WHERE k.since < 2000
 RETURN f
 ".
+% wwe ??? parameter
 "
 MATCH (n)
-WHERE n[toLower({ prop })]< 30
+WHERE n[toLower($prop)]< 30
 RETURN n
 ".
 "
@@ -864,12 +885,14 @@ RETURN r
 CREATE p =(andres { name:'Andres' })-[:WORKS_AT]->(neo)<-[:WORKS_AT]-(michael { name:'Michael' })
 RETURN p
 ".
+% wwe ??? parameter
 "
-CREATE (n:Person { props })
+CREATE (n:Person $props)
 RETURN n
 ".
+% wwe ??? parameter
 "
-UNWIND { props } AS map
+UNWIND $props AS map
 CREATE (n)
 SET n = map
 ".
@@ -957,8 +980,9 @@ RETURN michael
 MERGE (oliver:Person { name:'Oliver Stone', role:'Gordon Gekko' })
 RETURN oliver
 ".
+% wwe ??? parameter
 "
-MERGE (person:Person { name: { param }.name, role: { param }.role })
+MERGE (person:Person { name: $param.name, role: $param.role })
 RETURN person.name, person.role
 ".
 
@@ -984,14 +1008,16 @@ RETURN at, pn
 MATCH (peter { name: 'Peter' })
 SET peter += { hungry: TRUE , position: 'Entrepreneur' }
 ".
+% wwe ??? parameter
 "
 MATCH (n { name: 'Andres' })
-SET n.surname = { surname }
+SET n.surname = $surname
 RETURN n
 ".
+% wwe ??? parameter
 "
 MATCH (n { name: 'Andres' })
-SET n = { props }
+SET n = $props
 RETURN n
 ".
 "
@@ -1488,11 +1514,12 @@ MATCH (other:Person)
 WHERE (other)-[:FRIENDS_WITH]->() OR (other)-[:WORKS_IN]->()
 RETURN other.name
 ".
-"
-MATCH (other:Person)
-WHERE NOT ((other)-[:FRIENDS_WITH]->()) OR (other)-[:WORKS_IN]->()
-RETURN other.name
-".
+% wwe ??? parenthesized expression
+%"
+%MATCH (other:Person)
+%WHERE NOT ((other)-[:FRIENDS_WITH]->()) OR (other)-[:WORKS_IN]->()
+%RETURN other.name
+%".
 "
 MATCH (other:Person)
 WHERE other.age > 25 OR (other)-[:FRIENDS_WITH]->()

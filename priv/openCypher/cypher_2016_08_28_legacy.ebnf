@@ -14,32 +14,104 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *)
-Cypher = WS, Statement, [WS, ';'], WS ;
+Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
 
-Statement = Query ;
+QueryOptions = { AnyCypherOption, WS } ;
 
-Query = RegularQuery ;
+AnyCypherOption = CypherOption
+                | Explain
+                | Profile
+                ;
+
+CypherOption = (C,Y,P,H,E,R), [SP, VersionNumber], { SP, ConfigurationOption } ;
+
+VersionNumber = DecimalInteger, '.', DecimalInteger ;
+
+Explain = E,X,P,L,A,I,N ;
+
+Profile = P,R,O,F,I,L,E ;
+
+ConfigurationOption = SymbolicName, WS, '=', WS, SymbolicName ;
+
+Statement = Command
+          | Query
+          ;
+
+Query = RegularQuery
+      | BulkImportQuery
+      ;
 
 RegularQuery = SingleQuery, { WS, Union } ;
 
+BulkImportQuery = PeriodicCommitHint, WS, LoadCSVQuery ;
+
 SingleQuery = Clause, { WS, Clause } ;
+
+PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP] ;
+
+LoadCSVQuery = LoadCSV, { WS, Clause } ;
 
 Union = ((U,N,I,O,N), SP, (A,L,L), SingleQuery)
       | ((U,N,I,O,N), SingleQuery)
       ;
 
-Clause = Match
+Clause = LoadCSV
+       | Start
+       | Match
        | Unwind
        | Merge
        | Create
+       | CreateUnique
        | Set
        | Delete
        | Remove
+       | Foreach
        | With
        | Return
        ;
 
-Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), WS, Pattern, [WS, Where] ;
+Command = CreateIndex
+        | DropIndex
+        | CreateUniqueConstraint
+        | DropUniqueConstraint
+        | CreateNodePropertyExistenceConstraint
+        | DropNodePropertyExistenceConstraint
+        | CreateRelationshipPropertyExistenceConstraint
+        | DropRelationshipPropertyExistenceConstraint
+        ;
+
+CreateUniqueConstraint = (C,R,E,A,T,E), SP, UniqueConstraint ;
+
+CreateNodePropertyExistenceConstraint = (C,R,E,A,T,E), SP, NodePropertyExistenceConstraint ;
+
+CreateRelationshipPropertyExistenceConstraint = (C,R,E,A,T,E), SP, RelationshipPropertyExistenceConstraint ;
+
+CreateIndex = (C,R,E,A,T,E), SP, Index ;
+
+DropUniqueConstraint = (D,R,O,P), SP, UniqueConstraint ;
+
+DropNodePropertyExistenceConstraint = (D,R,O,P), SP, NodePropertyExistenceConstraint ;
+
+DropRelationshipPropertyExistenceConstraint = (D,R,O,P), SP, RelationshipPropertyExistenceConstraint ;
+
+DropIndex = (D,R,O,P), SP, Index ;
+
+Index = (I,N,D,E,X), SP, (O,N), WS, NodeLabel, '(', PropertyKeyName, ')' ;
+
+UniqueConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', WS, (A,S,S,E,R,T), SP, PropertyExpression, SP, (I,S), SP, (U,N,I,Q,U,E) ;
+
+NodePropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', WS, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), WS, '(', PropertyExpression, ')' ;
+
+RelationshipPropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, RelationshipPatternSyntax, WS, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), WS, '(', PropertyExpression, ')' ;
+
+RelationshipPatternSyntax = ('(', WS, ')', Dash, '[', Variable, RelType, ']', Dash, '(', WS, ')')
+                          | ('(', WS, ')', Dash, '[', Variable, RelType, ']', Dash, RightArrowHead, '(', WS, ')')
+                          | ('(', WS, ')', LeftArrowHead, Dash, '[', Variable, RelType, ']', Dash, '(', WS, ')')
+                          ;
+
+LoadCSV = (L,O,A,D), SP, (C,S,V), SP, [(W,I,T,H), SP, (H,E,A,D,E,R,S), SP], (F,R,O,M), SP, Expression, SP, (A,S), SP, Variable, SP, [(F,I,E,L,D,T,E,R,M,I,N,A,T,O,R), SP, StringLiteral] ;
+
+Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), WS, Pattern, { Hint }, [WS, Where] ;
 
 Unwind = (U,N,W,I,N,D), WS, Expression, SP, (A,S), SP, Variable ;
 
@@ -50,6 +122,8 @@ MergeAction = ((O,N), SP, (M,A,T,C,H), SP, Set)
             ;
 
 Create = (C,R,E,A,T,E), WS, Pattern ;
+
+CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern ;
 
 Set = (S,E,T), SetItem, { ',', SetItem } ;
 
@@ -68,6 +142,8 @@ Remove = (R,E,M,O,V,E), SP, RemoveItem, { WS, ',', WS, RemoveItem } ;
 RemoveItem = (Variable, NodeLabels)
            | PropertyExpression
            ;
+
+Foreach = (F,O,R,E,A,C,H), WS, '(', WS, Variable, SP, (I,N), SP, Expression, WS, '|', { SP, Clause }-, WS, ')' ;
 
 With = ((W,I,T,H), (D,I,S,T,I,N,C,T), SP, ReturnBody, [Where])
      | ((W,I,T,H), SP, ReturnBody, [Where])
@@ -97,15 +173,43 @@ SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
          | (Expression, [(A,S,C,E,N,D,I,N,G) | (A,S,C)])
          ;
 
+Hint = WS, (((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')') | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { WS, ',', WS, Variable }) | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)) ;
+
+Start = (S,T,A,R,T), SP, StartPoint, { WS, ',', WS, StartPoint }, [Where] ;
+
+StartPoint = Variable, WS, '=', WS, Lookup ;
+
+Lookup = NodeLookup
+       | RelationshipLookup
+       ;
+
+NodeLookup = (N,O,D,E), (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
+
+RelationshipLookup = ((R,E,L,A,T,I,O,N,S,H,I,P) | (R,E,L)), (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
+
+IdentifiedIndexLookup = ':', SymbolicName, '(', SymbolicName, '=', (StringLiteral | LegacyParameter), ')' ;
+
+IndexQuery = ':', SymbolicName, '(', (StringLiteral | LegacyParameter), ')' ;
+
+IdLookup = '(', (LiteralIds | LegacyParameter | '*'), ')' ;
+
+LiteralIds = { WS, ',', WS } ;
+
 Where = (W,H,E,R,E), SP, Expression ;
 
-Pattern = PatternPart, { ',', PatternPart } ;
+Pattern = PatternPart, { WS, ',', WS, PatternPart } ;
 
 PatternPart = (Variable, WS, '=', WS, AnonymousPatternPart)
             | AnonymousPatternPart
             ;
 
-AnonymousPatternPart = PatternElement ;
+AnonymousPatternPart = ShortestPathPattern
+                     | PatternElement
+                     ;
+
+ShortestPathPattern = ((S,H,O,R,T,E,S,T,P,A,T,H), '(', PatternElement, ')')
+                    | ((A,L,L,S,H,O,R,T,E,S,T,P,A,T,H,S), '(', PatternElement, ')')
+                    ;
 
 PatternElement = (NodePattern, { WS, PatternElementChain })
                | ('(', PatternElement, ')')
@@ -121,11 +225,14 @@ RelationshipPattern = (LeftArrowHead, WS, Dash, WS, [RelationshipDetail], WS, Da
                     | (Dash, WS, [RelationshipDetail], WS, Dash)
                     ;
 
-RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], ['*', RangeLiteral], [Properties], ']' ;
+RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], [RangeLiteral], [Properties], ']' ;
 
 Properties = MapLiteral
            | Parameter
+           | LegacyParameter
            ;
+
+RelType = ':', RelTypeName ;
 
 RelationshipTypes = ':', RelTypeName, { WS, '|', [':'], WS, RelTypeName } ;
 
@@ -133,7 +240,7 @@ NodeLabels = NodeLabel, { WS, NodeLabel } ;
 
 NodeLabel = ':', LabelName ;
 
-RangeLiteral = WS, [UnsignedIntegerLiteral, WS], ['..', WS, [UnsignedIntegerLiteral, WS]] ;
+RangeLiteral = '*', WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
 
 LabelName = SymbolicName ;
 
@@ -166,24 +273,30 @@ Expression2 = Atom, { PropertyLookup | NodeLabels } ;
 Atom = NumberLiteral
      | StringLiteral
      | Parameter
+     | LegacyParameter
      | (T,R,U,E)
      | (F,A,L,S,E)
      | (N,U,L,L)
+     | CaseExpression
      | ((C,O,U,N,T), '(', '*', ')')
      | MapLiteral
      | ListComprehension
      | ('[', WS, Expression, WS, { ',', WS, Expression, WS }, ']')
      | ((F,I,L,T,E,R), WS, '(', WS, FilterExpression, WS, ')')
      | ((E,X,T,R,A,C,T), WS, '(', WS, FilterExpression, WS, [WS, '|', Expression], ')')
+     | Reduce
      | ((A,L,L), WS, '(', WS, FilterExpression, WS, ')')
      | ((A,N,Y), WS, '(', WS, FilterExpression, WS, ')')
      | ((N,O,N,E), WS, '(', WS, FilterExpression, WS, ')')
      | ((S,I,N,G,L,E), WS, '(', WS, FilterExpression, WS, ')')
+     | ShortestPathPattern
      | RelationshipsPattern
-     | parenthesizedExpression
+     | ParenthesizedExpression
      | FunctionInvocation
      | Variable
      ;
+
+Reduce = (R,E,D,U,C,E), WS, '(', Variable, '=', Expression, ',', IdInColl, '|', Expression, ')' ;
 
 PartialComparisonExpression = ('=', WS, Expression7)
                             | ('<>', WS, Expression7)
@@ -194,7 +307,7 @@ PartialComparisonExpression = ('=', WS, Expression7)
                             | ('>=', WS, Expression7)
                             ;
 
-parenthesizedExpression = '(', WS, Expression, WS, ')' ;
+ParenthesizedExpression = '(', WS, Expression, WS, ')' ;
 
 RelationshipsPattern = NodePattern, { WS, PatternElementChain }- ;
 
@@ -202,13 +315,17 @@ FilterExpression = IdInColl, [WS, Where] ;
 
 IdInColl = Variable, SP, (I,N), SP, Expression ;
 
-FunctionInvocation = FunctionName, WS, '(', WS, [D,I,S,T,I,N,C,T], [Expression, { ',', WS, Expression }], WS, ')' ;
+FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
 
 FunctionName = SymbolicName ;
 
 ListComprehension = '[', FilterExpression, [WS, '|', Expression], ']' ;
 
 PropertyLookup = WS, '.', WS, ((PropertyKeyName, ('?' | '!')) | PropertyKeyName) ;
+
+CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), WS, Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
+
+CaseAlternatives = (W,H,E,N), WS, Expression, WS, (T,H,E,N), WS, Expression ;
 
 Variable = SymbolicName ;
 
@@ -219,37 +336,31 @@ StringLiteral = ('"', { ANY - ('"' | '\') | EscapedChar }, '"')
 EscapedChar = '\', ('\' | "'" | '"' | (B) | (F) | (N) | (R) | (T) | '_' | '%' | ((U), 4 * HexDigit) | ((U), 8 * HexDigit)) ;
 
 NumberLiteral = DoubleLiteral
-              | SignedIntegerLiteral
+              | IntegerLiteral
               ;
 
 MapLiteral = '{', WS, [PropertyKeyName, WS, ':', WS, Expression, WS, { ',', WS, PropertyKeyName, WS, ':', WS, Expression, WS }], '}' ;
 
-Parameter = '{', WS, (SymbolicName | UnsignedDecimalInteger), WS, '}' ;
+LegacyParameter = '{', WS, (SymbolicName | DecimalInteger), WS, '}' ;
+
+Parameter = '$', (SymbolicName | DecimalInteger) ;
 
 PropertyExpression = Atom, { WS, PropertyLookup }- ;
 
 PropertyKeyName = SymbolicName ;
 
-SignedIntegerLiteral = HexInteger
-                     | OctalInteger
-                     | DecimalInteger
-                     ;
+IntegerLiteral = HexInteger
+               | OctalInteger
+               | DecimalInteger
+               ;
 
-UnsignedIntegerLiteral = UnsignedDecimalInteger ;
+HexInteger = ('0',X), HexString ;
 
-HexInteger = ['-'], UnsignedHexInteger ;
+DecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
+               | '0'
+               ;
 
-DecimalInteger = ['-'], UnsignedDecimalInteger ;
-
-OctalInteger = ['-'], UnsignedOctalInteger ;
-
-UnsignedHexInteger = ('0',X), HexString ;
-
-UnsignedDecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
-                       | '0'
-                       ;
-
-UnsignedOctalInteger = '0', OctalString ;
+OctalInteger = '0', OctalString ;
 
 HexString = { HexDigit }- ;
 
@@ -301,9 +412,9 @@ DoubleLiteral = ExponentDecimalReal
               | RegularDecimalReal
               ;
 
-ExponentDecimalReal = ['-'], { Digit | '.' }-, ((E) | (E)), ['-'], DigitString ;
+ExponentDecimalReal = ({ Digit | '.' }- | DecimalInteger), ((E) | (E)), (DigitString | DecimalInteger) ;
 
-RegularDecimalReal = ['-'], { Digit }, '.', DigitString ;
+RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | DecimalInteger) ;
 
 SymbolicName = UnescapedSymbolicName
              | EscapedSymbolicName
@@ -315,7 +426,6 @@ UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
  *   (http://www.unicode.org/reports/tr31/)
  * And extended with a few characters.
  *)IdentifierStart = ID_Start
-                | Sc
                 | '_'
                 | 'â€¿'
                 | 'â€'
@@ -423,6 +533,8 @@ H = 'H' | 'h' ;
 
 I = 'I' | 'i' ;
 
+J = 'J' | 'j' ;
+
 K = 'K' | 'k' ;
 
 L = 'L' | 'l' ;
@@ -434,6 +546,8 @@ N = 'N' | 'n' ;
 O = 'O' | 'o' ;
 
 P = 'P' | 'p' ;
+
+Q = 'Q' | 'q' ;
 
 R = 'R' | 'r' ;
 
@@ -450,4 +564,3 @@ W = 'W' | 'w' ;
 X = 'X' | 'x' ;
 
 Y = 'Y' | 'y' ;
-
