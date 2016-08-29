@@ -286,7 +286,7 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ### Version 1.2.0
 
-Release Date: 01.08.2016 - Grammar as of 25.08.2016
+Release Date: 29.08.2016 - Grammar as of 28.08.2016
 
 #### Grammar changes
 
@@ -518,11 +518,8 @@ Old: RegularDecimalReal = ['-'], { Digit }, '.', DigitString ;
 
 #### New features
 
-1. Support of the legacy grammar.
-
-#### New features
-
-1. Support of the legacy grammar.
+1. Test data generator for generating generic tests.
+2. Script for generic stress tests.
 
 ### Version 1.1.1
 
