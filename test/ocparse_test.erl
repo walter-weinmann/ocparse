@@ -133,30 +133,40 @@ test_cypher(TestGroup, Test, Logs) ->
                 = try
                       {ok, {NPT, NT}} = ocparse:parsetree_with_tokens(NCypher),
                       {ok, {NPT, NT}}
-                  catch _:_ -> ?D_("Error : ~p ocparse:parsetree_with_tokens(~s)", [TestGroup, NCypher])
+                  catch
+                      _:_ ->
+                          ?D_("Error ocparse:parsetree_with_tokens : Test     ~n > ~p", [Test]),
+                          ?D_("Error ocparse:parsetree_with_tokens : TestGroup~n > ~p", [TestGroup]),
+                          ?D_("Error ocparse:parsetree_with_tokens : NCypher  ~n > ~p", [NCypher]),
+                          throw({error, "Error ocparse:parsetree_with_tokens"})
                   end,
             try
                 ParseTree = NPTree
             catch
                 _:_ ->
-                    ?D_("~n > ~p", [NPTree]),
-                    ?D_("~n > ~p", [Tokens]),
-                    ?D_("~n > ~p", [NToks])
+                    ?D_("[catch ParseTree = NPTree] : Test  ~n > ~p", [Test]),
+                    ?D_("[catch ParseTree = NPTree] : NPTree~n > ~p", [NPTree]),
+                    ?D_("[catch ParseTree = NPTree] : Tokens~n > ~p", [Tokens]),
+                    ?D_("[catch ParseTree = NPTree] : NToks ~n > ~p", [NToks]),
+                    throw({error, "Error catch ParseTree = NPTree"})
             end,
             try
                 ?assertEqual(ParseTree, NPTree)
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_cypher/3 ===> not equal~n ParseTree: ~p~n NPTree: ~p~n", [ParseTree, NPTree])
+                    ?D_("[catch ?assertEqual(ParseTree, NPTree)] : Test     ~n > ~p", [Test]),
+                    ?D_("[catch ?assertEqual(ParseTree, NPTree)] : ParseTree~n > ~p", [ParseTree]),
+                    ?D_("[catch ?assertEqual(ParseTree, NPTree)] : NPTree   ~n > ~p", [NPTree]),
+                    throw({error, "Error catch ?assertEqual(ParseTree, NPTree)"})
             end,
             ?D4("~n ~p~n", [ParseTree]);
         {lex_error, Error} ->
-            ?debugFmt("wwe debugging test_cypher/3 ===> Failed lexer~n Error: ~p~n", [Error]),
-            ?D_("Failed lexer ~p", [Error]),
+            ?D_("Failed lex_error : Test ~n > ~p", [Test]),
+            ?D_("Failed lex_error : Error~n > ~p", [Error]),
             ?assertEqual(ok, Error);
         {parse_error, {Error, _Tokens}} ->
-            ?debugFmt("wwe debugging test_cypher/3 parser ===> ~n Error: ~p~n Tokens: ~p~n", [Error, _Tokens]),
-            ?D_("Failed parser ~p", [Error]),
-            % ?D_("~nFailed: ~p~nTest: ~s~nTokens ~p", [Error, Test, Tokens]),
+            ?D_("Failed parse_error : Test  ~n > ~p", [Test]),
+            ?D_("Failed parse_error : Error ~n > ~p", [Error]),
+            ?D_("Failed parse_error : Tokens~n > ~p", [_Tokens]),
             ?assertEqual(ok, Error)
     end.
