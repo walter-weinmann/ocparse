@@ -1,6 +1,6 @@
 {application, ocparse,
     [{description, "LALR grammar based Cypher parser using the grammar rules from the openCypher project"},
-        {vsn, "1.1.2"},
+        {vsn, "1.2.0"},
         {registered, []},
         {applications, [kernel, stdlib]},
         {mod, {ocparse, []}},
