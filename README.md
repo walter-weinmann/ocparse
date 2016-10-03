@@ -311,7 +311,7 @@ New: Atom = ...
           | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
           ...
 
-New: Atom = ...
+Old: Atom = ...
           | ((C,O,U,N,T), '(', '*', ')')
           ...
 ```
@@ -321,7 +321,7 @@ New: Atom = ...
 ```
 New: FunctionInvocation = FunctionName, [SP], '(', [SP], [(D,I,S,T,I,N,C,T), [SP]], [Expression, [SP], { ',', [SP], Expression, [SP] }], ')' ;
 
-New: FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
+Old: FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
 ```
 
 - **WS**
@@ -329,7 +329,7 @@ New: FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [E
 ```
 New: n/a
 
-New: WS = { whitespace } ;
+Old: WS = { whitespace } ;
 ```
 
 ### Version 1.2.0
