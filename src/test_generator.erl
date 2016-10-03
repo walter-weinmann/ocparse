@@ -103,7 +103,7 @@
 -define(PRIME, 37).
 -define(RIGHT_ARROW_HEAD, ">").
 -define(SP, " ").
--define(WS, []).
+-define(SP_OPT, []).
 
 -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
@@ -135,9 +135,7 @@ generate() ->
 
     % generic eunit tests
     ok = file_create_eunit_all(false,
-        ?ALL_CLAUSE ++
-        [atom,
-            expression]),
+        ?ALL_CLAUSE),
 
     % ----------------------------------------------------------------------------------------------
     % Legacy version -------------------------------------------------------------------------------
@@ -162,9 +160,7 @@ generate() ->
     % generic eunit tests
     ok = file_create_eunit_all(true,
         ?ALL_CLAUSE_LEGACY ++
-            ?ALL_COMMAND ++
-            [atom,
-                expression]),
+        ?ALL_COMMAND),
 
     ?debugFmt("wwe debugging generate/0 ===> End ~n", []),
 
@@ -187,15 +183,15 @@ create_code(Legacy) ->
 %% Level 1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ---------------------------------------------------------------------------------------
+% -----------------------------------------------------
 % Atom = ...
 %      | (T,R,U,E)
 %      | (F,A,L,S,E)
 %      | (N,U,L,L)
-%      | ((C,O,U,N,T), '(', '*', ')')
+%      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
 %      | ... ;
-% ---------------------------------------------------------------------------------------
-    AtomCount = ["Count(*)"],
+% -----------------------------------------------------
+    AtomCount = ["Count(*)", "Count ( * )"],
     insert_table(Legacy, atom_count, AtomCount),
     AtomFalse = ["False"],
     insert_table(Legacy, atom_false, AtomFalse),
@@ -271,11 +267,11 @@ create_code(Legacy) ->
         "0X0123456789ABCDEF"
     ]),
     insert_table(Legacy, hex_integer, HexInteger),
-%-------------------------------
-% LiteralIds = { WS, ',', WS } ;
-%-------------------------------
+%-----------------------------------
+% LiteralIds = { [SP], ',', [SP] } ;
+%-----------------------------------
     LiteralIds = case Legacy of
-                     true -> [?WS ++ "," ++ ?WS];
+                     true -> [?SP_OPT ++ "," ++ ?SP_OPT];
                      _ -> []
                  end,
     insert_table(Legacy, literal_ids, LiteralIds),
@@ -397,12 +393,12 @@ create_code(Legacy) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % ---------------------------------------------------------------
-% ConfigurationOption = SymbolicName, WS, '=', WS, SymbolicName ;
+% ConfigurationOption = SymbolicName, [SP], '=', [SP], SymbolicName ;
 % ---------------------------------------------------------------
     ConfigurationOption = case Legacy of
                               true -> sort_list_random([
-                                      SN ++ ?WS ++ "=" ++
-                                      ?WS ++ lists:nth(rand:uniform(SymbolicName_Length), SymbolicName)
+                                      SN ++ ?SP_OPT ++ "=" ++
+                                      ?SP_OPT ++ lists:nth(rand:uniform(SymbolicName_Length), SymbolicName)
                                   || SN <- SymbolicName
                               ]);
                               _ -> []
@@ -425,17 +421,17 @@ create_code(Legacy) ->
 % --------------------------
     LabelName = SymbolicName,
     insert_table(Legacy, label_name, LabelName),
-% ---------------------------------------------------------------------
-% LegacyParameter = '{', WS, (SymbolicName | DecimalInteger), WS, '}' ;
-% ---------------------------------------------------------------------
+% -------------------------------------------------------------------------
+% LegacyParameter = '{', [SP], (SymbolicName | DecimalInteger), [SP], '}' ;
+% -------------------------------------------------------------------------
     LegacyParameter = case Legacy of
                           true ->
                               sort_list_random([
-                                      "{" ++ ?WS ++ SN ++ ?WS ++ "}"
+                                      "{" ++ ?SP_OPT ++ SN ++ ?SP_OPT ++ "}"
                                   || SN <- SymbolicName
                               ] ++
                               [
-                                      "{" ++ ?WS ++ DI ++ ?WS ++ "}"
+                                      "{" ++ ?SP_OPT ++ DI ++ ?SP_OPT ++ "}"
                                   || DI <- DecimalInteger
                               ]);
                           _ -> []
@@ -468,18 +464,18 @@ create_code(Legacy) ->
     PropertyKeyName = SymbolicName,
     PropertyKeyName_Length = length(PropertyKeyName),
     insert_table(Legacy, property_key_name, PropertyKeyName),
-% --------------------------------------------------------------------------------
-% RangeLiteral = '*', WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
-% --------------------------------------------------------------------------------
+% ----------------------------------------------------------------------------------------
+% RangeLiteral = '*', [SP], [IntegerLiteral, [SP]], ['..', [SP], [IntegerLiteral, [SP]]] ;
+% ----------------------------------------------------------------------------------------
     RangeLiteral = sort_list_random(
         ["*", "*.."] ++
         [
                 ?SP ++ case rand:uniform(?PRIME) rem 4 of
-                           1 -> "*" ++ IL ++ ?WS ++ ".." ++ ?WS ++
-                               lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++ ?WS;
-                           2 -> "*" ++ IL ++ ?WS ++ ".." ++ ?WS;
-                           3 -> "*" ++ IL ++ ?WS;
-                           _ -> "*" ++ ".." ++ ?WS ++ IL ++ ?WS
+                           1 -> "*" ++ IL ++ ?SP_OPT ++ ".." ++ ?SP_OPT ++
+                               lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++ ?SP_OPT;
+                           2 -> "*" ++ IL ++ ?SP_OPT ++ ".." ++ ?SP_OPT;
+                           3 -> "*" ++ IL ++ ?SP_OPT;
+                           _ -> "*" ++ ".." ++ ?SP_OPT ++ IL ++ ?SP_OPT
                        end
             || IL <- IntegerLiteral
         ]),
@@ -502,7 +498,7 @@ create_code(Legacy) ->
 %% Level 4
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -----------------------------------
+% ------------------------------------------------------
 % Atom = NumberLiteral
 %      | StringLiteral
 %      | Parameter
@@ -511,10 +507,10 @@ create_code(Legacy) ->
 %      | (F,A,L,S,E)
 %      | (N,U,L,L)
 %      | ...
-%      | ((C,O,U,N,T), '(', '*', ')')
+%      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
 %      | ...
 %      | Variable ;
-% -----------------------------------
+% ------------------------------------------------------
     Atom_Part_1 = sort_list_random(
         NumberLiteral ++
             StringLiteral ++
@@ -631,32 +627,32 @@ create_code(Legacy) ->
     ]),
     NodeLabel_Length = length(NodeLabel),
     insert_table(Legacy, node_label, NodeLabel),
-% ----------------------------------------------------------------------------------
-% PropertyLookup = WS, '.', WS, ((PropertyKeyName, ('?' | '!')) | PropertyKeyName) ;
-% ----------------------------------------------------------------------------------
+% --------------------------------------------------------------------------------------
+% PropertyLookup = [SP], '.', [SP], ((PropertyKeyName, ('?' | '!')) | PropertyKeyName) ;
+% --------------------------------------------------------------------------------------
     PropertyLookup =
         sort_list_random([
-                ?WS ++ "." ++ ?WS ++ PK ++ "?"
+                ?SP_OPT ++ "." ++ ?SP_OPT ++ PK ++ "?"
             || PK <- PropertyKeyName
         ] ++
             [
-                    ?WS ++ "." ++ ?WS ++ PK ++ "!"
+                    ?SP_OPT ++ "." ++ ?SP_OPT ++ PK ++ "!"
                 || PK <- PropertyKeyName
             ] ++
             [
-                    ?WS ++ "." ++ ?WS ++ PK
+                    ?SP_OPT ++ "." ++ ?SP_OPT ++ PK
                 || PK <- PropertyKeyName
             ]),
     PropertyLookup_Length = length(PropertyLookup),
     insert_table(Legacy, property_lookup, PropertyLookup),
-% ---------------------------------------------------------------------------
-% RelationshipTypes = ':', RelTypeName, { WS, '|', [':'], WS, RelTypeName } ;
-% ---------------------------------------------------------------------------
+% -------------------------------------------------------------------------------
+% RelationshipTypes = ':', RelTypeName, { [SP], '|', [':'], [SP], RelTypeName } ;
+% -------------------------------------------------------------------------------
     RelationshipTypes = sort_list_random([
             ":" ++ RTN ++
             case rand:uniform(?PRIME) rem 3 of
-                1 -> ?WS ++ "|" ++ ":" ++ ?WS ++ lists:nth(rand:uniform(RelTypeName_Length), RelTypeName);
-                2 -> ?WS ++ "|" ++ ?WS ++ lists:nth(rand:uniform(RelTypeName_Length), RelTypeName);
+                1 -> ?SP_OPT ++ "|" ++ ":" ++ ?SP_OPT ++ lists:nth(rand:uniform(RelTypeName_Length), RelTypeName);
+                2 -> ?SP_OPT ++ "|" ++ ?SP_OPT ++ lists:nth(rand:uniform(RelTypeName_Length), RelTypeName);
                 _ -> []
             end
         || RTN <- RelTypeName
@@ -691,16 +687,16 @@ create_code(Legacy) ->
                       end,
     AnyCypherOption_Length = length(AnyCypherOption),
     insert_table(Legacy, any_cypher_option, AnyCypherOption),
-% ----------------------------------------------------------------------------------------------
-% Hint = WS, (((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')')
-%           | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { WS, ',', WS, Variable })
+% ------------------------------------------------------------------------------------------------
+% Hint = [SP], (((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')')
+%           | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { [SP], ',', [SP], Variable })
 %           | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)) ;
-% ----------------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------------------------
 % wwe ???
 % Hint = SP, (((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')')
-%           | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { WS, ',', WS, Variable })
+%           | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { [SP], ',', [SP], Variable })
 %           | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)) ;
-% ----------------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------------------------
     Hint_Targ = NodeLabel_Length + PropertyKeyName_Length + Variable_Length,
     Hint = case Legacy of
                true -> sort_list_random(
@@ -716,9 +712,9 @@ create_code(Legacy) ->
                                lists:nth(rand:uniform(Variable_Length), Variable) ++
                                case rand:uniform(?PRIME) rem 3 of
                                    1 ->
-                                       ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(Variable_Length), Variable) ++ ?WS ++
-                                           "," ++ ?WS ++ lists:nth(rand:uniform(Variable_Length), Variable);
-                                   2 -> ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(Variable_Length), Variable);
+                                       ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                                           "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Variable_Length), Variable);
+                                   2 -> ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Variable_Length), Variable);
                                    _ -> []
                                end
                            || _ <- lists:seq(1, Hint_Targ)
@@ -734,14 +730,14 @@ create_code(Legacy) ->
            end,
     Hint_Length = length(Hint),
     insert_table(Legacy, hint, Hint),
-% --------------------------------------------------------------------------
-% Index = (I,N,D,E,X), SP, (O,N), WS, NodeLabel, '(', PropertyKeyName, ')' ;
-% --------------------------------------------------------------------------
+% ----------------------------------------------------------------------------
+% Index = (I,N,D,E,X), SP, (O,N), [SP], NodeLabel, '(', PropertyKeyName, ')' ;
+% ----------------------------------------------------------------------------
     Index_Targ = NodeLabel_Length + PropertyKeyName_Length,
     Index = case Legacy of
                 true ->
                     sort_list_random([
-                            "Index" ++ ?SP ++ "On" ++ ?WS ++
+                            "Index" ++ ?SP ++ "On" ++ ?SP_OPT ++
                             lists:nth(rand:uniform(NodeLabel_Length), NodeLabel) ++
                             "(" ++ lists:nth(rand:uniform(PropertyKeyName_Length), PropertyKeyName) ++ ")"
                         || _ <- lists:seq(1, Index_Targ)
@@ -750,13 +746,13 @@ create_code(Legacy) ->
             end,
     Index_Length = length(Index),
     insert_table(Legacy, index, Index),
-% -------------------------------------------
-% NodeLabels = NodeLabel, { WS, NodeLabel } ;
-% -------------------------------------------
+% ---------------------------------------------
+% NodeLabels = NodeLabel, { [SP], NodeLabel } ;
+% ---------------------------------------------
     NodeLabels = sort_list_random([
             NL ++
             case rand:uniform(?PRIME) rem 2 of
-                1 -> ?WS ++ lists:nth(rand:uniform(NodeLabel_Length), NodeLabel);
+                1 -> ?SP_OPT ++ lists:nth(rand:uniform(NodeLabel_Length), NodeLabel);
                 _ -> []
             end
         || NL <- NodeLabel]),
@@ -790,13 +786,13 @@ create_code(Legacy) ->
         || I <- IdentifiedIndexLookup ++ IndexQuery ++ IdLookup
     ]),
     insert_table(Legacy, relationship_lookup, RelationshipLookup),
-% ----------------------------------------------------------------------------------------------------------------------------------
-% RelationshipPatternSyntax = ('(', WS, ')',                Dash, '[', Variable, RelType, ']', Dash,                 '(', WS, ')')
-%                           | ('(', WS, ')',                Dash, '[', Variable, RelType, ']', Dash, RightArrowHead, '(', WS, ')')
-%                           | ('(', WS, ')', LeftArrowHead, Dash, '[', Variable, RelType, ']', Dash,                 '(', WS, ')') ;
-% ----------------------------------------------------------------------------------------------------------------------------------
+% --------------------------------------------------------------------------------------------------------------------------------------
+% RelationshipPatternSyntax = ('(', [SP], ')',                Dash, '[', Variable, RelType, ']', Dash,                 '(', [SP], ')')
+%                           | ('(', [SP], ')',                Dash, '[', Variable, RelType, ']', Dash, RightArrowHead, '(', [SP], ')')
+%                           | ('(', [SP], ')', LeftArrowHead, Dash, '[', Variable, RelType, ']', Dash,                 '(', [SP], ')') ;
+% --------------------------------------------------------------------------------------------------------------------------------------
     RelationshipPatternSyntax = sort_list_random([
-            "(" ++ ?WS ++ ")" ++
+            "(" ++ ?SP_OPT ++ ")" ++
             case rand:uniform(?PRIME) rem 3 of
                 1 -> ?DASH ++ "[" ++
                     lists:nth(rand:uniform(Variable_Length), Variable) ++
@@ -811,7 +807,7 @@ create_code(Legacy) ->
                     lists:nth(rand:uniform(RelType_Length), RelType) ++
                     "]" ++ ?DASH
             end ++
-            "(" ++ ?WS ++ ")"
+            "(" ++ ?SP_OPT ++ ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     RelationshipPatternSyntax_Length = length(RelationshipPatternSyntax),
@@ -826,10 +822,10 @@ create_code(Legacy) ->
 % ---------------------------
     Expression_Part_1 = sort_list_random(create_code_expression(?MAX_RULE_EXPRESSION, Legacy, Atom_Part_1, NodeLabels, PropertyLookup)),
     Expression_Part_1_Length = length(Expression_Part_1),
-% --------------------------------
+% -----------------------------
 % Lookup = NodeLookup
 %        | RelationshipLookup ;
-% --------------------------------
+% -----------------------------
     Lookup = case Legacy of
                  true -> sort_list_random(
                      NodeLookup ++
@@ -838,12 +834,12 @@ create_code(Legacy) ->
              end,
     Lookup_Length = length(Lookup),
     insert_table(Legacy, lookup, Lookup),
-% ----------------------------------------
-% QueryOptions = { AnyCypherOption, WS } ;
-% ----------------------------------------
+% ------------------------------------------
+% QueryOptions = { AnyCypherOption, [SP] } ;
+% ------------------------------------------
 % wwe ???
 % QueryOptions = { AnyCypherOption, SP } ;
-% ----------------------------------------
+% ------------------------------------------
     QueryOptions = case Legacy of
                        true ->
                            sort_list_random([
@@ -872,9 +868,9 @@ create_code(Legacy) ->
 %% Level 7
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -----------------------------------------------------------------------------
-% CaseAlternatives = (W,H,E,N), WS, Expression, WS, (T,H,E,N), WS, Expression ;
-% -----------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------
+% CaseAlternatives = (W,H,E,N), [SP], Expression, [SP], (T,H,E,N), [SP], Expression ;
+% -----------------------------------------------------------------------------------
     CaseAlternatives = case Legacy of
                            true ->
                                sort_list_random([
@@ -886,21 +882,21 @@ create_code(Legacy) ->
                        end,
     CaseAlternatives_Length = length(CaseAlternatives),
     insert_table(Legacy, case_alternatives, CaseAlternatives),
-% -------------------------------------------------------------------------------------------------------------------------
-% FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
-% -------------------------------------------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------------------------------------------------------------
+% FunctionInvocation = FunctionName, [SP], '(', [SP], [(D,I,S,T,I,N,C,T), [SP]], [Expression, [SP], { ',', [SP], Expression, [SP] }], ')' ;
+% -----------------------------------------------------------------------------------------------------------------------------------------
     FunctionInvocation = sort_list_random([
-            lists:nth(rand:uniform(FunctionName_Length), FunctionName) ++ ?WS ++
-            "(" ++ ?WS ++
+            lists:nth(rand:uniform(FunctionName_Length), FunctionName) ++ ?SP_OPT ++
+            "(" ++ ?SP_OPT ++
             case rand:uniform(?PRIME) rem 6 of
                 1 -> "Distinct" ++ ?SP ++
-                    lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                    "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS;
+                    lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
                 2 -> "Distinct" ++ ?SP ++
                     lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
                 3 -> "Distinct";
-                4 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                    "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS;
+                4 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
                 5 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
                 _ -> []
             end ++
@@ -920,47 +916,47 @@ create_code(Legacy) ->
     ]),
     IdInColl_Length = length(IdInColl),
     insert_table(Legacy, id_in_coll, IdInColl),
-% --------------------------------------------------------------------------------------------------------------------------------------
-% MapLiteral = '{', WS, [PropertyKeyName, WS, ':', WS, Expression, WS, { ',', WS, PropertyKeyName, WS, ':', WS, Expression, WS }], '}' ;
-% --------------------------------------------------------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------------------------------------------------------------------------------
+% MapLiteral = '{', [SP], [PropertyKeyName, [SP], ':', [SP], Expression, [SP], { ',', [SP], PropertyKeyName, [SP], ':', [SP], Expression, [SP] }], '}' ;
+% ------------------------------------------------------------------------------------------------------------------------------------------------------
     MapLiteral = sort_list_random([
-            "{" ++ ?WS ++ "}"
+            "{" ++ ?SP_OPT ++ "}"
     ] ++
     [
-            "{" ++ ?WS ++ lists:nth(rand:uniform(PropertyKeyName_Length), PropertyKeyName) ++
-            ?WS ++ ":" ++ ?WS ++
-            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS ++
+            "{" ++ ?SP_OPT ++ lists:nth(rand:uniform(PropertyKeyName_Length), PropertyKeyName) ++
+            ?SP_OPT ++ ":" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
             case rand:uniform(?PRIME) rem 2 of
                 1 ->
-                    "," ++ ?WS ++
+                    "," ++ ?SP_OPT ++
                         lists:nth(rand:uniform(PropertyKeyName_Length), PropertyKeyName) ++
-                        ?WS ++ ":" ++ ?WS ++
-                        lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS;
+                        ?SP_OPT ++ ":" ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
                 _ -> []
             end ++
             "}"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, map_literal, MapLiteral),
-% ----------------------------------------------------------
-% ParenthesizedExpression = '(', WS, Expression, WS, ')' ; ;
-% ----------------------------------------------------------
+% ------------------------------------------------------------
+% ParenthesizedExpression = '(', [SP], Expression, [SP], ')' ;
+% ------------------------------------------------------------
     ParenthesizedExpression = sort_list_random([
-            "(" ++ ?WS ++
+            "(" ++ ?SP_OPT ++
             lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-            ?WS ++ ")"
+            ?SP_OPT ++ ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, parenthesized_expression, ParenthesizedExpression),
-% --------------------------------------------
-% StartPoint = Variable, WS, '=', WS, Lookup ;
-% --------------------------------------------
+% ------------------------------------------------
+% StartPoint = Variable, [SP], '=', [SP], Lookup ;
+% ------------------------------------------------
     StartPoint_Targ = max(Lookup_Length, 30),
     StartPoint = case Legacy of
                      true ->
                          sort_list_random([
                                  lists:nth(rand:uniform(Variable_Length), Variable) ++
-                                 ?WS ++ "=" ++ ?WS ++
+                                 ?SP_OPT ++ "=" ++ ?SP_OPT ++
                                  lists:nth(rand:uniform(Lookup_Length), Lookup)
                              || _ <- lists:seq(1, StartPoint_Targ)
                          ]);
@@ -973,16 +969,16 @@ create_code(Legacy) ->
 %% Level 8
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% --------------------------------------------------------------------------------------------------------------------------------------------------------------
-% CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), WS, Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
-% --------------------------------------------------------------------------------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% CaseExpression = (((C,A,S,E), { [SP], CaseAlternatives }-) | ((C,A,S,E), [SP], Expression, { [SP], CaseAlternatives }-)), [[SP], (E,L,S,E), [SP], Expression], [SP], (E,N,D) ;
+% ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 % wwe
-% CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), WS, Expression, { WS, CaseAlternatives }-)), [SP, (E,L,S,E), SP, Expression], WS, (E,N,D) ;
-% --------------------------------------------------------------------------------------------------------------------------------------------------------------
+% CaseExpression = (((C,A,S,E), { [SP], CaseAlternatives }-) | ((C,A,S,E), [SP], Expression, { [SP], CaseAlternatives }-)), [SP, (E,L,S,E), SP, Expression], [SP], (E,N,D) ;
+% ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     CaseExpression_Targ = CaseAlternatives_Length,
     CaseExpression = case Legacy of
                          true -> sort_list_random([
-                                 "Case" ++ ?WS ++
+                                 "Case" ++ ?SP_OPT ++
                                  case rand:uniform(?PRIME) rem 8 of
                                      1 ->
                                          ?SP ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
@@ -1023,12 +1019,12 @@ create_code(Legacy) ->
                          _ -> []
                      end,
     insert_table(Legacy, case_expression, CaseExpression),
-% ------------------------------------------
-% FilterExpression = IdInColl, [WS, Where] ;
-% ------------------------------------------
+% --------------------------------------------
+% FilterExpression = IdInColl, [[SP], Where] ;
+% --------------------------------------------
 % wwe ???
 % FilterExpression = IdInColl, [SP, Where] ;
-% ------------------------------------------
+% --------------------------------------------
     FilterExpression = sort_list_random([
             lists:nth(rand:uniform(IdInColl_Length), IdInColl) ++
             case rand:uniform(?PRIME) rem 2 of
@@ -1053,11 +1049,11 @@ create_code(Legacy) ->
             end),
     Properties_Length = length(Properties),
     insert_table(Legacy, properties, Properties),
-% -------------------------------------------------------------------------------------------------
-% Reduce = (R,E,D,U,C,E), WS, '(', Variable, '=', Expression, ',', IdInColl, '|', Expression, ')' ;
-% -------------------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------------------
+% Reduce = (R,E,D,U,C,E), [SP], '(', Variable, '=', Expression, ',', IdInColl, '|', Expression, ')' ;
+% ---------------------------------------------------------------------------------------------------
     Reduce = sort_list_random([
-            "Reduce" ++ ?WS ++ "(" ++
+            "Reduce" ++ ?SP_OPT ++ "(" ++
             lists:nth(rand:uniform(Variable_Length), Variable) ++
             "=" ++
             lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
@@ -1074,41 +1070,41 @@ create_code(Legacy) ->
 %% Level 9
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -----------------------------------------------------------------------
-% ListComprehension = '[', FilterExpression, [WS, '|', Expression], ']' ;
-% -----------------------------------------------------------------------
+% -------------------------------------------------------------------------
+% ListComprehension = '[', FilterExpression, [[SP], '|', Expression], ']' ;
+% -------------------------------------------------------------------------
     ListComprehension = sort_list_random([
             "[" ++
             lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++
             case rand:uniform(?PRIME) rem 2 of
-                1 -> ?WS ++ "|" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
+                1 -> ?SP_OPT ++ "|" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
                 _ -> []
             end ++
             "]"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, list_comprehension, ListComprehension),
-% --------------------------------------------------------------------------------
-% NodePattern = '(', WS, [Variable, WS], [NodeLabels, WS], [Properties, WS], ')' ;
+% ----------------------------------------------------------------------------------------
+% NodePattern = '(', [SP], [Variable, [SP]], [NodeLabels, [SP]], [Properties, [SP]], ')' ;
 % --------------------------------------------------------------------------------
 % wwe ???
-% NodePattern = '(', WS, [Variable, SP], [NodeLabels, WS], [Properties, WS], ')' ;
-% --------------------------------------------------------------------------------
+% NodePattern = '(', [SP], [Variable, SP], [NodeLabels, [SP]], [Properties, [SP]], ')' ;
+% ----------------------------------------------------------------------------------------
     NodePattern = sort_list_random([
-            "(" ++ ?WS ++
+            "(" ++ ?SP_OPT ++
             case rand:uniform(?PRIME) rem 8 of
                 1 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
-                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?WS ++
-                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?WS;
+                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
                 2 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
-                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?WS;
+                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT;
                 3 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
-                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?WS;
+                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
                 4 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP;
-                5 -> lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?WS ++
-                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?WS;
-                6 -> lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?WS;
-                7 -> lists:nth(rand:uniform(Properties_Length), Properties) ++ ?WS;
+                5 -> lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                6 -> lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT;
+                7 -> lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
                 _ -> []
             end ++
             ")"
@@ -1218,30 +1214,30 @@ create_code(Legacy) ->
 %% Level 10
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -------------------------------------------------------------------------------------------------------
-% RelationshipPattern = (LeftArrowHead, WS, Dash, WS, [RelationshipDetail], WS, Dash, WS, RightArrowHead)
-%                     | (LeftArrowHead, WS, Dash, WS, [RelationshipDetail], WS, Dash)
-%                     | (                   Dash, WS, [RelationshipDetail], WS, Dash, WS, RightArrowHead)
-%                     | (                   Dash, WS, [RelationshipDetail], WS, Dash) ;
-% -------------------------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------------------------------
+% RelationshipPattern = (LeftArrowHead, [SP], Dash, [SP], [RelationshipDetail], [SP], Dash, [SP], RightArrowHead)
+%                     | (LeftArrowHead, [SP], Dash, [SP], [RelationshipDetail], [SP], Dash)
+%                     | (                     Dash, [SP], [RelationshipDetail], [SP], Dash, [SP], RightArrowHead)
+%                     | (                     Dash, [SP], [RelationshipDetail], [SP], Dash) ;
+% ----------------------------------------------------------------------------------------------------------------
     RelationshipPattern = sort_list_random([
         case rand:uniform(?PRIME) rem 4 of
-            1 -> ?LEFT_ARROW_HEAD ++ ?WS ++
-                ?DASH ++ ?WS ++
+            1 -> ?LEFT_ARROW_HEAD ++ ?SP_OPT ++
+                ?DASH ++ ?SP_OPT ++
                 lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
-                ?WS ++ ?DASH ++
-                ?WS ++ ?RIGHT_ARROW_HEAD;
-            2 -> ?LEFT_ARROW_HEAD ++ ?WS ++
-                ?DASH ++ ?WS ++
+                ?SP_OPT ++ ?DASH ++
+                ?SP_OPT ++ ?RIGHT_ARROW_HEAD;
+            2 -> ?LEFT_ARROW_HEAD ++ ?SP_OPT ++
+                ?DASH ++ ?SP_OPT ++
                 lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
-                ?WS ++ ?DASH;
-            3 -> ?DASH ++ ?WS ++
+                ?SP_OPT ++ ?DASH;
+            3 -> ?DASH ++ ?SP_OPT ++
                 lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
-                ?WS ++ ?DASH ++
-                ?WS ++ ?RIGHT_ARROW_HEAD;
-            _ -> ?DASH ++ ?WS ++
+                ?SP_OPT ++ ?DASH ++
+                ?SP_OPT ++ ?RIGHT_ARROW_HEAD;
+            _ -> ?DASH ++ ?SP_OPT ++
                 lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
-                ?WS ++ ?DASH
+                ?SP_OPT ++ ?DASH
         end
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
@@ -1252,12 +1248,12 @@ create_code(Legacy) ->
 %% Level 11
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ------------------------------------------------------------
-% PatternElementChain = RelationshipPattern, WS, NodePattern ;
-% ------------------------------------------------------------
+% --------------------------------------------------------------
+% PatternElementChain = RelationshipPattern, [SP], NodePattern ;
+% --------------------------------------------------------------
     PatternElementChain = sort_list_random([
             lists:nth(rand:uniform(RelationshipPattern_Length), RelationshipPattern) ++
-            ?WS ++
+            ?SP_OPT ++
             lists:nth(rand:uniform(NodePattern_Length), NodePattern)
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
@@ -1268,51 +1264,51 @@ create_code(Legacy) ->
 %% Level 12
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -----------------------------------------------------------
-% PatternElement = (NodePattern, { WS, PatternElementChain })
+% -------------------------------------------------------------
+% PatternElement = (NodePattern, { [SP], PatternElementChain })
 %                | ('(', PatternElement, ')') ;
-% -----------------------------------------------------------
+% -------------------------------------------------------------
     PatternElement = sort_list_random([
         case rand:uniform(?PRIME) rem 7 of
             1 -> "(" ++
                 "(" ++
                 lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
                 ")" ++
                 ")";
             2 -> "(" ++
                 lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
                 ")";
             3 -> "(" ++
                 lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
                 ")";
             4 -> "(" ++
                 lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
                 ")";
             5 -> lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
             6 -> lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
             _ -> lists:nth(rand:uniform(NodePattern_Length), NodePattern)
         end
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     PatternElement_Length = length(PatternElement),
     insert_table(Legacy, pattern_element, PatternElement),
-% ------------------------------------------------------------------
-% RelationshipsPattern = NodePattern, { WS, PatternElementChain }- ;
-% ------------------------------------------------------------------
+% --------------------------------------------------------------------
+% RelationshipsPattern = NodePattern, { [SP], PatternElementChain }- ;
+% --------------------------------------------------------------------
     RelationshipsPattern = sort_list_random([
             lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
             case rand:uniform(?PRIME) rem 2 of
-                1 -> ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                    ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
-                _ -> ?WS ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain)
+                1 -> ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                    ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
+                _ -> ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain)
             end
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
@@ -1360,25 +1356,26 @@ create_code(Legacy) ->
 %% Level 50
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ---------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------------------
 % Atom = ...
-%      | ('[', WS, Expression, WS, { ',', WS, Expression, WS }, ']')
-%      | ((F,I,L,T,E,R), WS, '(', WS, FilterExpression, WS, ')')
-%      | ((E,X,T,R,A,C,T), WS, '(', WS, FilterExpression, WS, [WS, '|', Expression], ')')
+%      | ('[', [SP], Expression, [SP], { ',', [SP], Expression, [SP] }, ']')
+%      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+%      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
 %      | ...
-%      | ((A,L,L), WS, '(', WS, FilterExpression, WS, ')')
-%      | ((A,N,Y), WS, '(', WS, FilterExpression, WS, ')')
-%      | ((N,O,N,E), WS, '(', WS, FilterExpression, WS, ')')
-%      | ((S,I,N,G,L,E), WS, '(', WS, FilterExpression, WS, ')')
+%      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
+%      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
+%      | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
+%      | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
 %      | ...
-% ---------------------------------------------------------------------------------------
+% -------------------------------------------------------------------------------------------------
     AtomSquareBracket = sort_list_random([
-            "[" ++ ?WS ++
-            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS ++
+            "[" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
             case rand:uniform(?PRIME) rem 3 of
-                1 -> "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS ++
-                    "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS;
-                2 -> "," ++ ?WS ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?WS;
+                1 ->
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
+                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
+                2 -> "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
                 _ -> []
             end ++
             "]"
@@ -1387,18 +1384,18 @@ create_code(Legacy) ->
     insert_table(Legacy, atom_square_bracket, AtomSquareBracket),
 
     AtomFilter = sort_list_random([
-            "Filter" ++ ?WS ++ "(" ++ ?WS ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?WS ++
+            "Filter" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, atom_filter, AtomFilter),
 
     AtomExtract = sort_list_random([
-            "Extract" ++ ?WS ++ "(" ++ ?WS ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?WS ++
+            "Extract" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
             case rand:uniform(?PRIME) rem 2 of
-                1 -> ?WS ++ "|" ++
+                1 -> ?SP_OPT ++ "|" ++
                     lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
                 _ -> []
             end ++
@@ -1408,56 +1405,56 @@ create_code(Legacy) ->
     insert_table(Legacy, atom_extract, AtomExtract),
 
     AtomAll = sort_list_random([
-            "All" ++ ?WS ++ "(" ++ ?WS ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?WS ++
+            "All" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, atom_all, AtomAll),
 
     AtomAny = sort_list_random([
-            "Any" ++ ?WS ++ "(" ++ ?WS ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?WS ++
+            "Any" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, atom_any, AtomAny),
 
     AtomNone = sort_list_random([
-            "None" ++ ?WS ++ "(" ++ ?WS ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?WS ++
+            "None" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, atom_none, AtomNone),
 
     AtomSingle = sort_list_random([
-            "Single" ++ ?WS ++ "(" ++ ?WS ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?WS ++
+            "Single" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ]),
     insert_table(Legacy, atom_single, AtomSingle),
-% -------------------------------------------
+% ------------------------------------------------------------------------------------------------
 % Atom = ...
 %      | CaseExpression
 %      | ...
 %      | MapLiteral
 %      | ListComprehension
-%      | ('[', WS, Expression, WS, { ',', WS, Expression, WS }, ']')
-%      | ((F,I,L,T,E,R), WS, '(', WS, FilterExpression, WS, ')')
-%      | ((E,X,T,R,A,C,T), WS, '(', WS, FilterExpression, WS, [WS, '|', Expression], ')')
+%      | ('[', [SP], Expression, [SP], { ',', [SP], Expression, [SP] }, ']')
+%      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+%      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
 %      | Reduce
-%      | ((A,L,L), WS, '(', WS, FilterExpression, WS, ')')
-%      | ((A,N,Y), WS, '(', WS, FilterExpression, WS, ')')
-%      | ((N,O,N,E), WS, '(', WS, FilterExpression, WS, ')')
-%      | ((S,I,N,G,L,E), WS, '(', WS, FilterExpression, WS, ')')
+%      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
+%      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
+%      | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
+%      | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
 %      | ShortestPathPattern
 %      | RelationshipsPattern
 %      | ParenthesizedExpression
 %      | FunctionInvocation
 %      | ...
-% -------------------------------------------
+% ------------------------------------------------------------------------------------------------
     Atom = sort_list_random(
         Atom_Part_1 ++
             case Legacy of
@@ -1508,15 +1505,15 @@ create_code(Legacy) ->
     ]),
     Limit_Length = length(Limit),
     insert_table(Legacy, limit, Limit),
-% -----------------------------------------------------------
-% PatternPart = (Variable, WS, '=', WS, AnonymousPatternPart)
+% ---------------------------------------------------------------
+% PatternPart = (Variable, [SP], '=', [SP], AnonymousPatternPart)
 %             | AnonymousPatternPart ;
-% -----------------------------------------------------------
+% ---------------------------------------------------------------
     PatternPart_Targ = AnonymousPathPattern_Length,
     PatternPart = sort_list_random([
         case rand:uniform(?PRIME) rem 2 of
             1 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
-                ?WS ++ "=" ++ ?WS ++
+                ?SP_OPT ++ "=" ++ ?SP_OPT ++
                 lists:nth(rand:uniform(AnonymousPathPattern_Length), AnonymousPathPattern);
             _ -> lists:nth(rand:uniform(AnonymousPathPattern_Length), AnonymousPathPattern)
         end
@@ -1524,16 +1521,16 @@ create_code(Legacy) ->
     ]),
     PatternPart_Length = length(PatternPart),
     insert_table(Legacy, pattern_part, PatternPart),
-% ----------------------------------------------------
-% PropertyExpression = Atom, { WS, PropertyLookup }- ;
-% ----------------------------------------------------
+% ------------------------------------------------------
+% PropertyExpression = Atom, { [SP], PropertyLookup }- ;
+% ------------------------------------------------------
     PropertyExpression_Targ = max(Atom_Length, PropertyLookup_Length),
     PropertyExpression = sort_list_random([
             lists:nth(rand:uniform(Atom_Length), Atom) ++
             case rand:uniform(?PRIME) rem 2 of
-                2 -> ?WS ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup) ++
-                    ?WS ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup);
-                _ -> ?WS ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup)
+                2 -> ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup) ++
+                    ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup);
+                _ -> ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup)
             end
         || _ <- lists:seq(1, PropertyExpression_Targ)
     ]),
@@ -1570,18 +1567,18 @@ create_code(Legacy) ->
     ]),
     ReturnItem_Length = length(ReturnItem),
     insert_table(Legacy, return_item, ReturnItem),
-% -----------------------------------------------
+% ---------------------------------------------------
 % SetItem = (PropertyExpression, '=', Expression)
 %         | (Variable, '=', Expression)
 %         | (Variable, '+=', Expression)
 %         | (Variable, NodeLabels) ;
-% -----------------------------------------------
+% ---------------------------------------------------
 % wwe ???
 % SetItem = (PropertyExpression, SP, '=', Expression)
 %         | (Variable, SP, '=', Expression)
 %         | (Variable, '+=', Expression)
 %         | (Variable, NodeLabels) ;
-% -----------------------------------------------
+% ---------------------------------------------------
     SetItem_Targ = max(Expression_Length, max(NodeLabels_Length, max(PropertyExpression_Length, Variable_Length))),
     SetItem = sort_list_random([
         case rand:uniform(?PRIME) rem 4 of
@@ -1617,53 +1614,53 @@ create_code(Legacy) ->
 %% Level 52
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-% NodePropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', WS, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), WS, '(', PropertyExpression, ')' ;
-% -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% NodePropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), [SP], '(', Variable, NodeLabel, ')', [SP], (A,S,S,E,R,T), SP, (E,X,I,S,T,S), [SP], '(', PropertyExpression, ')' ;
+% -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     NodePropertyExistenceConstraint_Targ = NodeLabel_Length + PropertyExpression_Length + Variable_Length,
     NodePropertyExistenceConstraint = sort_list_random([
-            "Constraint" ++ ?SP ++ "On" ++ ?WS ++ "(" ++
+            "Constraint" ++ ?SP ++ "On" ++ ?SP_OPT ++ "(" ++
             lists:nth(rand:uniform(Variable_Length), Variable) ++
-            lists:nth(rand:uniform(NodeLabel_Length), NodeLabel) ++ ?WS ++
-            ")" ++ ?WS ++ "Assert" ++ ?SP ++ "Exists" ++ ?WS ++ "(" ++
+            lists:nth(rand:uniform(NodeLabel_Length), NodeLabel) ++ ?SP_OPT ++
+            ")" ++ ?SP_OPT ++ "Assert" ++ ?SP ++ "Exists" ++ ?SP_OPT ++ "(" ++
             lists:nth(rand:uniform(PropertyExpression_Length), PropertyExpression) ++
             ")"
         || _ <- lists:seq(1, NodePropertyExistenceConstraint_Targ)
     ]),
     NodePropertyExistenceConstraint_Length = length(NodePropertyExistenceConstraint),
     insert_table(Legacy, node_property_existence_constraint, NodePropertyExistenceConstraint),
-% -----------------------------------------------------
-% Pattern = PatternPart, { WS, ',', WS, PatternPart } ;
-% -----------------------------------------------------
+% ---------------------------------------------------------
+% Pattern = PatternPart, { [SP], ',', [SP], PatternPart } ;
+% ---------------------------------------------------------
     Pattern_Targ = PatternPart_Length,
     Pattern = sort_list_random([
             lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
             case rand:uniform(?PRIME) rem 2 of
-                1 -> ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
+                1 -> ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
                 _ -> []
             end
         || _ <- lists:seq(1, Pattern_Targ)
     ]),
     Pattern_Length = length(Pattern),
     insert_table(Legacy, pattern, Pattern),
-% -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-% RelationshipPropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, RelationshipPatternSyntax, WS, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), WS, '(', PropertyExpression, ')' ;
-% -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% RelationshipPropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), [SP], RelationshipPatternSyntax, [SP], (A,S,S,E,R,T), SP, (E,X,I,S,T,S), [SP], '(', PropertyExpression, ')' ;
+% -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     RelationshipPropertyExistenceConstraint_Targ = RelationshipPatternSyntax_Length + PropertyExpression_Length,
     RelationshipPropertyExistenceConstraint = sort_list_random([
-            "Constraint" ++ ?SP ++ "On" ++ ?WS ++
+            "Constraint" ++ ?SP ++ "On" ++ ?SP_OPT ++
             lists:nth(rand:uniform(RelationshipPatternSyntax_Length), RelationshipPatternSyntax) ++
-            ?WS ++ "Assert" ++ ?SP ++ "Exists" ++ ?WS ++ "(" ++
+            ?SP_OPT ++ "Assert" ++ ?SP ++ "Exists" ++ ?SP_OPT ++ "(" ++
             lists:nth(rand:uniform(PropertyExpression_Length), PropertyExpression) ++
             ")"
         || _ <- lists:seq(1, RelationshipPropertyExistenceConstraint_Targ)
     ]),
     RelationshipPropertyExistenceConstraint_Length = length(RelationshipPropertyExistenceConstraint),
     insert_table(Legacy, relationship_property_existence_constraint, RelationshipPropertyExistenceConstraint),
-% ----------------------------------------------------------
-% ReturnItems = ('*', { WS, ',', WS, ReturnItem })
-%             | (ReturnItem, { WS, ',', WS, ReturnItem }) ;
-% ---------------------------------------------------------
+% -------------------------------------------------------------
+% ReturnItems = ('*', { [SP], ',', [SP], ReturnItem })
+%             | (ReturnItem, { [SP], ',', [SP], ReturnItem }) ;
+% -------------------------------------------------------------
     ReturnItems_Targ = ReturnItem_Length,
     ReturnItems = sort_list_random([
         "*"
@@ -1671,29 +1668,29 @@ create_code(Legacy) ->
     [
         case rand:uniform(?PRIME) rem 5 of
             1 -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
-                ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
-                ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
             2 -> "*" ++
-                ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
-                ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
             3 -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
-                ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
             4 -> "*" ++
-                ?WS ++ "," ++ ?WS ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
             _ -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem)
         end
         || _ <- lists:seq(1, ReturnItems_Targ)
     ]),
     ReturnItems_Length = length(ReturnItems),
     insert_table(Legacy, return_items, ReturnItems),
-% ------------------------------------------------------------
+% ----------------------------------------------------------------
 % SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
 %          | (Expression, [(A,S,C,E,N,D,I,N,G) | (A,S,C)]) ;
-% ------------------------------------------------------------
+% ----------------------------------------------------------------
 % wwe ???
 % SortItem = (Expression, SP, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
 %          | (Expression, SP, [(A,S,C,E,N,D,I,N,G) | (A,S,C)]) ;
-% ------------------------------------------------------------
+% ----------------------------------------------------------------
     SortItem_Targ = Expression_Length,
     SortItem = sort_list_random([
             lists:nth(rand:uniform(Expression_Length), Expression) ++
@@ -1708,15 +1705,15 @@ create_code(Legacy) ->
     ]),
     SortItem_Length = length(SortItem),
     insert_table(Legacy, sort_item, SortItem),
-% -----------------------------------------------------------------------------------------------------------------------------------------------------------------
-% UniqueConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', WS, (A,S,S,E,R,T), SP, PropertyExpression, SP, (I,S), SP, (U,N,I,Q,U,E) ;
-% -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% UniqueConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), [SP], '(', Variable, NodeLabel, ')', [SP], (A,S,S,E,R,T), SP, PropertyExpression, SP, (I,S), SP, (U,N,I,Q,U,E) ;
+% ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
     UniqueConstraint_Targ = NodeLabel_Length + PropertyExpression_Length + Variable_Length,
     UniqueConstraint = sort_list_random([
-            "Constraint" ++ ?SP ++ "On" ++ ?WS ++ "(" ++
+            "Constraint" ++ ?SP ++ "On" ++ ?SP_OPT ++ "(" ++
             lists:nth(rand:uniform(Variable_Length), Variable) ++
-            lists:nth(rand:uniform(NodeLabel_Length), NodeLabel) ++ ?WS ++
-            ")" ++ ?WS ++ "Assert" ++ ?SP ++
+            lists:nth(rand:uniform(NodeLabel_Length), NodeLabel) ++ ?SP_OPT ++
+            ")" ++ ?SP_OPT ++ "Assert" ++ ?SP ++
             lists:nth(rand:uniform(PropertyExpression_Length), PropertyExpression) ++
             ?SP ++ "Is" ++ ?SP ++ "Unique"
         || _ <- lists:seq(1, UniqueConstraint_Targ)
@@ -1728,17 +1725,17 @@ create_code(Legacy) ->
 %% Level 53
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ---------------------------------------------------------------------
-% Order = (O,R,D,E,R), SP, (B,Y), SP, SortItem, { ',', WS, SortItem } ;
-% ---------------------------------------------------------------------
+% -----------------------------------------------------------------------
+% Order = (O,R,D,E,R), SP, (B,Y), SP, SortItem, { ',', [SP], SortItem } ;
+% -----------------------------------------------------------------------
     Order_Targ = SortItem_Length,
     Order = sort_list_random([
             "Order" ++ ?SP ++ "By" ++ ?SP ++
             lists:nth(rand:uniform(SortItem_Length), SortItem) ++
             case rand:uniform(?PRIME) rem 3 of
-                1 -> "," ++ ?WS ++ lists:nth(rand:uniform(SortItem_Length), SortItem) ++
-                    "," ++ ?WS ++ lists:nth(rand:uniform(SortItem_Length), SortItem);
-                2 -> "," ++ ?WS ++ lists:nth(rand:uniform(SortItem_Length), SortItem);
+                1 -> "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem) ++
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem);
+                2 -> "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem);
                 _ -> []
             end
         || _ <- lists:seq(1, Order_Targ)
@@ -1775,12 +1772,12 @@ create_code(Legacy) ->
 %% Level 90
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -------------------------------------
-% Create = (C,R,E,A,T,E), WS, Pattern ;
-% -------------------------------------
+% ---------------------------------------
+% Create = (C,R,E,A,T,E), [SP], Pattern ;
+% ---------------------------------------
 % wwe ???
 % Create = (C,R,E,A,T,E), SP, Pattern ;
-% -------------------------------------
+% ---------------------------------------
     Create = sort_list_random([
             "Create" ++ ?SP ++
             lists:nth(rand:uniform(Pattern_Length), Pattern)
@@ -1825,12 +1822,12 @@ create_code(Legacy) ->
                                                         _ -> []
                                                     end,
     insert_table(Legacy, create_relationship_property_existence_constraint, CreateRelationshipPropertyExistenceConstraint),
-% --------------------------------------------------------------
-% CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern ;
-% --------------------------------------------------------------
+% ----------------------------------------------------------------
+% CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), [SP], Pattern ;
+% ----------------------------------------------------------------
 % wwe ???
 % CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), SP, Pattern ;
-% --------------------------------------------------------------
+% ----------------------------------------------------------------
     CreateUnique = case Legacy of
                        true -> sort_list_random([
                                "Create" ++ ?SP ++ "Unique" ++ ?SP ++
@@ -1852,14 +1849,14 @@ create_code(Legacy) ->
                                  _ -> []
                              end,
     insert_table(Legacy, create_unique_constraint, CreateUniqueConstraint),
-% -------------------------------------------------------------------------------
+% ----------------------------------------------------------------------------------
 % Delete = ((D,E,L,E,T,E), Expression, { ',', Expression })
 %        | ((D,E,T,A,C,H), SP, (D,E,L,E,T,E), Expression, { ',', Expression }) ;
-% -------------------------------------------------------------------------------
+% ----------------------------------------------------------------------------------
 % wwe ???
 % Delete = ((D,E,L,E,T,E), SP, Expression, { ',', Expression })
 %        | ((D,E,T,A,C,H), SP, (D,E,L,E,T,E), SP, Expression, { ',', Expression }) ;
-% ------------------------------------------------------------------------------
+% ----------------------------------------------------------------------------------
     Delete = sort_list_random([
         case rand:uniform(?PRIME) rem 6 of
             1 -> "Detach" ++ ?SP ++
@@ -1963,12 +1960,12 @@ create_code(Legacy) ->
                   _ -> []
               end,
     insert_table(Legacy, load_csv, LoadCSV),
-% ------------------------------------------------------------------------
-% Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), WS, Pattern, [WS, Where] ;
-% ------------------------------------------------------------------------
+% ----------------------------------------------------------------------------
+% Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), [SP], Pattern, [[SP], Where] ;
+% ----------------------------------------------------------------------------
 % wwe ???
 % Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), SP, Pattern, [SP, Where] ;
-% ------------------------------------------------------------------------
+% -----------------------------------------------------------------------------
     Match = sort_list_random([
         case rand:uniform(?PRIME) rem 12 of
             1 -> "Optional" ++ ?SP ++
@@ -2047,18 +2044,18 @@ create_code(Legacy) ->
         || _ <- lists:seq(1, ?MAX_CLAUSE)
     ]),
     insert_table(Legacy, match, Match),
-% ---------------------------------------------------------------------
-% Remove = (R,E,M,O,V,E), SP, RemoveItem, { WS, ',', WS, RemoveItem } ;
-% ---------------------------------------------------------------------
+% -------------------------------------------------------------------------
+% Remove = (R,E,M,O,V,E), SP, RemoveItem, { [SP], ',', [SP], RemoveItem } ;
+% -------------------------------------------------------------------------
     Remove = sort_list_random([
             "Remove" ++ ?SP ++
             lists:nth(rand:uniform(RemoveItem_Length), RemoveItem) ++
             case rand:uniform(?PRIME) rem 3 of
-                1 -> ?WS ++ "," ++ ?WS ++
+                1 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
                     lists:nth(rand:uniform(RemoveItem_Length), RemoveItem) ++
-                    ?WS ++ "," ++ ?WS ++
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++
                     lists:nth(rand:uniform(RemoveItem_Length), RemoveItem);
-                2 -> ?WS ++ "," ++ ?WS ++
+                2 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
                     lists:nth(rand:uniform(RemoveItem_Length), RemoveItem);
                 _ -> []
             end
@@ -2079,12 +2076,12 @@ create_code(Legacy) ->
         || _ <- lists:seq(1, ?MAX_CLAUSE)
     ]),
     insert_table(Legacy, return, Return),
-% ------------------------------------------
+% ----------------------------------------------
 % Set = (S,E,T), SetItem, { ',', SetItem } ;
-% ------------------------------------------
+% ----------------------------------------------
 % wwe ???
 % Set = (S,E,T), SP, SetItem, { ',', SetItem } ;
-% ------------------------------------------
+% ----------------------------------------------
     Set = sort_list_random([
             "Set" ++ ?SP ++
             lists:nth(rand:uniform(SetItem_Length), SetItem) ++
@@ -2098,18 +2095,18 @@ create_code(Legacy) ->
     ]),
     Set_Length = length(Set),
     insert_table(Legacy, set, Set),
-% ---------------------------------------------------------------------------
-% Start = (S,T,A,R,T), SP, StartPoint, { WS, ',', WS, StartPoint }, [Where] ;
-% ---------------------------------------------------------------------------
+% -------------------------------------------------------------------------------
+% Start = (S,T,A,R,T), SP, StartPoint, { [SP], ',', [SP], StartPoint }, [Where] ;
+% -------------------------------------------------------------------------------
     Start = case Legacy of
                 true -> sort_list_random([
                         "Start" ++ ?SP ++
                         lists:nth(rand:uniform(StartPoint_Length), StartPoint) ++ ?SP ++
                         case rand:uniform(?PRIME) rem 4 of
-                            1 -> ?WS ++ "," ++ ?WS ++
+                            1 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
                                 lists:nth(rand:uniform(StartPoint_Length), StartPoint) ++
                                 lists:nth(rand:uniform(Where_Length), Where);
-                            2 -> ?WS ++ "," ++ ?WS ++
+                            2 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
                                 lists:nth(rand:uniform(StartPoint_Length), StartPoint);
                             3 -> lists:nth(rand:uniform(Where_Length), Where);
                             _ -> []
@@ -2119,12 +2116,12 @@ create_code(Legacy) ->
                 _ -> []
             end,
     insert_table(Legacy, start, Start),
-% -----------------------------------------------------------------
-% Unwind = (U,N,W,I,N,D), WS, Expression, SP, (A,S), SP, Variable ;
-% -----------------------------------------------------------------
+% -------------------------------------------------------------------
+% Unwind = (U,N,W,I,N,D), [SP], Expression, SP, (A,S), SP, Variable ;
+% -------------------------------------------------------------------
 % wwe ???
 % Unwind = (U,N,W,I,N,D), SP, Expression, SP, (A,S), SP, Variable ;
-% -----------------------------------------------------------------
+% -------------------------------------------------------------------
     Unwind = sort_list_random([
             "Unwind" ++ ?SP ++
             lists:nth(rand:uniform(Expression_Length), Expression) ++
@@ -2133,14 +2130,14 @@ create_code(Legacy) ->
         || _ <- lists:seq(1, ?MAX_CLAUSE)
     ]),
     insert_table(Legacy, unwind, Unwind),
-% --------------------------------------------------------------
+% ------------------------------------------------------------------
 % With = ((W,I,T,H), (D,I,S,T,I,N,C,T), SP, ReturnBody, [Where])
 %      | ((W,I,T,H), SP, ReturnBody, [Where])
-% --------------------------------------------------------------
-% wwe ???
+% ------------------------------------------------------------------
+% wwe ???-
 % With = ((W,I,T,H), (D,I,S,T,I,N,C,T), SP, ReturnBody, [SP, Where])
 %      | ((W,I,T,H), SP, ReturnBody, [SP, Where])
-% --------------------------------------------------------------
+% ------------------------------------------------------------------
     With = sort_list_random([
             "With" ++ ?SP ++
             case rand:uniform(?PRIME) rem 4 of
@@ -2227,22 +2224,22 @@ create_code(Legacy) ->
 %% Level 92
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ----------------------------------------------------------------------------------------------------------------
-% Foreach = (F,O,R,E,A,C,H), WS, '(', WS, Variable, SP, (I,N), SP, Expression, WS, '|', { SP, Clause }-, WS, ')' ;
-% ----------------------------------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------------------------------------------------
+% Foreach = (F,O,R,E,A,C,H), [SP], '(', [SP], Variable, SP, (I,N), SP, Expression, [SP], '|', { SP, Clause }-, [SP], ')' ;
+% ------------------------------------------------------------------------------------------------------------------------
     Foreach = case Legacy of
                   true -> sort_list_random([
-                          "Foreach" ++ ?WS ++ "(" ++ ?WS ++
+                          "Foreach" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
                           lists:nth(rand:uniform(Variable_Length), Variable) ++
                           ?SP ++ "In" ++ ?SP ++
                           lists:nth(rand:uniform(Expression_Length), Expression) ++
-                          ?WS ++ "|" ++
+                          ?SP_OPT ++ "|" ++
                           case rand:uniform(?PRIME) rem 2 of
                               1 -> ?SP ++ lists:nth(rand:uniform(Clause_Part_1_Length), Clause_Part_1) ++
                                   ?SP ++ lists:nth(rand:uniform(Clause_Part_1_Length), Clause_Part_1);
                               _ -> ?SP ++ lists:nth(rand:uniform(Clause_Part_1_Length), Clause_Part_1)
                           end ++
-                          ?WS ++ ")"
+                          ?SP_OPT ++ ")"
                       || _ <- lists:seq(1, ?MAX_CLAUSE)
                   ]);
                   _ -> []
@@ -2269,12 +2266,12 @@ create_code(Legacy) ->
 %% Level 93
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -----------------------------------------------------------
-% Merge = (M,E,R,G,E), WS, PatternPart, { SP, MergeAction } ;
-% -----------------------------------------------------------
+% -------------------------------------------------------------
+% Merge = (M,E,R,G,E), [SP], PatternPart, { SP, MergeAction } ;
+% -------------------------------------------------------------
 % wwe ???
 % Merge = (M,E,R,G,E), SP, PatternPart, { SP, MergeAction } ;
-% -----------------------------------------------------------
+% -------------------------------------------------------------
     Merge = sort_list_random([
             "Merge" ++ ?SP ++
             lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
@@ -2292,13 +2289,13 @@ create_code(Legacy) ->
 %% Level 94
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ---------------------
+% ----------------
 % Clause = ...
 %        | Merge
 %        | ...
 %        | Foreach
 %        | ...
-% ---------------------
+% ----------------
     Clause = sort_list_random(
         Clause_Part_1 ++
             Merge ++
@@ -2313,12 +2310,12 @@ create_code(Legacy) ->
 %% Level 95
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ----------------------------------------
-% LoadCSVQuery = LoadCSV, { WS, Clause } ;
-% ----------------------------------------
+% ------------------------------------------
+% LoadCSVQuery = LoadCSV, { [SP], Clause } ;
+% ------------------------------------------
 % wwe ???
 % LoadCSVQuery = LoadCSV, { SP, Clause } ;
-% ----------------------------------------
+% ------------------------------------------
     LoadCSVQuery = sort_list_random([
             LC ++
             case rand:uniform(?PRIME) rem 3 of
@@ -2330,12 +2327,12 @@ create_code(Legacy) ->
         || LC <- LoadCSV
     ]),
     insert_table(Legacy, load_csv_query, LoadCSVQuery),
-% --------------------------------------
-% SingleQuery = Clause, { WS, Clause } ;
-% --------------------------------------
+% ----------------------------------------
+% SingleQuery = Clause, { [SP], Clause } ;
+% ----------------------------------------
 % wwe ???
 % SingleQuery = Clause, { SP, Clause } ;
-% --------------------------------------
+% ----------------------------------------
     SingleQuery = sort_list_random([
             C ++
             case rand:uniform(?PRIME) rem 3 of
@@ -2352,22 +2349,22 @@ create_code(Legacy) ->
 %% Level 96
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% --------------------------------------------------------
-% BulkImportQuery = PeriodicCommitHint, WS, LoadCSVQuery ;
-% --------------------------------------------------------
+% ----------------------------------------------------------
+% BulkImportQuery = PeriodicCommitHint, [SP], LoadCSVQuery ;
+% ----------------------------------------------------------
     BulkImportQuery = sort_list_random([
-            PeriodicCommitHint ++ ?WS ++ LCQ
+            PeriodicCommitHint ++ ?SP_OPT ++ LCQ
         || LCQ <- LoadCSVQuery
     ]),
     insert_table(Legacy, bulk_import_query, BulkImportQuery),
-% -----------------------------------------------
-% Union = ((U,N,I,O,N), SP, (A,L,L), SingleQuery)
-%       | ((U,N,I,O,N), SingleQuery) ;
-% -----------------------------------------------
+% -----------------------------------------------------
+% Union = ((U,N,I,O,N), SP, (A,L,L), [SP], SingleQuery)
+%       | ((U,N,I,O,N), [SP], SingleQuery) ;
+% -----------------------------------------------------
 % wwe ???
 % Union = ((U,N,I,O,N), SP, (A,L,L), SP, SingleQuery)
 %       | ((U,N,I,O,N), SP, SingleQuery) ;
-% -----------------------------------------------
+% -----------------------------------------------------
     Union = sort_list_random([
             "Union" ++
             case rand:uniform(?PRIME) rem 2 of
@@ -2384,12 +2381,12 @@ create_code(Legacy) ->
 %% Level 97
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -------------------------------------------
-% RegularQuery = SingleQuery, { WS, Union } ;
-% -------------------------------------------
+% ---------------------------------------------
+% RegularQuery = SingleQuery, { [SP], Union } ;
+% ---------------------------------------------
 % wwe ???
 % RegularQuery = SingleQuery, { SP, Union } ;
-% -------------------------------------------
+% ---------------------------------------------
     RegularQuery = sort_list_random([
             SQ ++
             case rand:uniform(?PRIME) rem 3 of
@@ -2446,21 +2443,21 @@ create_code(Legacy) ->
 %% Level 100
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -----------------------------------------------------
-% Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
-% -----------------------------------------------------
+% -----------------------------------------------------------
+% Cypher = [SP], QueryOptions, Statement, [[SP], ';'], [SP] ;
+% -----------------------------------------------------------
     Cypher_Curr = sort_list_random([
-            ?WS ++
+            ?SP_OPT ++
             case Legacy of
                 true -> lists:nth(rand:uniform(QueryOptions_Length), QueryOptions);
                 _ -> []
             end ++
             S ++
             case rand:uniform(?PRIME) rem 2 of
-                1 -> ?WS ++ ";";
+                1 -> ?SP_OPT ++ ";";
                 _ -> []
             end
-            ++ ?WS
+            ++ ?SP_OPT
         || S <- Statement
     ]),
     Cypher = case length(Cypher_Curr) > ?MAX_CYPHER of
@@ -2511,107 +2508,107 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                   end,
     Expression2_Length = length(Expression2),
     insert_table(_Legacy, expression2, Expression2),
-% -----------------------------------------------------------------------------
-% Expression3 = Expression2, { (WS, '[', Expression, ']')
-%                            | (WS, '[', [Expression], '..', [Expression], ']')
-%                            | (((WS, '=~')
-%                              | (SP, (I,N))
-%                              | (SP, (S,T,A,R,T,S), SP, (W,I,T,H))
-%                              | (SP, (E,N,D,S), SP, (W,I,T,H))
-%                              | (SP, (C,O,N,T,A,I,N,S))), WS, Expression2)
+% -------------------------------------------------------------------------------
+% Expression3 = Expression2, { ([SP], '[', Expression, ']')
+%                            | ([SP], '[', [Expression], '..', [Expression], ']')
+%                            | ((([SP], '=~')
+%                            | (SP, (I,N))
+%                            | (SP, (S,T,A,R,T,S), SP, (W,I,T,H))
+%                            | (SP, (E,N,D,S), SP, (W,I,T,H))
+%                            | (SP, (C,O,N,T,A,I,N,S))), [SP], Expression2)
 %                            | (SP, (I,S), SP, (N,U,L,L))
 %                            | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
-% -----------------------------------------------------------------------------
+% -------------------------------------------------------------------------------
     Expression3_Prev = case ets:lookup(?CODE_TEMPLATES, expression3) of
                            [{_, Expression3_Exist}] -> Expression3_Exist;
                            _ -> []
                        end,
     Expression3_Curr = sort_list_random(sets:to_list(sets:from_list(
         Expression3_Prev ++
-            [lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                case rand:uniform(?PRIME) rem 23 of
-                    1 -> ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]" ++
-                        ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]";
-                    2 -> ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ".." ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]" ++
-                        ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ".." ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]";
-                    3 -> ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ".." ++ "]" ++
-                        ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ".." ++ "]";
-                    4 -> ?WS ++ "[" ++ ".." ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]" ++
-                        ?WS ++ "[" ++ ".." ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]";
-                    5 -> ?SP ++ "=~" ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ?SP ++ "=~" ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    6 -> ?SP ++ "In" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ?SP ++ "In" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    7 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    8 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    9 -> ?SP ++ "Contains" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ?SP ++ "Contains" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    10 -> ?SP ++ "Is" ++ ?SP ++ "Null" ++
-                        ?SP ++ "Is" ++ ?SP ++ "Null";
-                    11 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null" ++
-                        ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
-                    12 -> ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]";
-                    13 -> ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ".." ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]";
-                    14 -> ?WS ++ "[" ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        ".." ++ "]";
-                    15 -> ?WS ++ "[" ++
-                        ".." ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
-                        "]";
-                    16 -> ?SP ++ "=~" ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    17 -> ?SP ++ "In" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    18 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    19 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    20 -> ?SP ++ "Contains" ++ ?SP ++ ?WS ++
-                        lists:nth(rand:uniform(Expression2_Length), Expression2);
-                    21 -> ?SP ++ "Is" ++ ?SP ++ "Null";
-                    22 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
-                    _ -> []
-                end
-                || _ <- lists:seq(1, Max)
-            ]
+        [lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+            case rand:uniform(?PRIME) rem 23 of
+                1 -> ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]" ++
+                    ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]";
+                2 -> ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ".." ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]" ++
+                    ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ".." ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]";
+                3 -> ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ".." ++ "]" ++
+                    ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ".." ++ "]";
+                4 -> ?SP_OPT ++ "[" ++ ".." ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]" ++
+                    ?SP_OPT ++ "[" ++ ".." ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]";
+                5 -> ?SP ++ "=~" ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?SP ++ "=~" ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                6 -> ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                7 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                8 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                9 -> ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                10 -> ?SP ++ "Is" ++ ?SP ++ "Null" ++
+                    ?SP ++ "Is" ++ ?SP ++ "Null";
+                11 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null" ++
+                    ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
+                12 -> ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]";
+                13 -> ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ".." ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]";
+                14 -> ?SP_OPT ++ "[" ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    ".." ++ "]";
+                15 -> ?SP_OPT ++ "[" ++
+                    ".." ++ lists:nth(rand:uniform(Expression2_Length), Expression2) ++
+                    "]";
+                16 -> ?SP ++ "=~" ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                17 -> ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                18 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                19 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                20 -> ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression2_Length), Expression2);
+                21 -> ?SP ++ "Is" ++ ?SP ++ "Null";
+                22 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
+                _ -> []
+            end
+            || _ <- lists:seq(1, Max)
+        ]
     ))),
     Expression3 = case length(Expression3_Curr) > Max of
                       true -> lists:sublist(Expression3_Curr, 1, Max);
@@ -2645,9 +2642,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                   end,
     Expression4_Length = length(Expression4),
     insert_table(_Legacy, expression4, Expression4),
-% ---------------------------------------------------------
-% Expression5 = Expression4, { WS, '^', WS, Expression4 } ;
-% ---------------------------------------------------------
+% -------------------------------------------------------------
+% Expression5 = Expression4, { [SP], '^', [SP], Expression4 } ;
+% -------------------------------------------------------------
     Expression5_Prev = case ets:lookup(?CODE_TEMPLATES, expression5) of
                            [{_, Expression5_Exist}] -> Expression5_Exist;
                            _ -> []
@@ -2657,9 +2654,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
         [
                 lists:nth(rand:uniform(Expression4_Length), Expression4) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR * 3 of
-                    1 -> ?WS ++ "^" ++ ?WS ++ lists:nth(rand:uniform(Expression4_Length), Expression4) ++
-                        ?WS ++ "^" ++ ?WS ++ lists:nth(rand:uniform(Expression4_Length), Expression4);
-                    2 -> ?WS ++ "^" ++ ?WS ++ lists:nth(rand:uniform(Expression4_Length), Expression4);
+                    1 -> ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression4_Length), Expression4) ++
+                        ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression4_Length), Expression4);
+                    2 -> ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression4_Length), Expression4);
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
@@ -2670,9 +2667,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                   end,
     Expression5_Length = length(Expression5),
     insert_table(_Legacy, expression5, Expression5),
-% ---------------------------------------------------------------------------------------------------------------------
-% Expression6 = Expression5, { (WS, '*', WS, Expression5) | (WS, '/', WS, Expression5) | (WS, '%', WS, Expression5) } ;
-% ---------------------------------------------------------------------------------------------------------------------
+% ---------------------------------------------------------------------------------------------------------------------------------
+% Expression6 = Expression5, { ([SP], '*', [SP], Expression5) | ([SP], '/', [SP], Expression5) | ([SP], '%', [SP], Expression5) } ;
+% ---------------------------------------------------------------------------------------------------------------------------------
     Expression6_Prev = case ets:lookup(?CODE_TEMPLATES, expression6) of
                            [{_, Expression6_Exist}] -> Expression6_Exist;
                            _ -> []
@@ -2682,15 +2679,15 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
         [
                 lists:nth(rand:uniform(Expression5_Length), Expression5) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR * 7 of
-                    1 -> ?WS ++ "*" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5) ++
-                        ?WS ++ "*" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
-                    2 -> ?WS ++ "/" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5) ++
-                        ?WS ++ "/" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
-                    3 -> ?WS ++ "%" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5) ++
-                        ?WS ++ "%" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
-                    4 -> ?WS ++ "*" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
-                    5 -> ?WS ++ "/" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
-                    6 -> ?WS ++ "%" ++ ?WS ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
+                    1 -> ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5) ++
+                        ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
+                    2 -> ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5) ++
+                        ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
+                    3 -> ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5) ++
+                        ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
+                    4 -> ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
+                    5 -> ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
+                    6 -> ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression5_Length), Expression5);
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
@@ -2701,9 +2698,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                   end,
     Expression6_Length = length(Expression6),
     insert_table(_Legacy, expression6, Expression6),
-% -----------------------------------------------------------------------------------------
-% Expression7 = Expression6, { (WS, '+', WS, Expression6) | (WS, '-', WS, Expression6) } ;
-% -----------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------------------------
+% Expression7 = Expression6, { ([SP], '+', [SP], Expression6) | ([SP], '-', [SP], Expression6) } ;
+% ------------------------------------------------------------------------------------------------
     Expression7_Prev = case ets:lookup(?CODE_TEMPLATES, expression7) of
                            [{_, Expression7_Exist}] -> Expression7_Exist;
                            _ -> []
@@ -2713,12 +2710,12 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
         [
                 lists:nth(rand:uniform(Expression6_Length), Expression6) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR * 5 of
-                    1 -> ?WS ++ "+" ++ ?WS ++ lists:nth(rand:uniform(Expression6_Length), Expression6) ++
-                        ?WS ++ "+" ++ ?WS ++ lists:nth(rand:uniform(Expression6_Length), Expression6);
-                    2 -> ?WS ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression6_Length), Expression6) ++
-                        ?WS ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression6_Length), Expression6);
-                    3 -> ?WS ++ "+" ++ ?WS ++ lists:nth(rand:uniform(Expression6_Length), Expression6);
-                    4 -> ?WS ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression6_Length), Expression6);
+                    1 -> ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression6_Length), Expression6) ++
+                        ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression6_Length), Expression6);
+                    2 -> ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression6_Length), Expression6) ++
+                        ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression6_Length), Expression6);
+                    3 -> ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression6_Length), Expression6);
+                    4 -> ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression6_Length), Expression6);
                     _ -> []
                 end
             || _ <- lists:seq(1, Max)
@@ -2729,15 +2726,15 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                   end,
     Expression7_Length = length(Expression7),
     insert_table(_Legacy, expression7, Expression7),
-% ----------------------------------------------------------------
-% PartialComparisonExpression = ('=', WS, Expression7)
-%                             | ('<>', WS, Expression7)
-%                             | ('!=', WS, Expression7)
-%                             | ('<', WS, Expression7)
-%                             | ('>', WS, Expression7)
-%                             | ('<=', WS, Expression7)
-%                             | ('>=', WS, Expression7) ;
-% ----------------------------------------------------------------
+% ---------------------------------------------------------
+% PartialComparisonExpression = ('=', [SP], Expression7)
+%                             | ('<>', [SP], Expression7)
+%                             | ('!=', [SP], Expression7)
+%                             | ('<', [SP], Expression7)
+%                             | ('>', [SP], Expression7)
+%                             | ('<=', [SP], Expression7)
+%                             | ('>=', [SP], Expression7) ;
+% ---------------------------------------------------------
     PartialComparisonExpression_Prev = case ets:lookup(?CODE_TEMPLATES, partial_comparison_expression) of
                                            [{_, PartialComparisonExpression_Exist}] ->
                                                PartialComparisonExpression_Exist;
@@ -2747,7 +2744,7 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
         PartialComparisonExpression_Prev ++
         [
             case rand:uniform(?PRIME) rem 7 of
-                1 -> "=" ++ ?WS ++ lists:nth(rand:uniform(Expression7_Length), Expression7);
+                1 -> "=" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression7_Length), Expression7);
                 2 -> "<>" ++ ?SP ++ lists:nth(rand:uniform(Expression7_Length), Expression7);
                 3 -> "!=" ++ ?SP ++ lists:nth(rand:uniform(Expression7_Length), Expression7);
                 4 -> "<" ++ ?SP ++ lists:nth(rand:uniform(Expression7_Length), Expression7);
@@ -2763,9 +2760,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                                   end,
     PartialComparisonExpression_Length = length(PartialComparisonExpression),
     insert_table(_Legacy, partial_comparison_expression, PartialComparisonExpression),
-% ----------------------------------------------------------------
-% Expression8 = Expression7, { WS, PartialComparisonExpression } ;
-% ----------------------------------------------------------------
+% ------------------------------------------------------------------
+% Expression8 = Expression7, { [SP], PartialComparisonExpression } ;
+% ------------------------------------------------------------------
     Expression8_Prev = case ets:lookup(?CODE_TEMPLATES, expression8) of
                            [{_, Expression8_Exist}] -> Expression8_Exist;
                            _ -> []
@@ -2775,11 +2772,11 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
         [
                 lists:nth(rand:uniform(Expression7_Length), Expression7) ++
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR * 3 of
-                    1 -> ?WS ++
+                    1 -> ?SP_OPT ++
                         lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression) ++
-                        ?WS ++
+                        ?SP_OPT ++
                         lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression);
-                    2 -> ?WS ++
+                    2 -> ?SP_OPT ++
                     lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression);
                     _ -> []
                 end
@@ -2840,9 +2837,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                    end,
     Expression10_Length = length(Expression10),
     insert_table(_Legacy, expression10, Expression10),
-% --------------------------------------------------------------
+% ----------------------------------------------------------------
 % Expression11 = Expression10, { SP, (X,O,R), SP, Expression10 } ;
-% --------------------------------------------------------------
+% ----------------------------------------------------------------
     Expression11_Prev = case ets:lookup(?CODE_TEMPLATES, expression11) of
                             [{_, Expression11_Exist}] -> Expression11_Exist;
                             _ -> []
@@ -2865,9 +2862,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                    end,
     Expression11_Length = length(Expression11),
     insert_table(_Legacy, expression11, Expression11),
-% ----------------------------------------------------------------
+% --------------------------------------------------------------
 % Expression12 = Expression11, { SP, (O,R), SP, Expression11 } ;
-% ----------------------------------------------------------------
+% --------------------------------------------------------------
     Expression12_Prev = case ets:lookup(?CODE_TEMPLATES, expression12) of
                             [{_, Expression12_Exist}] -> Expression12_Exist;
                             _ -> []

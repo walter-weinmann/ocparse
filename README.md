@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/walter-weinmann/ocparse.svg?branch=master)](https://travis-ci.org/walter-weinmann/ocparse)
 
-**ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang.  **ocparse** is closely aligned to the [openCypher](https://github.com/opencypher/openCypher) project and in future will be adapted on a regular basis as the [openCypher](https://github.com/opencypher/openCypher) project evolves. The [openCypher project](http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](https://neo4j.com/docs/developer-manual/current/#cypher-query-lang). And, with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the project provides the basis for the definition of the LALR grammar.
+**ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang.  **ocparse** is closely aligned to the openCypher project and in future will be adapted on a regular basis as the openCypher project evolves. The [openCypher project](http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](https://neo4j.com/docs/developer-manual/current/#cypher-query-lang). And, with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the project provides the basis for the definition of the LALR grammar.
 
 ### Legacy version:
 
@@ -283,6 +283,54 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 5. Create new Pull Request
 
 ## 6. Release Notes
+
+### Version 1.2.1
+
+Release Date: 03.10.2016 - Grammar as of 02.10.2016
+
+#### Grammar changes
+
+- `WS` has been replaced by `[SP]`.
+
+- **Union**
+
+```
+New: Union = ((U,N,I,O,N), SP, (A,L,L), [SP], SingleQuery)
+           | ((U,N,I,O,N), [SP], SingleQuery)
+           ;
+
+Old: Union = ((U,N,I,O,N), SP, (A,L,L), SingleQuery)
+           | ((U,N,I,O,N), SingleQuery)
+           ;
+```
+
+- **Atom**
+
+```
+New: Atom = ...
+          | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+          ...
+
+New: Atom = ...
+          | ((C,O,U,N,T), '(', '*', ')')
+          ...
+```
+
+- **FunctionInvocation**
+
+```
+New: FunctionInvocation = FunctionName, [SP], '(', [SP], [(D,I,S,T,I,N,C,T), [SP]], [Expression, [SP], { ',', [SP], Expression, [SP] }], ')' ;
+
+New: FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
+```
+
+- **WS**
+
+```
+New: n/a
+
+New: WS = { whitespace } ;
+```
 
 ### Version 1.2.0
 
