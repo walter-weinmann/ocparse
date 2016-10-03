@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *)
-Cypher = WS, QueryOptions, Statement, [WS, ';'], WS ;
+Cypher = [SP], QueryOptions, Statement, [[SP], ';'], [SP] ;
 
-QueryOptions = { AnyCypherOption, WS } ;
+QueryOptions = { AnyCypherOption, [SP] } ;
 
 AnyCypherOption = CypherOption
                 | Explain
@@ -31,7 +31,7 @@ Explain = E,X,P,L,A,I,N ;
 
 Profile = P,R,O,F,I,L,E ;
 
-ConfigurationOption = SymbolicName, WS, '=', WS, SymbolicName ;
+ConfigurationOption = SymbolicName, [SP], '=', [SP], SymbolicName ;
 
 Statement = Command
           | Query
@@ -41,18 +41,18 @@ Query = RegularQuery
       | BulkImportQuery
       ;
 
-RegularQuery = SingleQuery, { WS, Union } ;
+RegularQuery = SingleQuery, { [SP], Union } ;
 
-BulkImportQuery = PeriodicCommitHint, WS, LoadCSVQuery ;
+BulkImportQuery = PeriodicCommitHint, [SP], LoadCSVQuery ;
 
-SingleQuery = Clause, { WS, Clause } ;
+SingleQuery = Clause, { [SP], Clause } ;
 
 PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP] ;
 
-LoadCSVQuery = LoadCSV, { WS, Clause } ;
+LoadCSVQuery = LoadCSV, { [SP], Clause } ;
 
-Union = ((U,N,I,O,N), SP, (A,L,L), SingleQuery)
-      | ((U,N,I,O,N), SingleQuery)
+Union = ((U,N,I,O,N), SP, (A,L,L), [SP], SingleQuery)
+      | ((U,N,I,O,N), [SP], SingleQuery)
       ;
 
 Clause = LoadCSV
@@ -96,34 +96,34 @@ DropRelationshipPropertyExistenceConstraint = (D,R,O,P), SP, RelationshipPropert
 
 DropIndex = (D,R,O,P), SP, Index ;
 
-Index = (I,N,D,E,X), SP, (O,N), WS, NodeLabel, '(', PropertyKeyName, ')' ;
+Index = (I,N,D,E,X), SP, (O,N), [SP], NodeLabel, '(', PropertyKeyName, ')' ;
 
-UniqueConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', WS, (A,S,S,E,R,T), SP, PropertyExpression, SP, (I,S), SP, (U,N,I,Q,U,E) ;
+UniqueConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), [SP], '(', Variable, NodeLabel, ')', [SP], (A,S,S,E,R,T), SP, PropertyExpression, SP, (I,S), SP, (U,N,I,Q,U,E) ;
 
-NodePropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, '(', Variable, NodeLabel, ')', WS, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), WS, '(', PropertyExpression, ')' ;
+NodePropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), [SP], '(', Variable, NodeLabel, ')', [SP], (A,S,S,E,R,T), SP, (E,X,I,S,T,S), [SP], '(', PropertyExpression, ')' ;
 
-RelationshipPropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), WS, RelationshipPatternSyntax, WS, (A,S,S,E,R,T), SP, (E,X,I,S,T,S), WS, '(', PropertyExpression, ')' ;
+RelationshipPropertyExistenceConstraint = (C,O,N,S,T,R,A,I,N,T), SP, (O,N), [SP], RelationshipPatternSyntax, [SP], (A,S,S,E,R,T), SP, (E,X,I,S,T,S), [SP], '(', PropertyExpression, ')' ;
 
-RelationshipPatternSyntax = ('(', WS, ')', Dash, '[', Variable, RelType, ']', Dash, '(', WS, ')')
-                          | ('(', WS, ')', Dash, '[', Variable, RelType, ']', Dash, RightArrowHead, '(', WS, ')')
-                          | ('(', WS, ')', LeftArrowHead, Dash, '[', Variable, RelType, ']', Dash, '(', WS, ')')
+RelationshipPatternSyntax = ('(', [SP], ')', Dash, '[', Variable, RelType, ']', Dash, '(', [SP], ')')
+                          | ('(', [SP], ')', Dash, '[', Variable, RelType, ']', Dash, RightArrowHead, '(', [SP], ')')
+                          | ('(', [SP], ')', LeftArrowHead, Dash, '[', Variable, RelType, ']', Dash, '(', [SP], ')')
                           ;
 
 LoadCSV = (L,O,A,D), SP, (C,S,V), SP, [(W,I,T,H), SP, (H,E,A,D,E,R,S), SP], (F,R,O,M), SP, Expression, SP, (A,S), SP, Variable, SP, [(F,I,E,L,D,T,E,R,M,I,N,A,T,O,R), SP, StringLiteral] ;
 
-Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), WS, Pattern, { Hint }, [WS, Where] ;
+Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), [SP], Pattern, { Hint }, [[SP], Where] ;
 
-Unwind = (U,N,W,I,N,D), WS, Expression, SP, (A,S), SP, Variable ;
+Unwind = (U,N,W,I,N,D), [SP], Expression, SP, (A,S), SP, Variable ;
 
-Merge = (M,E,R,G,E), WS, PatternPart, { SP, MergeAction } ;
+Merge = (M,E,R,G,E), [SP], PatternPart, { SP, MergeAction } ;
 
 MergeAction = ((O,N), SP, (M,A,T,C,H), SP, Set)
             | ((O,N), SP, (C,R,E,A,T,E), SP, Set)
             ;
 
-Create = (C,R,E,A,T,E), WS, Pattern ;
+Create = (C,R,E,A,T,E), [SP], Pattern ;
 
-CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), WS, Pattern ;
+CreateUnique = (C,R,E,A,T,E), SP, (U,N,I,Q,U,E), [SP], Pattern ;
 
 Set = (S,E,T), SetItem, { ',', SetItem } ;
 
@@ -137,13 +137,13 @@ Delete = ((D,E,L,E,T,E), Expression, { ',', Expression })
        | ((D,E,T,A,C,H), SP, (D,E,L,E,T,E), Expression, { ',', Expression })
        ;
 
-Remove = (R,E,M,O,V,E), SP, RemoveItem, { WS, ',', WS, RemoveItem } ;
+Remove = (R,E,M,O,V,E), SP, RemoveItem, { [SP], ',', [SP], RemoveItem } ;
 
 RemoveItem = (Variable, NodeLabels)
            | PropertyExpression
            ;
 
-Foreach = (F,O,R,E,A,C,H), WS, '(', WS, Variable, SP, (I,N), SP, Expression, WS, '|', { SP, Clause }-, WS, ')' ;
+Foreach = (F,O,R,E,A,C,H), [SP], '(', [SP], Variable, SP, (I,N), SP, Expression, [SP], '|', { SP, Clause }-, [SP], ')' ;
 
 With = ((W,I,T,H), (D,I,S,T,I,N,C,T), SP, ReturnBody, [Where])
      | ((W,I,T,H), SP, ReturnBody, [Where])
@@ -155,15 +155,15 @@ Return = ((R,E,T,U,R,N), SP, (D,I,S,T,I,N,C,T), SP, ReturnBody)
 
 ReturnBody = ReturnItems, [SP, Order], [SP, Skip], [SP, Limit] ;
 
-ReturnItems = ('*', { WS, ',', WS, ReturnItem })
-            | (ReturnItem, { WS, ',', WS, ReturnItem })
+ReturnItems = ('*', { [SP], ',', [SP], ReturnItem })
+            | (ReturnItem, { [SP], ',', [SP], ReturnItem })
             ;
 
 ReturnItem = (Expression, SP, (A,S), SP, Variable)
            | Expression
            ;
 
-Order = (O,R,D,E,R), SP, (B,Y), SP, SortItem, { ',', WS, SortItem } ;
+Order = (O,R,D,E,R), SP, (B,Y), SP, SortItem, { ',', [SP], SortItem } ;
 
 Skip = (S,K,I,P), SP, Expression ;
 
@@ -173,11 +173,11 @@ SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
          | (Expression, [(A,S,C,E,N,D,I,N,G) | (A,S,C)])
          ;
 
-Hint = WS, (((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')') | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { WS, ',', WS, Variable }) | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)) ;
+Hint = [SP], (((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')') | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { [SP], ',', [SP], Variable }) | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)) ;
 
-Start = (S,T,A,R,T), SP, StartPoint, { WS, ',', WS, StartPoint }, [Where] ;
+Start = (S,T,A,R,T), SP, StartPoint, { [SP], ',', [SP], StartPoint }, [Where] ;
 
-StartPoint = Variable, WS, '=', WS, Lookup ;
+StartPoint = Variable, [SP], '=', [SP], Lookup ;
 
 Lookup = NodeLookup
        | RelationshipLookup
@@ -193,13 +193,13 @@ IndexQuery = ':', SymbolicName, '(', (StringLiteral | LegacyParameter), ')' ;
 
 IdLookup = '(', (LiteralIds | LegacyParameter | '*'), ')' ;
 
-LiteralIds = { WS, ',', WS } ;
+LiteralIds = { [SP], ',', [SP] } ;
 
 Where = (W,H,E,R,E), SP, Expression ;
 
-Pattern = PatternPart, { WS, ',', WS, PatternPart } ;
+Pattern = PatternPart, { [SP], ',', [SP], PatternPart } ;
 
-PatternPart = (Variable, WS, '=', WS, AnonymousPatternPart)
+PatternPart = (Variable, [SP], '=', [SP], AnonymousPatternPart)
             | AnonymousPatternPart
             ;
 
@@ -211,18 +211,18 @@ ShortestPathPattern = ((S,H,O,R,T,E,S,T,P,A,T,H), '(', PatternElement, ')')
                     | ((A,L,L,S,H,O,R,T,E,S,T,P,A,T,H,S), '(', PatternElement, ')')
                     ;
 
-PatternElement = (NodePattern, { WS, PatternElementChain })
+PatternElement = (NodePattern, { [SP], PatternElementChain })
                | ('(', PatternElement, ')')
                ;
 
-NodePattern = '(', WS, [Variable, WS], [NodeLabels, WS], [Properties, WS], ')' ;
+NodePattern = '(', [SP], [Variable, [SP]], [NodeLabels, [SP]], [Properties, [SP]], ')' ;
 
-PatternElementChain = RelationshipPattern, WS, NodePattern ;
+PatternElementChain = RelationshipPattern, [SP], NodePattern ;
 
-RelationshipPattern = (LeftArrowHead, WS, Dash, WS, [RelationshipDetail], WS, Dash, WS, RightArrowHead)
-                    | (LeftArrowHead, WS, Dash, WS, [RelationshipDetail], WS, Dash)
-                    | (Dash, WS, [RelationshipDetail], WS, Dash, WS, RightArrowHead)
-                    | (Dash, WS, [RelationshipDetail], WS, Dash)
+RelationshipPattern = (LeftArrowHead, [SP], Dash, [SP], [RelationshipDetail], [SP], Dash, [SP], RightArrowHead)
+                    | (LeftArrowHead, [SP], Dash, [SP], [RelationshipDetail], [SP], Dash)
+                    | (Dash, [SP], [RelationshipDetail], [SP], Dash, [SP], RightArrowHead)
+                    | (Dash, [SP], [RelationshipDetail], [SP], Dash)
                     ;
 
 RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], [RangeLiteral], [Properties], ']' ;
@@ -234,13 +234,13 @@ Properties = MapLiteral
 
 RelType = ':', RelTypeName ;
 
-RelationshipTypes = ':', RelTypeName, { WS, '|', [':'], WS, RelTypeName } ;
+RelationshipTypes = ':', RelTypeName, { [SP], '|', [':'], [SP], RelTypeName } ;
 
-NodeLabels = NodeLabel, { WS, NodeLabel } ;
+NodeLabels = NodeLabel, { [SP], NodeLabel } ;
 
 NodeLabel = ':', LabelName ;
 
-RangeLiteral = '*', WS, [IntegerLiteral, WS], ['..', WS, [IntegerLiteral, WS]] ;
+RangeLiteral = '*', [SP], [IntegerLiteral, [SP]], ['..', [SP], [IntegerLiteral, [SP]]] ;
 
 LabelName = SymbolicName ;
 
@@ -256,17 +256,17 @@ Expression10 = Expression9, { SP, (A,N,D), SP, Expression9 } ;
 
 Expression9 = { SP, (N,O,T), SP }, Expression8 ;
 
-Expression8 = Expression7, { WS, PartialComparisonExpression } ;
+Expression8 = Expression7, { [SP], PartialComparisonExpression } ;
 
-Expression7 = Expression6, { (WS, '+', WS, Expression6) | (WS, '-', WS, Expression6) } ;
+Expression7 = Expression6, { ([SP], '+', [SP], Expression6) | ([SP], '-', [SP], Expression6) } ;
 
-Expression6 = Expression5, { (WS, '*', WS, Expression5) | (WS, '/', WS, Expression5) | (WS, '%', WS, Expression5) } ;
+Expression6 = Expression5, { ([SP], '*', [SP], Expression5) | ([SP], '/', [SP], Expression5) | ([SP], '%', [SP], Expression5) } ;
 
-Expression5 = Expression4, { WS, '^', WS, Expression4 } ;
+Expression5 = Expression4, { [SP], '^', [SP], Expression4 } ;
 
-Expression4 = { ('+' | '-'), WS }, Expression3 ;
+Expression4 = { ('+' | '-'), [SP] }, Expression3 ;
 
-Expression3 = Expression2, { (WS, '[', Expression, ']') | (WS, '[', [Expression], '..', [Expression], ']') | (((WS, '=~') | (SP, (I,N)) | (SP, (S,T,A,R,T,S), SP, (W,I,T,H)) | (SP, (E,N,D,S), SP, (W,I,T,H)) | (SP, (C,O,N,T,A,I,N,S))), WS, Expression2) | (SP, (I,S), SP, (N,U,L,L)) | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
+Expression3 = Expression2, { ([SP], '[', Expression, ']') | ([SP], '[', [Expression], '..', [Expression], ']') | ((([SP], '=~') | (SP, (I,N)) | (SP, (S,T,A,R,T,S), SP, (W,I,T,H)) | (SP, (E,N,D,S), SP, (W,I,T,H)) | (SP, (C,O,N,T,A,I,N,S))), [SP], Expression2) | (SP, (I,S), SP, (N,U,L,L)) | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
 
 Expression2 = Atom, { PropertyLookup | NodeLabels } ;
 
@@ -278,17 +278,17 @@ Atom = NumberLiteral
      | (F,A,L,S,E)
      | (N,U,L,L)
      | CaseExpression
-     | ((C,O,U,N,T), '(', '*', ')')
+     | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
      | MapLiteral
      | ListComprehension
-     | ('[', WS, Expression, WS, { ',', WS, Expression, WS }, ']')
-     | ((F,I,L,T,E,R), WS, '(', WS, FilterExpression, WS, ')')
-     | ((E,X,T,R,A,C,T), WS, '(', WS, FilterExpression, WS, [WS, '|', Expression], ')')
+     | ('[', [SP], Expression, [SP], { ',', [SP], Expression, [SP] }, ']')
+     | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+     | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
      | Reduce
-     | ((A,L,L), WS, '(', WS, FilterExpression, WS, ')')
-     | ((A,N,Y), WS, '(', WS, FilterExpression, WS, ')')
-     | ((N,O,N,E), WS, '(', WS, FilterExpression, WS, ')')
-     | ((S,I,N,G,L,E), WS, '(', WS, FilterExpression, WS, ')')
+     | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
+     | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
+     | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
+     | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
      | ShortestPathPattern
      | RelationshipsPattern
      | ParenthesizedExpression
@@ -296,36 +296,36 @@ Atom = NumberLiteral
      | Variable
      ;
 
-Reduce = (R,E,D,U,C,E), WS, '(', Variable, '=', Expression, ',', IdInColl, '|', Expression, ')' ;
+Reduce = (R,E,D,U,C,E), [SP], '(', Variable, '=', Expression, ',', IdInColl, '|', Expression, ')' ;
 
-PartialComparisonExpression = ('=', WS, Expression7)
-                            | ('<>', WS, Expression7)
-                            | ('!=', WS, Expression7)
-                            | ('<', WS, Expression7)
-                            | ('>', WS, Expression7)
-                            | ('<=', WS, Expression7)
-                            | ('>=', WS, Expression7)
+PartialComparisonExpression = ('=', [SP], Expression7)
+                            | ('<>', [SP], Expression7)
+                            | ('!=', [SP], Expression7)
+                            | ('<', [SP], Expression7)
+                            | ('>', [SP], Expression7)
+                            | ('<=', [SP], Expression7)
+                            | ('>=', [SP], Expression7)
                             ;
 
-ParenthesizedExpression = '(', WS, Expression, WS, ')' ;
+ParenthesizedExpression = '(', [SP], Expression, [SP], ')' ;
 
-RelationshipsPattern = NodePattern, { WS, PatternElementChain }- ;
+RelationshipsPattern = NodePattern, { [SP], PatternElementChain }- ;
 
-FilterExpression = IdInColl, [WS, Where] ;
+FilterExpression = IdInColl, [[SP], Where] ;
 
 IdInColl = Variable, SP, (I,N), SP, Expression ;
 
-FunctionInvocation = FunctionName, WS, '(', WS, [(D,I,S,T,I,N,C,T), WS], [Expression, { ',', WS, Expression }, WS], ')' ;
+FunctionInvocation = FunctionName, [SP], '(', [SP], [(D,I,S,T,I,N,C,T), [SP]], [Expression, [SP], { ',', [SP], Expression, [SP] }], ')' ;
 
 FunctionName = SymbolicName ;
 
-ListComprehension = '[', FilterExpression, [WS, '|', Expression], ']' ;
+ListComprehension = '[', FilterExpression, [[SP], '|', Expression], ']' ;
 
-PropertyLookup = WS, '.', WS, ((PropertyKeyName, ('?' | '!')) | PropertyKeyName) ;
+PropertyLookup = [SP], '.', [SP], ((PropertyKeyName, ('?' | '!')) | PropertyKeyName) ;
 
-CaseExpression = (((C,A,S,E), { WS, CaseAlternatives }-) | ((C,A,S,E), WS, Expression, { WS, CaseAlternatives }-)), [WS, (E,L,S,E), WS, Expression], WS, (E,N,D) ;
+CaseExpression = (((C,A,S,E), { [SP], CaseAlternatives }-) | ((C,A,S,E), [SP], Expression, { [SP], CaseAlternatives }-)), [[SP], (E,L,S,E), [SP], Expression], [SP], (E,N,D) ;
 
-CaseAlternatives = (W,H,E,N), WS, Expression, WS, (T,H,E,N), WS, Expression ;
+CaseAlternatives = (W,H,E,N), [SP], Expression, [SP], (T,H,E,N), [SP], Expression ;
 
 Variable = SymbolicName ;
 
@@ -339,13 +339,13 @@ NumberLiteral = DoubleLiteral
               | IntegerLiteral
               ;
 
-MapLiteral = '{', WS, [PropertyKeyName, WS, ':', WS, Expression, WS, { ',', WS, PropertyKeyName, WS, ':', WS, Expression, WS }], '}' ;
+MapLiteral = '{', [SP], [PropertyKeyName, [SP], ':', [SP], Expression, [SP], { ',', [SP], PropertyKeyName, [SP], ':', [SP], Expression, [SP] }], '}' ;
 
-LegacyParameter = '{', WS, (SymbolicName | DecimalInteger), WS, '}' ;
+LegacyParameter = '{', [SP], (SymbolicName | DecimalInteger), [SP], '}' ;
 
 Parameter = '$', (SymbolicName | DecimalInteger) ;
 
-PropertyExpression = Atom, { WS, PropertyLookup }- ;
+PropertyExpression = Atom, { [SP], PropertyLookup }- ;
 
 PropertyKeyName = SymbolicName ;
 
@@ -446,8 +446,6 @@ UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
                ;
 
 (* Any character except "`", enclosed within `backticks`. Backticks are escaped with double backticks. *)EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
-
-WS = { whitespace } ;
 
 SP = { whitespace }- ;
 
