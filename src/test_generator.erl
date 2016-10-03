@@ -135,9 +135,7 @@ generate() ->
 
     % generic eunit tests
     ok = file_create_eunit_all(false,
-        ?ALL_CLAUSE ++
-        [atom,
-            expression]),
+        ?ALL_CLAUSE),
 
     % ----------------------------------------------------------------------------------------------
     % Legacy version -------------------------------------------------------------------------------
@@ -162,9 +160,7 @@ generate() ->
     % generic eunit tests
     ok = file_create_eunit_all(true,
         ?ALL_CLAUSE_LEGACY ++
-            ?ALL_COMMAND ++
-            [atom,
-                expression]),
+        ?ALL_COMMAND),
 
     ?debugFmt("wwe debugging generate/0 ===> End ~n", []),
 
