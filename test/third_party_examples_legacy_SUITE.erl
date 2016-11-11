@@ -1616,7 +1616,7 @@ test_neo4j_13_2_expand(_Config) ->
                  WHERE NOT (me)-[:FRIENDS_WITH]->(other)
                  RETURN other.name",
     octest_legacy:ct_string(Cypher_06),
-    Cypher_07 = "MATCH (other:Person)1705
+    Cypher_07 = "MATCH (other:Person)
                  WHERE (other)-[:FRIENDS_WITH]->() OR (other)-[:WORKS_IN]->()
                  RETURN other.name",
     octest_legacy:ct_string(Cypher_07),
