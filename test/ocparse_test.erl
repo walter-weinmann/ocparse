@@ -11,6 +11,7 @@ cypher_test_() ->
                 Cypher when is_list(Cypher) -> Cypher;
                 _ -> "*"
             end ++ ".tst",
+    % ?debugFmt("wwe debugging cypher_test_ ===> ~n WCard: ~p~n", [WCard]),
     Logs = case os:getenv("LOG") of
                V when length(V) > 0 ->
                    case lists:map(
@@ -24,10 +25,14 @@ cypher_test_() ->
            end,
     io:format(user, "File = ~s, Logs = ~p~n", [WCard, Logs]),
     {ok, Cwd} = file:get_cwd(),
-    [_ | RootPath] = lists:reverse(filename:split(Cwd)),
+    % ?debugFmt("wwe debugging cypher_test_ ===> ~n Cwd: ~p~n", [Cwd]),
+    RootPath = lists:reverse(filename:split(Cwd)),
+    % ?debugFmt("wwe debugging cypher_test_ ===> ~n RootPath: ~p~n", [RootPath]),
     TestDir = filename:join(lists:reverse(["test" | RootPath])),
+    % ?debugFmt("wwe debugging cypher_test_ ===> ~n TestDir: ~p~n", [TestDir]),
     TestFiles = lists:sort([filename:join(TestDir, T)
         || T <- filelib:wildcard(WCard, TestDir)]),
+    % ?debugFmt("wwe debugging cypher_test_ ===> ~n TestFiles: ~p~n", [TestFiles]),
     group_gen(TestFiles, Logs).
 
 group_gen(TestFiles, Logs) ->
@@ -116,16 +121,16 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
 test_cypher(TestGroup, Test, Logs) ->
     ?D1("~n ~s", [Test]),
     %?debugFmt("~n", []),
-    %?debugFmt("wwe debugging test_cypher/3 ===> ~n Test: ~p~n", [Test]),
+    %?debugFmt("wwe debugging test_cypher ===> ~n Test: ~p~n", [Test]),
     case ocparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, Tokens}} ->
-            %?debugFmt("wwe debugging test_cypher/3 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
+            %?debugFmt("wwe debugging test_cypher ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
             ?D2("~n~p", [ParseTree]),
             NCypher = case ocparse:parsetree_to_string_td(ParseTree) of
                           {error, Error} ->
                               throw({error, Error});
                           NS ->
-                              %?debugFmt("wwe debugging test_cypher/3 ===> ~n NS: ~p~n", [NS]),
+                              %?debugFmt("wwe debugging test_cypher ===> ~n NS: ~p~n", [NS]),
                               NS
                       end,
             ?D3("~n ~ts~n", [NCypher]),

@@ -352,11 +352,11 @@ test_neo4j_5_6_compatibility(_Config) ->
                  START n=node:nodes(name = \"A\")
                  RETURN n",
     octest_legacy:ct_string(Cypher_01),
-    Cypher_02 = "CYPHER 1.9
+    _Cypher_02 = "CYPHER 1.9
                  START n=node(42)
                  RETURN n".
-    % wwe ??? parenthesized expression
-    %octest_legacy:ct_string(Cypher_02).
+% wwe ??? parenthesized expression
+%octest_legacy:ct_string(Cypher_02).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 6.2 Expressions
@@ -673,7 +673,7 @@ test_neo4j_8_1_match(_Config) ->
     Cypher_13 = "MATCH (martin { name:'Charlie Sheen' })-[:ACTED_IN*1..3]-(movie:Movie)
                  RETURN movie.title",
     octest_legacy:ct_string(Cypher_13),
-    Cypher_14 = "MATCH (actor { name:'Charlie Sheen' })-[r:ACTED_IN*2]-(co_actor)
+    _Cypher_14 = "MATCH (actor { name:'Charlie Sheen' })-[r:ACTED_IN*2]-(co_actor)
                  RETURN r",
 %   octest_legacy:ct_string(Cypher_14),                                                % not supported by openCypher ???
     Cypher_15 = "MATCH (charlie:Person { name:'Charlie Sheen' }),(martin:Person { name:'Martin Sheen' })
@@ -736,7 +736,7 @@ test_neo4j_8_2_optional_match(_Config) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 test_neo4j_8_3_where(_Config) ->
-    Cypher_01 = "MATCH (n)
+    _Cypher_01 = "MATCH (n)
                  WHERE n.name = 'Peter' XOR (n.age < 30 AND n.name = \"Tobias\") OR NOT (n.name = \"Tobias\" OR n.name=\"Peter\")
                  RETURN n",
 %   octest_legacy:ct_string(Cypher_01),                                                % not supported by openCypher ???
@@ -1620,7 +1620,7 @@ test_neo4j_13_2_expand(_Config) ->
                  WHERE (other)-[:FRIENDS_WITH]->() OR (other)-[:WORKS_IN]->()
                  RETURN other.name",
     octest_legacy:ct_string(Cypher_07),
-    Cypher_08 = "MATCH (other:Person)
+    _Cypher_08 = "MATCH (other:Person)
                  WHERE NOT ((other)-[:FRIENDS_WITH]->()) OR (other)-[:WORKS_IN]->()
                  RETURN other.name",
     % wwe ??? parenthesized expression
@@ -1702,7 +1702,7 @@ test_neo4j_13_4_row_operators(_Config) ->
     Cypher_13 = "UNWIND range(1,5) AS value
                  RETURN value;",
     octest_legacy:ct_string(Cypher_13),
-    Cypher_14 = "CALL db.labels() YIELD label
+    _Cypher_14 = "CALL db.labels() YIELD label
                  RETURN *
                  ORDER BY label".
 %   octest_legacy:ct_string(Cypher_14).                                                % not supported by openCypher
@@ -1719,11 +1719,11 @@ test_neo4j_13_5_update_operators(_Config) ->
     Cypher_03 = "CYPHER planner=rule
                  CREATE (:Person { name: \"Alistair\" })",
     octest_legacy:ct_string(Cypher_03),
-    Cypher_04 = "CYPHER planner=rule
+    _Cypher_04 = "CYPHER planner=rule
                  MATCH (p:Person { name: \"me\" }),(f:Person { name: \"Andres\" })
                  MERGE (p)-[:FRIENDS_WITH]->(f)".
-    % wwe ??? parenthesized expression
-    %octest_legacy:ct_string(Cypher_04).
+% wwe ??? parenthesized expression
+%octest_legacy:ct_string(Cypher_04).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 13.6 Shortest path planning

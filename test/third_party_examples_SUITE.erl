@@ -386,10 +386,10 @@ test_neo4j_6_7_lists(_Config) ->
     octest:ct_string(Cypher_02),
     Cypher_03 = "RETURN range(0,10)[-3]",
     octest:ct_string(Cypher_03),
-    Cypher_04 = "RETURN range(0,10)[0..3]",
+    _Cypher_04 = "RETURN range(0,10)[0..3]",
     % wwe ??? range literal
     %octest:ct_string(Cypher_04),
-    Cypher_05 = "RETURN range(0,10)[0..5]",
+    _Cypher_05 = "RETURN range(0,10)[0..5]",
     % wwe ??? signed integer
     % wwe ??? range literal
     %octest:ct_string(Cypher_05),
@@ -399,10 +399,10 @@ test_neo4j_6_7_lists(_Config) ->
     octest:ct_string(Cypher_07),
     Cypher_08 = "RETURN range(0,10)[15]",
     octest:ct_string(Cypher_08),
-    Cypher_09 = "RETURN range(0,10)[5..15]",
+    _Cypher_09 = "RETURN range(0,10)[5..15]",
     % wwe ??? range literal
     %octest:ct_string(Cypher_09),
-    Cypher_10 = "RETURN size(range(0,10)[0..3])",
+    _Cypher_10 = "RETURN size(range(0,10)[0..3])",
     % wwe ??? range literal
     %octest:ct_string(Cypher_10),
     Cypher_11 = "RETURN [x IN range(0,10) WHERE x % 2 = 0 | x^3] AS result",
@@ -632,7 +632,7 @@ test_neo4j_8_1_match(_Config) ->
     Cypher_13 = "MATCH (martin { name:'Charlie Sheen' })-[:ACTED_IN*1..3]-(movie:Movie)
                  RETURN movie.title",
     octest:ct_string(Cypher_13),
-    Cypher_14 = "MATCH (actor { name:'Charlie Sheen' })-[r:ACTED_IN*2]-(co_actor)
+    _Cypher_14 = "MATCH (actor { name:'Charlie Sheen' })-[r:ACTED_IN*2]-(co_actor)
                  RETURN r",
 %   octest:ct_string(Cypher_14),                                                % not supported by openCypher ???
     Cypher_15 = "MATCH (charlie:Person { name:'Charlie Sheen' }),(martin:Person { name:'Martin Sheen' })
@@ -1460,7 +1460,7 @@ test_neo4j_13_4_row_operators(_Config) ->
     Cypher_13 = "UNWIND range(1,5) AS value
                  RETURN value;",
     octest:ct_string(Cypher_13),
-    Cypher_14 = "CALL db.labels() YIELD label
+    _Cypher_14 = "CALL db.labels() YIELD label
                  RETURN *
                  ORDER BY label".
 %   octest:ct_string(Cypher_14).                                                % not supported by openCypher
