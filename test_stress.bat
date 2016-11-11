@@ -17,8 +17,8 @@ FOR /L %%G IN (1,1,%no_runs%) DO (
    ECHO ----------------------------------------------------------------------------
    ECHO !TIME! %%G Step: test_generator.bat
    CALL test_generator.bat
-   ECHO !TIME! %%G Step: rebar ct
-   CALL rebar.cmd ct
+   ECHO !TIME! %%G Step: rebar3 ct
+   CALL rebar3.cmd ct
 )
 
 ECHO ----------------------------------------------------------------------------

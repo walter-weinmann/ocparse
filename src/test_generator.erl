@@ -98,7 +98,7 @@
 -define(MAX_RULE_ATOM, 1000).
 -define(MAX_RULE_EXPRESSION, 2000).
 -define(MAX_STATEMENT, 1000).
--define(PATH_CT, "ct").
+-define(PATH_CT, "test").
 -define(PATH_EUNIT, "test").
 -define(PRIME, 37).
 -define(RIGHT_ARROW_HEAD, ">").
