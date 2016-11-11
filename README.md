@@ -284,6 +284,20 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ## 6. Release Notes
 
+### Version 1.2.2
+
+Release Date: 11.11.2016 - Grammar as of 10.11.2016
+
+#### Grammar changes
+
+There are no relevant grammar changes available.
+
+#### New features
+
+- Support of rebar3.
+
+----------
+
 ### Version 1.2.1
 
 Release Date: 03.10.2016 - Grammar as of 02.10.2016
