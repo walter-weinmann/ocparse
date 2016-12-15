@@ -71,6 +71,7 @@ Nonterminals
  index
  index_query
  integer_literal
+ integer_literal_commalist
  label_name
  legacy_parameter
  limit
@@ -380,7 +381,8 @@ clause_list ->             clause                                               
 clause_list -> clause_list clause                                                               : '$1' ++ ['$2'].
 %% =====================================================================================================================
 
-periodic_commit_hint -> USING PERIODIC COMMIT                                                   : {periodicCommitHint}.
+periodic_commit_hint -> USING PERIODIC COMMIT                                                   : {periodicCommitHint, []}.
+periodic_commit_hint -> USING PERIODIC COMMIT integer_literal                                   : {periodicCommitHint, '$4'}.
 
 load_csv_query -> load_csv                                                                      : {loadCSVQuery, '$1', []}.
 load_csv_query -> load_csv clause_list                                                          : {loadCSVQuery, '$1', '$2'}.
@@ -619,7 +621,14 @@ id_lookup -> '(' literal_ids      ')'                                           
 id_lookup -> '(' legacy_parameter ')'                                                           : {idLookup, '$2'}.
 id_lookup -> '(' '*'              ')'                                                           : {idLookup, "(*)"}.
 
-literal_ids -> ','                                                                              : {literalIds}.
+literal_ids -> integer_literal_commalist                                                        : {literalIds, '$1'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+integer_literal_commalist -> integer_literal                                                    : ['$1'].
+integer_literal_commalist -> integer_literal ',' integer_literal_commalist                      : ['$1' | '$3'].
+%% =====================================================================================================================
 
 where -> WHERE expression                                                                       : {where, '$2'}.
 

@@ -1,5 +1,4 @@
 *.dot
-erl_crash.dump
 /_build
 /erl_crash.dump
 /rebar.lock

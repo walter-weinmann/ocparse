@@ -267,14 +267,6 @@ create_code(Legacy) ->
         "0X0123456789ABCDEF"
     ]),
     insert_table(Legacy, hex_integer, HexInteger),
-%-----------------------------------
-% LiteralIds = { [SP], ',', [SP] } ;
-%-----------------------------------
-    LiteralIds = case Legacy of
-                     true -> [?SP_OPT ++ "," ++ ?SP_OPT];
-                     _ -> []
-                 end,
-    insert_table(Legacy, literal_ids, LiteralIds),
 % ---------------------------------
 % OctalInteger = '0', OctalString ;
 % ---------------------------------
@@ -286,16 +278,6 @@ create_code(Legacy) ->
         "01234567"
     ]),
     insert_table(Legacy, octal_integer, OctalInteger),
-% ----------------------------------------------------------------------------------
-% PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP] ;
-% ----------------------------------------------------------------------------------
-    PeriodicCommitHint = case Legacy of
-                             true -> [
-                                     "Using" ++ ?SP ++ "Periodic" ++ ?SP ++ "Commit" ++ ?SP
-                             ];
-                             _ -> []
-                         end,
-    insert_table(Legacy, periodicCommit_hint, PeriodicCommitHint),
 % -------------------------
 % Profile = P,R,O,F,I,L,E ;
 % -------------------------
@@ -416,6 +398,30 @@ create_code(Legacy) ->
         end,
     FunctionName_Length = length(FunctionName),
     insert_table(Legacy, function_name, FunctionName),
+%-------------------------------------------------------------------
+% LiteralIds = IntegerLiteral, { [SP], ',', [SP], IntegerLiteral } ;
+%-------------------------------------------------------------------
+    LiteralIds = sort_list_random(
+        [
+                IL ++
+                case rand:uniform(?PRIME) rem 4 of
+                    1 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral);
+                    2 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++
+                        ?SP_OPT ++ "," ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral);
+                    3 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++
+                        ?SP_OPT ++ "," ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++
+                        ?SP_OPT ++ "," ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral);
+                    _ -> []
+                end
+            || IL <- IntegerLiteral
+        ]),
+    insert_table(Legacy, literal_ids, LiteralIds),
 % --------------------------
 % LabelName = SymbolicName ;
 % --------------------------
@@ -458,6 +464,17 @@ create_code(Legacy) ->
         || DI <- DecimalInteger
     ]),
     insert_table(Legacy, parameter, Parameter),
+% --------------------------------------------------------------------------------------------------
+% PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP, IntegerLiteral] ;
+% --------------------------------------------------------------------------------------------------
+    PeriodicCommitHint = sort_list_random(
+        ["Using" ++ ?SP ++ "Periodic" ++ ?SP ++ "Commit" ++ ?SP] ++
+        [
+                "Using" ++ ?SP ++ "Periodic" ++ ?SP ++ "Commit" ++ ?SP ++ IL ++ ?SP
+            || IL <- IntegerLiteral
+        ]),
+    PeriodicCommitHint_Length = length(PeriodicCommitHint),
+    insert_table(Legacy, periodic_commit_hint, PeriodicCommitHint),
 % --------------------------------
 % PropertyKeyName = SymbolicName ;
 % --------------------------------
@@ -758,19 +775,19 @@ create_code(Legacy) ->
         || NL <- NodeLabel]),
     NodeLabels_Length = length(NodeLabels),
     insert_table(Legacy, node_labels, NodeLabels),
-% -------------------------------------------------------------------------
-% NodeLookup = (N,O,D,E), (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
-% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------------
+% NodeLookup = (N,O,D,E), [SP], (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
+% -------------------------------------------------------------------------------
     NodeLookup = sort_list_random([
-            "Node" ++ IIL
+            "Node" ++ ?SP_OPT ++ IIL
         || IIL <- IdentifiedIndexLookup
     ] ++
         [
-                "Node" ++ IQ
+                "Node" ++ ?SP_OPT ++ IQ
             || IQ <- IndexQuery
         ] ++
         [
-                "Node" ++ IL
+                "Node" ++ ?SP_OPT ++ IL
             || IL <- IdLookup
         ]),
     insert_table(Legacy, node_lookup, NodeLookup),
@@ -1683,23 +1700,20 @@ create_code(Legacy) ->
     ]),
     ReturnItems_Length = length(ReturnItems),
     insert_table(Legacy, return_items, ReturnItems),
-% ----------------------------------------------------------------
-% SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
-%          | (Expression, [(A,S,C,E,N,D,I,N,G) | (A,S,C)]) ;
-% ----------------------------------------------------------------
+% ----------------------------------------------------------------------------------------------------
+% SortItem = Expression, [[SP], ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
+% ----------------------------------------------------------------------------------------------------
 % wwe ???
-% SortItem = (Expression, SP, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
-%          | (Expression, SP, [(A,S,C,E,N,D,I,N,G) | (A,S,C)]) ;
-% ----------------------------------------------------------------
+% SortItem = Expression, [SP, ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
+% ----------------------------------------------------------------------------------------------------
     SortItem_Targ = Expression_Length,
     SortItem = sort_list_random([
             lists:nth(rand:uniform(Expression_Length), Expression) ++
-            ?SP ++
             case rand:uniform(?PRIME) rem 4 of
-                1 -> "Descending";
-                2 -> "Desc";
-                3 -> "Ascending";
-                _ -> "Asc"
+                1 -> ?SP ++ "Descending";
+                2 -> ?SP ++ "Desc";
+                3 -> ?SP ++ "Ascending";
+                _ -> ?SP ++ "Asc"
             end
         || _ <- lists:seq(1, SortItem_Targ)
     ]),
@@ -2353,7 +2367,7 @@ create_code(Legacy) ->
 % BulkImportQuery = PeriodicCommitHint, [SP], LoadCSVQuery ;
 % ----------------------------------------------------------
     BulkImportQuery = sort_list_random([
-            PeriodicCommitHint ++ ?SP_OPT ++ LCQ
+            lists:nth(rand:uniform(PeriodicCommitHint_Length), PeriodicCommitHint) ++ ?SP_OPT ++ LCQ
         || LCQ <- LoadCSVQuery
     ]),
     insert_table(Legacy, bulk_import_query, BulkImportQuery),
@@ -2788,9 +2802,9 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
                   end,
     Expression8_Length = length(Expression8),
     insert_table(_Legacy, expression8, Expression8),
-% ------------------------------------------------
-% Expression9 = { SP, (N,O,T), SP }, Expression8 ;
-% ------------------------------------------------
+% ----------------------------------------------
+% Expression9 = { (N,O,T), [SP] }, Expression8 ;
+% ----------------------------------------------
     Expression9_Prev = case ets:lookup(?CODE_TEMPLATES, expression9) of
                            [{_, Expression9_Exist}] -> Expression9_Exist;
                            _ -> []
@@ -2799,8 +2813,8 @@ create_code_expression(Max, _Legacy, Atom, NodeLabels, PropertyLookup) ->
         Expression9_Prev ++
         [
                 case rand:uniform(?PRIME) rem ?MAX_BASE_VAR * 3 of
-                    1 -> ?SP ++ "Not" ++ ?SP ++ ?SP ++ "Not" ++ ?SP;
-                    2 -> ?SP ++ "Not" ++ ?SP;
+                    1 -> "Not" ++ ?SP_OPT ++ "Not" ++ ?SP_OPT;
+                    2 -> "Not" ++ ?SP_OPT;
                     _ -> []
                 end ++
                 lists:nth(rand:uniform(Expression8_Length), Expression8)

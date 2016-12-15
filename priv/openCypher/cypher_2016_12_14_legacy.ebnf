@@ -47,7 +47,7 @@ BulkImportQuery = PeriodicCommitHint, [SP], LoadCSVQuery ;
 
 SingleQuery = Clause, { [SP], Clause } ;
 
-PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP] ;
+PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP, IntegerLiteral] ;
 
 LoadCSVQuery = LoadCSV, { [SP], Clause } ;
 
@@ -169,9 +169,7 @@ Skip = (S,K,I,P), SP, Expression ;
 
 Limit = (L,I,M,I,T), SP, Expression ;
 
-SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
-         | (Expression, [(A,S,C,E,N,D,I,N,G) | (A,S,C)])
-         ;
+SortItem = Expression, [[SP], ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
 
 Hint = [SP], (((U,S,I,N,G), SP, (I,N,D,E,X), SP, Variable, NodeLabel, '(', PropertyKeyName, ')') | ((U,S,I,N,G), SP, (J,O,I,N), SP, (O,N), SP, Variable, { [SP], ',', [SP], Variable }) | ((U,S,I,N,G), SP, (S,C,A,N), SP, Variable, NodeLabel)) ;
 
@@ -183,7 +181,7 @@ Lookup = NodeLookup
        | RelationshipLookup
        ;
 
-NodeLookup = (N,O,D,E), (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
+NodeLookup = (N,O,D,E), [SP], (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
 
 RelationshipLookup = ((R,E,L,A,T,I,O,N,S,H,I,P) | (R,E,L)), (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
 
@@ -193,7 +191,7 @@ IndexQuery = ':', SymbolicName, '(', (StringLiteral | LegacyParameter), ')' ;
 
 IdLookup = '(', (LiteralIds | LegacyParameter | '*'), ')' ;
 
-LiteralIds = { [SP], ',', [SP] } ;
+LiteralIds = IntegerLiteral, { [SP], ',', [SP], IntegerLiteral } ;
 
 Where = (W,H,E,R,E), SP, Expression ;
 
@@ -254,7 +252,7 @@ Expression11 = Expression10, { SP, (X,O,R), SP, Expression10 } ;
 
 Expression10 = Expression9, { SP, (A,N,D), SP, Expression9 } ;
 
-Expression9 = { SP, (N,O,T), SP }, Expression8 ;
+Expression9 = { (N,O,T), [SP] }, Expression8 ;
 
 Expression8 = Expression7, { [SP], PartialComparisonExpression } ;
 
@@ -427,15 +425,15 @@ UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
  * And extended with a few characters.
  *)IdentifierStart = ID_Start
                 | '_'
-                | 'â€¿'
-                | 'â€'
-                | 'â”'
-                | 'ï¸³'
-                | 'ï¸´'
-                | 'ï¹'
-                | 'ï¹Ž'
-                | 'ï¹'
-                | 'ï¼¿'
+                | '‿'
+                | '⁀'
+                | '⁔'
+                | '︳'
+                | '︴'
+                | '﹍'
+                | '﹎'
+                | '﹏'
+                | '＿'
                 ;
 
 (* Based on the unicode identifier and pattern syntax
@@ -459,25 +457,25 @@ whitespace = SPACE
            | GS
            | RS
            | US
-           | 'áš€'
-           | 'á Ž'
-           | 'â€€'
-           | 'â€'
-           | 'â€‚'
-           | 'â€ƒ'
-           | 'â€„'
-           | 'â€…'
-           | 'â€†'
-           | 'â€ˆ'
-           | 'â€‰'
-           | 'â€Š'
-           | 'â€¨'
-           | 'â€©'
-           | 'âŸ'
-           | 'ã€€'
-           | 'Â '
-           | 'â€‡'
-           | 'â€¯'
+           | ' '
+           | '᠎'
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | '　'
+           | ' '
+           | ' '
+           | ' '
            | Comment
            ;
 
@@ -486,31 +484,31 @@ Comment = ('/*', { ANY - ('*') | ('*', ANY - ('/')) }, '*/')
         ;
 
 LeftArrowHead = '<'
-              | 'âŸ¨'
-              | 'ã€ˆ'
-              | 'ï¹¤'
-              | 'ï¼œ'
+              | '⟨'
+              | '〈'
+              | '﹤'
+              | '＜'
               ;
 
 RightArrowHead = '>'
-               | 'âŸ©'
-               | 'ã€‰'
-               | 'ï¹¥'
-               | 'ï¼ž'
+               | '⟩'
+               | '〉'
+               | '﹥'
+               | '＞'
                ;
 
 Dash = '-'
-     | 'Â­'
-     | 'â€'
-     | 'â€‘'
-     | 'â€’'
-     | 'â€“'
-     | 'â€”'
-     | 'â€•'
-     | 'âˆ’'
-     | 'ï¹˜'
-     | 'ï¹£'
-     | 'ï¼'
+     | '­'
+     | '‐'
+     | '‑'
+     | '‒'
+     | '–'
+     | '—'
+     | '―'
+     | '−'
+     | '﹘'
+     | '﹣'
+     | '－'
      ;
 
 A = 'A' | 'a' ;
