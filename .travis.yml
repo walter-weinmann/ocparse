@@ -3,6 +3,7 @@ notifications:
   email:
     - walter.weinmann@gmail.com
 otp_release:
+  - 19.2
   - 19.1
   - 19.0
   - 18.3
@@ -16,4 +17,4 @@ otp_release:
   - 17.1
   - 17.0
 after_success:
-  rebar ct
+  "./rebar3 ct"

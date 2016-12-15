@@ -76,7 +76,7 @@ tests_gen(TestGroup, Tests, Opts, Logs) ->
     tests_gen(TestGroup, Tests, Logs, SelTests, []).
 
 tests_gen(_TestGroup, [], _Logs, _SelTests, Acc) ->
-    {inparallel, lists:reverse(Acc)};
+    {inorder, lists:reverse(Acc)};
 tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
     case lists:member(I, SelTests) of
         true ->

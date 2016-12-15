@@ -93,9 +93,7 @@ Skip = (S,K,I,P), SP, Expression ;
 
 Limit = (L,I,M,I,T), SP, Expression ;
 
-SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
-         | (Expression, [(A,S,C,E,N,D,I,N,G) | (A,S,C)])
-         ;
+SortItem = Expression, [[SP], ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
 
 Where = (W,H,E,R,E), SP, Expression ;
 
@@ -147,7 +145,7 @@ Expression11 = Expression10, { SP, (X,O,R), SP, Expression10 } ;
 
 Expression10 = Expression9, { SP, (A,N,D), SP, Expression9 } ;
 
-Expression9 = { SP, (N,O,T), SP }, Expression8 ;
+Expression9 = { (N,O,T), [SP] }, Expression8 ;
 
 Expression8 = Expression7, { [SP], PartialComparisonExpression } ;
 
@@ -308,15 +306,15 @@ UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
  * And extended with a few characters.
  *)IdentifierStart = ID_Start
                 | '_'
-                | 'â€¿'
-                | 'â€'
-                | 'â”'
-                | 'ï¸³'
-                | 'ï¸´'
-                | 'ï¹'
-                | 'ï¹Ž'
-                | 'ï¹'
-                | 'ï¼¿'
+                | '‿'
+                | '⁀'
+                | '⁔'
+                | '︳'
+                | '︴'
+                | '﹍'
+                | '﹎'
+                | '﹏'
+                | '＿'
                 ;
 
 (* Based on the unicode identifier and pattern syntax
@@ -340,25 +338,25 @@ whitespace = SPACE
            | GS
            | RS
            | US
-           | 'áš€'
-           | 'á Ž'
-           | 'â€€'
-           | 'â€'
-           | 'â€‚'
-           | 'â€ƒ'
-           | 'â€„'
-           | 'â€…'
-           | 'â€†'
-           | 'â€ˆ'
-           | 'â€‰'
-           | 'â€Š'
-           | 'â€¨'
-           | 'â€©'
-           | 'âŸ'
-           | 'ã€€'
-           | 'Â '
-           | 'â€‡'
-           | 'â€¯'
+           | ' '
+           | '᠎'
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | ' '
+           | '　'
+           | ' '
+           | ' '
+           | ' '
            | Comment
            ;
 
@@ -367,31 +365,31 @@ Comment = ('/*', { ANY - ('*') | ('*', ANY - ('/')) }, '*/')
         ;
 
 LeftArrowHead = '<'
-              | 'âŸ¨'
-              | 'ã€ˆ'
-              | 'ï¹¤'
-              | 'ï¼œ'
+              | '⟨'
+              | '〈'
+              | '﹤'
+              | '＜'
               ;
 
 RightArrowHead = '>'
-               | 'âŸ©'
-               | 'ã€‰'
-               | 'ï¹¥'
-               | 'ï¼ž'
+               | '⟩'
+               | '〉'
+               | '﹥'
+               | '＞'
                ;
 
 Dash = '-'
-     | 'Â­'
-     | 'â€'
-     | 'â€‘'
-     | 'â€’'
-     | 'â€“'
-     | 'â€”'
-     | 'â€•'
-     | 'âˆ’'
-     | 'ï¹˜'
-     | 'ï¹£'
-     | 'ï¼'
+     | '­'
+     | '‐'
+     | '‑'
+     | '‒'
+     | '–'
+     | '—'
+     | '―'
+     | '−'
+     | '﹘'
+     | '﹣'
+     | '－'
      ;
 
 A = 'A' | 'a' ;

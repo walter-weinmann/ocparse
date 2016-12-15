@@ -284,6 +284,54 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ## 6. Release Notes
 
+### Version 1.2.3
+
+Release Date: 15.12.2016 - Grammar as of 14.12.2016
+
+#### Grammar changes
+
+- **Expression9**
+
+```
+New: Expression9 = { (N,O,T), [SP] }, Expression8 ;
+
+Old: Expression9 = { SP, (N,O,T), SP }, Expression8 ;
+```
+
+- **LiteralIds** (Legacy)
+
+```
+New: LiteralIds = IntegerLiteral, { [SP], ',', [SP], IntegerLiteral } ;
+
+Old: LiteralIds = { [SP], ',', [SP] } ;
+```
+
+- **NodeLookup** (Legacy)
+
+```
+New: NodeLookup = (N,O,D,E), [SP], (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
+
+Old: NodeLookup = (N,O,D,E), (IdentifiedIndexLookup | IndexQuery | IdLookup) ;
+```
+
+- **PeriodicCommitHint** (Legacy)
+
+```
+New: PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP, IntegerLiteral] ;
+
+Old: PeriodicCommitHint = (U,S,I,N,G), SP, (P,E,R,I,O,D,I,C), SP, (C,O,M,M,I,T), [SP] ;
+```
+
+- **SortItem**
+
+```
+New: SortItem = Expression, [[SP], ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
+
+Old: SortItem = (Expression, ((D,E,S,C,E,N,D,I,N,G) | (D,E,S,C)))
+              | (Expression, [(A,S,C,E,N,D,I,N,G) | (A,S,C)])
+              ;
+```
+
 ### Version 1.2.2
 
 Release Date: 11.11.2016 - Grammar as of 10.11.2016
@@ -296,7 +344,6 @@ There are no relevant grammar changes available.
 
 - Support of rebar3.
 
-----------
 
 ### Version 1.2.1
 
