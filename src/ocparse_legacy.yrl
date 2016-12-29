@@ -10,6 +10,7 @@ Nonterminals
  any_cypher_option
  any_cypher_option_list
  atom
+ boolean_literal
  bulk_import_query
  case_alternatives
  case_alternatives_list
@@ -76,6 +77,8 @@ Nonterminals
  legacy_parameter
  limit
  list_comprehension
+ list_literal
+ literal
  literal_ids
  load_csv
  load_csv_query
@@ -889,17 +892,10 @@ expression_2_addon_list -> expression_2_addon_list node_labels                  
 expression_2_addon_list -> expression_2_addon_list property_lookup                              : '$1' ++ ['$2'].
 %% =====================================================================================================================
 
-atom -> number_literal                                                                          : {atom, '$1'}.
-atom -> STRING_LITERAL                                                                          : {atom, {stringLiteral, unwrap('$1')}}.
+atom -> literal                                                                                 : {atom, '$1'}.
 atom -> parameter                                                                               : {atom, '$1'}.
-atom -> TRUE                                                                                    : {atom, {terminal, "true"}}.
-atom -> FALSE                                                                                   : {atom, {terminal, "false"}}.
-atom -> NULL                                                                                    : {atom, {terminal, "null"}}.
 atom -> COUNT '(' '*' ')'                                                                       : {atom, {terminal, "count(*)"}}.
-atom -> map_literal                                                                             : {atom, '$1'}.
 atom -> list_comprehension                                                                      : {atom, '$1'}.
-atom -> '['                expression_commalist ']'                                             : {atom, '$2', [],   "]"}.
-atom -> '[' id_in_coll ',' expression_commalist ']'                                             : {atom, '$2', '$4', "]"}.
 atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
 atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
 atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
@@ -915,6 +911,18 @@ atom -> legacy_parameter                                                        
 atom -> case_expression                                                                         : {atom, '$1'}.
 atom -> reduce                                                                                  : {atom, '$1'}.
 atom -> shortest_path_pattern                                                                   : {atom, '$1'}.
+
+literal -> number_literal                                                                       : {literal, '$1'}.
+literal -> STRING_LITERAL                                                                       : {literal, {stringLiteral, unwrap('$1')}}.
+literal -> boolean_literal                                                                      : {literal, '$1'}.
+literal -> NULL                                                                                 : {literal, {terminal, "null"}}.
+literal -> map_literal                                                                          : {literal, '$1'}.
+literal -> list_literal                                                                         : {literal, '$1'}.
+
+boolean_literal -> TRUE                                                                         : {booleanLiteral, {terminal, "true"}}.
+boolean_literal -> FALSE                                                                        : {booleanLiteral, {terminal, "false"}}.
+
+list_literal -> '[' expression_commalist ']'                                                    : {listLiteral, '$2'}.
 
 reduce -> REDUCE '(' variable '=' expression ',' id_in_coll '|' expression ')'                  : {reduce, '$3', '$5', '$7', '$9'}.
 

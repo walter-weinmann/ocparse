@@ -4,7 +4,9 @@ Definitions.
 Rules.
 
 %% number literals
-((([0-9]*\.)|[0-9]+)(e|E)[0-9]+)                          : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
+((\.[0-9]+)(e|E)[-]?[0-9]+)                               : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
+(([0-9]+)(e|E)[-]?[0-9]+)                                 : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
+(([0-9]+\.[0-9]+)(e|E)[-]?[0-9]+)                         : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
 ([0-9]+\.[0-9]+)                                          : {token, {'REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
 (0(x|X)([0-9]|[A-Fa-f])+)                                 : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
 (0[0-7]+)                                                 : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
