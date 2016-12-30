@@ -173,7 +173,8 @@ The output of the parse tree in the Erlang shell is shortened (cause not known).
                     {expression4,
                      {expression3,
                       {expression2,
-                       {atom,{stringLiteral,"'The Matrix'"}},
+                       {atom,
+                        {literal,{stringLiteral,"'The Matrix'"}}},
                        []},
                       []},
                      []},
@@ -234,6 +235,10 @@ The number of block comments (`/* ... */`) is limted to one per line.
 
 The variant `[..]` is not supported.
 
+### ListLiteral
+
+`ListLiteral` is not supported due to a conflict with the `Atom` definition.
+
 ### ParenthesizedExpression
 
 `ParenthesizedExpression` is not supported due to a conflict with `NodePattern`.
@@ -283,6 +288,296 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 5. Create new Pull Request
 
 ## 6. Release Notes
+
+### Version 1.2.4 (OpenCypher 1.0.0-M04)
+
+Release Date: 15.12.2016 - Grammar as of 20.12.2016
+
+#### Grammar changes
+
+- **Atom**
+
+```
+New: Atom = Literal
+          | Parameter
+          | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+          | ListComprehension
+          | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+          ...
+
+Old: Atom = NumberLiteral
+          | StringLiteral
+          | Parameter
+          | (T,R,U,E)
+          | (F,A,L,S,E)
+          | (N,U,L,L)
+          | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+          | MapLiteral
+          | ListComprehension
+          | ('[', [SP], Expression, [SP], { ',', [SP], Expression, [SP] }, ']')
+          | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+          ...     
+```
+
+- **BooleanLiteral**
+
+```
+New: BooleanLiteral = (T,R,U,E)
+                    | (F,A,L,S,E)
+                    ;
+
+Old: n/a
+```
+
+- **DecimalInteger**
+
+```
+New: DecimalInteger = ZeroDigit
+                    | (NonZeroDigit, { Digit })
+                    ;
+
+Old: DecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
+                    | '0'
+                    ;
+```
+
+- **Delete**
+
+```
+New: Delete = [(D,E,T,A,C,H), SP], (D,E,L,E,T,E), [SP], Expression, { [SP], ',', [SP], Expression } ;
+
+Old: Delete = ((D,E,L,E,T,E), Expression, { ',', Expression })
+            | ((D,E,T,A,C,H), SP, (D,E,L,E,T,E), Expression, { ',', Expression })
+            ;
+```
+
+- **Digit**
+
+```
+New: Digit = ZeroDigit
+           | NonZeroDigit
+           ;
+
+Old: Digit = '0'
+           | '1'
+           | '2'
+           | '3'
+           | '4'
+           | '5'
+           | '6'
+           | '7'
+           | '8'
+           | '9'
+           ;
+```
+
+- **DigitString**
+
+```
+New: n/a
+
+Old: DigitString = { Digit }- ;
+```
+
+- **ExponentDecimalReal**
+
+```
+New: ExponentDecimalReal = ({ Digit }- | ({ Digit }-, '.', { Digit }-) | ('.', { Digit }-)), ((E) | (E)), ['-'], { Digit }- ;
+
+Old: ExponentDecimalReal = ({ Digit | '.' }- | DecimalInteger), ((E) | (E)), (DigitString | DecimalInteger) ;
+```
+
+- **HexDigit**
+
+```
+New: HexDigit = Digit
+              | HexLetter
+              ;
+
+Old: HexDigit = '0'
+              | '1'
+              | '2'
+              | '3'
+              | '4'
+              | '5'
+              | '6'
+              | '7'
+              | '8'
+              | '9'
+              | (A)
+              | (B)
+              | (C)
+              | (D)
+              | (E)
+              | (F)
+              ;
+```
+
+- **HexInteger**
+
+```
+New: HexInteger = ('0',X), { HexDigit }- ;
+
+Old: HexInteger = ('0',X), HexString ;
+```
+
+- **HexLetter**
+
+```
+New: HexLetter = (A)
+               | (B)
+               | (C)
+               | (D)
+               | (E)
+               | (F)
+               ;
+
+Old: n/a
+```
+
+- **HexString**
+
+```
+New: n/a
+
+Old: HexString = { HexDigit }- ;
+```
+
+- **ListComprehension**
+
+```
+New: ListComprehension = '[', [SP], FilterExpression, [[SP], '|', [SP], Expression], [SP], ']' ;
+
+Old: ListComprehension = '[', FilterExpression, [[SP], '|', Expression], ']' ;
+```
+
+- **ListLiteral**
+
+```
+New: ListLiteral = '[', [SP], [Expression, [SP], { ',', [SP], Expression, [SP] }], ']' ;
+
+Old: n/a
+```
+
+- **Literal**
+
+```
+New: Literal = NumberLiteral
+             | StringLiteral
+             | BooleanLiteral
+             | (N,U,L,L)
+             | MapLiteral
+             | ListLiteral
+             ;
+        
+Old: n/a
+```
+
+- **NonZeroDigit**
+
+```
+New: NonZeroDigit = NonZeroOctDigit
+                  | '8'
+                  | '9'
+                  ;
+
+Old: n/a
+```
+
+- **NonZeroOctDigit**
+
+```
+New: NonZeroOctDigit = '1'
+                     | '2'
+                     | '3'
+                     | '4'
+                     | '5'
+                     | '6'
+                     | '7'
+                     ;
+
+Old: n/a
+```
+
+- **OctalInteger**
+
+```
+New: OctalInteger = ZeroDigit, { OctDigit }- ;
+
+Old: OctalInteger = '0', OctalString ;
+```
+
+- **OctalString**
+
+```
+New: n/a
+
+Old: OctalString = { OctDigit }- ;
+```
+
+- **OctDigit**
+
+```
+New: OctDigit = ZeroDigit
+              | NonZeroOctDigit
+              ;
+
+Old: OctDigit = '0'
+              | '1'
+              | '2'
+              | '3'
+              | '4'
+              | '5'
+              | '6'
+              | '7'
+              ;
+```
+
+- **RegularDecimalReal**
+
+```
+New: RegularDecimalReal = { Digit }, '.', { Digit }- ;
+
+Old: RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | DecimalInteger) ;
+```
+
+- **Return**
+
+```
+New: Return = (R,E,T,U,R,N), [[SP], (D,I,S,T,I,N,C,T)], SP, ReturnBody ;
+
+Old: Return = ((R,E,T,U,R,N), SP, (D,I,S,T,I,N,C,T), SP, ReturnBody)
+            | ((R,E,T,U,R,N), SP, ReturnBody)
+            ;
+```
+
+- **VersionNumber** (Legacy)
+
+```
+New: VersionNumber = RegularDecimalReal ;
+
+Old: VersionNumber = DecimalInteger, '.', DecimalInteger ;
+```
+
+- **With**
+
+```
+New: With = (W,I,T,H), [[SP], (D,I,S,T,I,N,C,T)], SP, ReturnBody, [[SP], Where] ;
+
+
+Old: With = ((W,I,T,H), (D,I,S,T,I,N,C,T), SP, ReturnBody, [Where])
+          | ((W,I,T,H), SP, ReturnBody, [Where])
+          ;
+```
+
+- **ZeroDigit**
+
+```
+New: ZeroDigit = '0' ;
+
+
+Old: n/a
+```
 
 ### Version 1.2.3
 

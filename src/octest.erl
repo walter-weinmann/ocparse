@@ -8,7 +8,7 @@
 
 -compile(export_all).
 
-%-define(NODEBUG, true).
+-define(NODEBUG, true).
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 

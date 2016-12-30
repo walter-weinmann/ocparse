@@ -25,7 +25,7 @@ AnyCypherOption = CypherOption
 
 CypherOption = (C,Y,P,H,E,R), [SP, VersionNumber], { SP, ConfigurationOption } ;
 
-VersionNumber = DecimalInteger, '.', DecimalInteger ;
+VersionNumber = RegularDecimalReal ;
 
 Explain = E,X,P,L,A,I,N ;
 
@@ -133,9 +133,7 @@ SetItem = (PropertyExpression, '=', Expression)
         | (Variable, NodeLabels)
         ;
 
-Delete = ((D,E,L,E,T,E), Expression, { ',', Expression })
-       | ((D,E,T,A,C,H), SP, (D,E,L,E,T,E), Expression, { ',', Expression })
-       ;
+Delete = [(D,E,T,A,C,H), SP], (D,E,L,E,T,E), [SP], Expression, { [SP], ',', [SP], Expression } ;
 
 Remove = (R,E,M,O,V,E), SP, RemoveItem, { [SP], ',', [SP], RemoveItem } ;
 
@@ -145,13 +143,9 @@ RemoveItem = (Variable, NodeLabels)
 
 Foreach = (F,O,R,E,A,C,H), [SP], '(', [SP], Variable, SP, (I,N), SP, Expression, [SP], '|', { SP, Clause }-, [SP], ')' ;
 
-With = ((W,I,T,H), (D,I,S,T,I,N,C,T), SP, ReturnBody, [Where])
-     | ((W,I,T,H), SP, ReturnBody, [Where])
-     ;
+With = (W,I,T,H), [[SP], (D,I,S,T,I,N,C,T)], SP, ReturnBody, [[SP], Where] ;
 
-Return = ((R,E,T,U,R,N), SP, (D,I,S,T,I,N,C,T), SP, ReturnBody)
-       | ((R,E,T,U,R,N), SP, ReturnBody)
-       ;
+Return = (R,E,T,U,R,N), [[SP], (D,I,S,T,I,N,C,T)], SP, ReturnBody ;
 
 ReturnBody = ReturnItems, [SP, Order], [SP, Skip], [SP, Limit] ;
 
@@ -268,18 +262,12 @@ Expression3 = Expression2, { ([SP], '[', Expression, ']') | ([SP], '[', [Express
 
 Expression2 = Atom, { PropertyLookup | NodeLabels } ;
 
-Atom = NumberLiteral
-     | StringLiteral
+Atom = Literal
      | Parameter
      | LegacyParameter
-     | (T,R,U,E)
-     | (F,A,L,S,E)
-     | (N,U,L,L)
      | CaseExpression
      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
-     | MapLiteral
      | ListComprehension
-     | ('[', [SP], Expression, [SP], { ',', [SP], Expression, [SP] }, ']')
      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
      | Reduce
@@ -293,6 +281,20 @@ Atom = NumberLiteral
      | FunctionInvocation
      | Variable
      ;
+
+Literal = NumberLiteral
+        | StringLiteral
+        | BooleanLiteral
+        | (N,U,L,L)
+        | MapLiteral
+        | ListLiteral
+        ;
+
+BooleanLiteral = (T,R,U,E)
+               | (F,A,L,S,E)
+               ;
+
+ListLiteral = '[', [SP], [Expression, [SP], { ',', [SP], Expression, [SP] }], ']' ;
 
 Reduce = (R,E,D,U,C,E), [SP], '(', Variable, '=', Expression, ',', IdInColl, '|', Expression, ')' ;
 
@@ -317,7 +319,7 @@ FunctionInvocation = FunctionName, [SP], '(', [SP], [(D,I,S,T,I,N,C,T), [SP]], [
 
 FunctionName = SymbolicName ;
 
-ListComprehension = '[', FilterExpression, [[SP], '|', Expression], ']' ;
+ListComprehension = '[', [SP], FilterExpression, [[SP], '|', [SP], Expression], [SP], ']' ;
 
 PropertyLookup = [SP], '.', [SP], ((PropertyKeyName, ('?' | '!')) | PropertyKeyName) ;
 
@@ -352,67 +354,57 @@ IntegerLiteral = HexInteger
                | DecimalInteger
                ;
 
-HexInteger = ('0',X), HexString ;
+HexInteger = ('0',X), { HexDigit }- ;
 
-DecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
-               | '0'
+DecimalInteger = ZeroDigit
+               | (NonZeroDigit, { Digit })
                ;
 
-OctalInteger = '0', OctalString ;
+OctalInteger = ZeroDigit, { OctDigit }- ;
 
-HexString = { HexDigit }- ;
+HexLetter = (A)
+          | (B)
+          | (C)
+          | (D)
+          | (E)
+          | (F)
+          ;
 
-DigitString = { Digit }- ;
-
-OctalString = { OctDigit }- ;
-
-HexDigit = '0'
-         | '1'
-         | '2'
-         | '3'
-         | '4'
-         | '5'
-         | '6'
-         | '7'
-         | '8'
-         | '9'
-         | (A)
-         | (B)
-         | (C)
-         | (D)
-         | (E)
-         | (F)
+HexDigit = Digit
+         | HexLetter
          ;
 
-Digit = '0'
-      | '1'
-      | '2'
-      | '3'
-      | '4'
-      | '5'
-      | '6'
-      | '7'
-      | '8'
-      | '9'
+Digit = ZeroDigit
+      | NonZeroDigit
       ;
 
-OctDigit = '0'
-         | '1'
-         | '2'
-         | '3'
-         | '4'
-         | '5'
-         | '6'
-         | '7'
+NonZeroDigit = NonZeroOctDigit
+             | '8'
+             | '9'
+             ;
+
+NonZeroOctDigit = '1'
+                | '2'
+                | '3'
+                | '4'
+                | '5'
+                | '6'
+                | '7'
+                ;
+
+OctDigit = ZeroDigit
+         | NonZeroOctDigit
          ;
+
+ZeroDigit = '0' ;
 
 DoubleLiteral = ExponentDecimalReal
               | RegularDecimalReal
               ;
 
-ExponentDecimalReal = ({ Digit | '.' }- | DecimalInteger), ((E) | (E)), (DigitString | DecimalInteger) ;
+ExponentDecimalReal = ({ Digit }- | ({ Digit }-, '.', { Digit }-) | ('.', { Digit }-)), ((E) | (E)), ['-'], { Digit }- ;
 
-RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | DecimalInteger) ;
+RegularDecimalReal = { Digit }, '.', { Digit }- ;
 
 SymbolicName = UnescapedSymbolicName
              | EscapedSymbolicName
