@@ -291,7 +291,7 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ### Version 1.2.4 (OpenCypher 1.0.0-M04)
 
-Release Date: 15.12.2016 - Grammar as of 20.12.2016
+Release Date: 31.12.2016 - Grammar as of 20.12.2016
 
 #### Grammar changes
 
