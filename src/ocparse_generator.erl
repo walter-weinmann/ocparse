@@ -1,4 +1,4 @@
--module(test_generator).
+-module(ocparse_generator).
 
 -export([generate/0]).
 
