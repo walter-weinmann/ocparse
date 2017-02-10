@@ -10,17 +10,10 @@
         {mod, {ocparse, []}},
         {modules,
             [
-                generate_test_data,
-                oclexer,
-                oclexer_legacy,
                 ocparse,
-                ocparse_fold,
-                ocparse_fold_legacy,
-                ocparse_legacy,
-                octest,
-                octest_legacy
+                ocparse_legacy
             ]
         },
-        {vsn, "1.2.4"}
+        {vsn, "1.2.6"}
     ]
 }.

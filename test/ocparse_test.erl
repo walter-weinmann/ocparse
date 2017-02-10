@@ -168,13 +168,13 @@ test_cypher(_TestGroup, Test, Logs) ->
                     throw({error, "Error catch ?assertEqual(ParseTree, NPTree)"})
             end,
             ?D4("~n ~p~n", [ParseTree]);
-        {lex_error, Error} ->
+        {lex_error, _Error} ->
             ?D_("Failed lex_error : Test ~n > ~p", [Test]),
-            ?D_("Failed lex_error : Error~n > ~p", [Error]),
-            ?assertEqual(ok, Error);
-        {parse_error, {Error, _Tokens}} ->
+            ?D_("Failed lex_error : Error~n > ~p", [_Error]),
+            ?assertEqual(ok, _Error);
+        {parse_error, {_Error, _Tokens}} ->
             ?D_("Failed parse_error : Test  ~n > ~p", [Test]),
-            ?D_("Failed parse_error : Error ~n > ~p", [Error]),
+            ?D_("Failed parse_error : Error ~n > ~p", [_Error]),
             ?D_("Failed parse_error : Tokens~n > ~p", [_Tokens]),
-            ?assertEqual(ok, Error)
+            ?assertEqual(ok, _Error)
     end.
