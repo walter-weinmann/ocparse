@@ -1,7 +1,6 @@
+install:
+  - wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
 language: erlang
-notifications:
-  email:
-    - walter.weinmann@gmail.com
 otp_release:
   - 19.2
   - 19.1
@@ -16,5 +15,7 @@ otp_release:
   - 17.3
   - 17.1
   - 17.0
-after_success:
-  "./rebar3 ct"
+script:
+  - ./rebar3 compile
+  - ./rebar3 eunit
+  - ./rebar3 ct
