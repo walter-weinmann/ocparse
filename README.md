@@ -4,10 +4,6 @@
 
 **ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang.  **ocparse** is closely aligned to the openCypher project and in future will be adapted on a regular basis as the openCypher project evolves. The [openCypher project](http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](https://neo4j.com/docs/developer-manual/current/#cypher-query-lang). And, with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the project provides the basis for the definition of the LALR grammar.
 
-### Legacy version:
-
-Not all grammar rules of Cypher the language will be standardised in their current form, meaning that they will not be part of openCypher as-is. Therefore, the openCypher grammar will not include some well-known Cypher constructs; these are called 'legacy'. To still enable tool authors or others interested in developing support for Cypher in its full current shape, these legacy rules are still present in the the legacy version of the parser. The legacy version of the parser uses `ocparse_legacy` instead of `ocparse` etc.
-
 ## 1. Usage
 
 ### Example code:
@@ -288,6 +284,40 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 5. Create new Pull Request
 
 ## 6. Release Notes
+
+### Version 1.3.0
+
+Release Date: dd.mm.yyyy - Grammar as of 01.04.2017
+
+#### Grammar changes
+
+- **Atom**
+
+```
+New: Atom = Literal
+          | Parameter
+          | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+          | ListComprehension
+          | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+          ...
+
+Old: Atom = NumberLiteral
+          | StringLiteral
+          | Parameter
+          | (T,R,U,E)
+          | (F,A,L,S,E)
+          | (N,U,L,L)
+          | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+          | MapLiteral
+          | ListComprehension
+          | ('[', [SP], Expression, [SP], { ',', [SP], Expression, [SP] }, ']')
+          | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+          ...     
+```
+#### New features
+
+- Legacy version support is discontinued.
+
 
 ### Version 1.2.4 (OpenCypher 1.0.0-M04)
 

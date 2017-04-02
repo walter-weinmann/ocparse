@@ -1,3 +1,25 @@
+%% -----------------------------------------------------------------------------
+%%
+%% neo4j_v3.0.tst: opencypher - eunit tests from neo4j v3.0 documentation.
+%%
+%% Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
+%%
+%% This file is provided to you under the Apache License,
+%% Version 2.0 (the "License"); you may not use this file
+%% except in compliance with the License.  You may obtain
+%% a copy of the License at
+%%
+%%   http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing,
+%% software distributed under the License is distributed on an
+%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+%% KIND, either express or implied.  See the License for the
+%% specific language governing permissions and limitations
+%% under the License.
+%%
+%% -----------------------------------------------------------------------------
+
 %%-*- mode: erlang -*-
 %%-*- coding: utf-8 -*-
 
@@ -290,14 +312,12 @@ MATCH (n) WHERE 21 < n.age AND n.age <= 30 RETURN n
 %% 6.5 Comments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-"
-MATCH (n) RETURN n //This is an end of line comment
-".
-"
-MATCH (n)
-//This is a whole line comment
-RETURN n
-".
+% wwe "MATCH (n) RETURN n //This is an end of line comment".
+% wwe "
+% wwe MATCH (n)
+% wwe //This is a whole line comment
+% wwe RETURN n
+% wwe ".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 6.6 Patterns
