@@ -291,30 +291,228 @@ Release Date: dd.mm.yyyy - Grammar as of 01.04.2017
 
 #### Grammar changes
 
+- **AddOrSubtractExpression**
+
+```
+New: AddOrSubtractExpression = MultiplyDivideModuloExpression, { ([SP], '+', [SP], MultiplyDivideModuloExpression) | ([SP], '-', [SP], MultiplyDivideModuloExpression) } ;
+
+Old: Expression7 = Expression6, { ([SP], '+', [SP], Expression6) | ([SP], '-', [SP], Expression6) } ;
+```
+
+- **AndExpression**
+
+```
+New: AndExpression = NotExpression, { SP, (A,N,D), SP, NotExpression } ;
+
+Old: Expression10 = Expression9, { SP, (A,N,D), SP, Expression9 } ;
+```
+
 - **Atom**
 
 ```
 New: Atom = Literal
-          | Parameter
-          | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
-          | ListComprehension
-          | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+	      | Parameter
+	      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+	      | ListComprehension
+	      | PatternComprehension
+	      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
           ...
 
-Old: Atom = NumberLiteral
-          | StringLiteral
-          | Parameter
-          | (T,R,U,E)
-          | (F,A,L,S,E)
-          | (N,U,L,L)
-          | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
-          | MapLiteral
-          | ListComprehension
-          | ('[', [SP], Expression, [SP], { ',', [SP], Expression, [SP] }, ']')
-          | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
-          ...     
+Old: Atom = Literal
+	      | Parameter
+	      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+	      | ListComprehension
+	      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+          ...
 ```
+
+- **ComparisonExpression**
+
+```
+New: ComparisonExpression = AddOrSubtractExpression, { [SP], PartialComparisonExpression } ;
+
+Old: Expression8 = Expression7, { [SP], PartialComparisonExpression } ;
+```
+
+- **EscapedChar**
+
+```
+New: EscapedChar = '\', ('\' | "'" | '"' | (B) | (F) | (N) | (R) | (T) | ((U), 4 * HexDigit) | ((U), 8 * HexDigit)) ;
+
+Old: EscapedChar = '\', ('\' | "'" | '"' | (B) | (F) | (N) | (R) | (T) | '_' | '%' | ((U), 4 * HexDigit) | ((U), 8 * HexDigit)) ;
+```
+
+- **Expression**
+
+```
+New: Expression = OrExpression ;
+
+Old: Expression = Expression12 ;
+```
+
+- **HexInteger**
+
+```
+New: HexInteger = '0x', { HexDigit }- ;
+
+Old: HexInteger = ('0',X), { HexDigit }- ;
+```
+
+- **MultiplyDivideModuloExpression**
+
+```
+New: MultiplyDivideModuloExpression = PowerOfExpression, { ([SP], '*', [SP], PowerOfExpression) | ([SP], '/', [SP], PowerOfExpression) | ([SP], '%', [SP], PowerOfExpression) } ;
+
+Old: Expression6 = Expression5, { ([SP], '*', [SP], Expression5) | ([SP], '/', [SP], Expression5) | ([SP], '%', [SP], Expression5) } ;
+```
+
+- **NodeLabel**
+
+```
+New: NodeLabel = ':', [SP], LabelName ;
+
+Old: NodeLabel = ':', LabelName ;
+```
+
+- **NotExpression**
+
+```
+New: NotExpression = { (N,O,T), [SP] }, ComparisonExpression ;
+
+Old: Expression9 = { (N,O,T), [SP] }, Expression8 ;
+```
+
+- **OrExpression**
+
+```
+New: OrExpression = XorExpression, { SP, (O,R), SP, XorExpression } ;
+
+Old: Expression12 = Expression11, { SP, (O,R), SP, Expression11 } ;
+```
+
+- **PartialComparisonExpression**
+
+```
+New: PartialComparisonExpression = ('=', [SP], AddOrSubtractExpression)
+	                             | ('<>', [SP], AddOrSubtractExpression)
+	                             | ('!=', [SP], AddOrSubtractExpression)
+	                             | ('<', [SP], AddOrSubtractExpression)
+	                             | ('>', [SP], AddOrSubtractExpression)
+	                             | ('<=', [SP], AddOrSubtractExpression)
+	                             | ('>=', [SP], AddOrSubtractExpression)
+	                             ;
+
+Old: PartialComparisonExpression = ('=', [SP], Expression7)
+	                             | ('<>', [SP], Expression7)
+	                             | ('!=', [SP], Expression7)
+	                             | ('<', [SP], Expression7)
+	                             | ('>', [SP], Expression7)
+	                             | ('<=', [SP], Expression7)
+	                             | ('>=', [SP], Expression7)
+	                             ;
+```
+
+- **PatternComprehension**
+
+```
+New: PatternComprehension = '[', [SP], [Variable, [SP], '=', [SP]], RelationshipsPattern, [SP], [(W,H,E,R,E), [SP], Expression, [SP]], '|', [SP], Expression, [SP], ']' ;
+
+Old: n/a
+```
+
+- **PowerOfExpression**
+
+```
+New: PowerOfExpression = UnaryAddOrSubtractExpression, { [SP], '^', [SP], UnaryAddOrSubtractExpression } ;
+
+Old: Expression5 = Expression4, { [SP], '^', [SP], Expression4 } ;
+```
+
+- **PropertyLookup**
+
+```
+New: PropertyLookup = '.', [SP], (PropertyKeyName) ;
+
+Old: PropertyLookup = [SP], '.', [SP], ((PropertyKeyName, ('?' | '!')) | PropertyKeyName) ;
+```
+
+- **PropertyOrLabelsExpression**
+
+```
+New: PropertyOrLabelsExpression = Atom, { [SP], (PropertyLookup | NodeLabels) } ;
+
+Old: Expression2 = Atom, { PropertyLookup | NodeLabels } ;
+```
+
+- **RelationshipDetail**
+
+```
+New: RelationshipDetail = '[', [SP], [Variable, [SP]], [RelationshipTypes, [SP]], [RangeLiteral], [Properties, [SP]], ']' ;
+
+Old: RelationshipDetail = '[', [Variable], ['?'], [RelationshipTypes], [RangeLiteral], [Properties], ']' ;
+```
+
+- **RelationshipTypes**
+
+```
+New: RelationshipTypes = ':', [SP], RelTypeName, { [SP], '|', [':'], [SP], RelTypeName } ;
+
+Old: RelationshipTypes = ':', RelTypeName, { [SP], '|', [':'], [SP], RelTypeName } ;
+```
+
+- **Set**
+
+```
+New: Set = (S,E,T), [SP], SetItem, { ',', SetItem } ;
+
+Old: Set = (S,E,T), SetItem, { ',', SetItem } ;
+```
+
+- **SetItem**
+
+```
+New: SetItem = (PropertyExpression, [SP], '=', [SP], Expression)
+  	         | (Variable, [SP], '=', [SP], Expression)
+	         | (Variable, [SP], '+=', [SP], Expression)
+	         | (Variable, [SP], NodeLabels)
+	         ;
+
+Old: SetItem = (PropertyExpression, '=', Expression)
+		     | (Variable, '=', Expression)
+		     | (Variable, '+=', Expression)
+		     | (Variable, NodeLabels)
+		     ;
+```
+
+- **StringListNullOperatorExpression**
+
+```
+New: StringListNullOperatorExpression = PropertyOrLabelsExpression, { ([SP], '[', Expression, ']') | ([SP], '[', [Expression], '..', [Expression], ']') | ((([SP], '=~') | (SP, (I,N)) | (SP, (S,T,A,R,T,S), SP, (W,I,T,H)) | (SP, (E,N,D,S), SP, (W,I,T,H)) | (SP, (C,O,N,T,A,I,N,S))), [SP], PropertyOrLabelsExpression) | (SP, (I,S), SP, (N,U,L,L)) | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
+
+Old: Expression3 = Expression2, { ([SP], '[', Expression, ']') | ([SP], '[', [Expression], '..', [Expression], ']') | ((([SP], '=~') | (SP, (I,N)) | (SP, (S,T,A,R,T,S), SP, (W,I,T,H)) | (SP, (E,N,D,S), SP, (W,I,T,H)) | (SP, (C,O,N,T,A,I,N,S))), [SP], Expression2) | (SP, (I,S), SP, (N,U,L,L)) | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
+```
+
+- **UnaryAddOrSubtractExpression**
+
+```
+New: UnaryAddOrSubtractExpression = { ('+' | '-'), [SP] }, StringListNullOperatorExpression ;
+
+Old: Expression4 = { ('+' | '-'), [SP] }, Expression3 ;
+```
+
+- **XorExpression**
+
+```
+New: XorExpression = AndExpression, { SP, (X,O,R), SP, AndExpression } ;
+
+Old: Expression11 = Expression10, { SP, (X,O,R), SP, Expression10 } ;
+```
+
 #### New features
+
+- ???.
+
+#### Omitted features
 
 - Legacy version support is discontinued.
 
