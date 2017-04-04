@@ -918,22 +918,24 @@ pt_to_source(FType, Fun, Ctx, Lvl, {listComprehension, FilterExpression, Express
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % listLiteral
+% ------------------------------------------------------------------------------
+% !!! Currently not supported !!!
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pt_to_source(FType, Fun, Ctx, Lvl, {listLiteral, ExpressionCommalist} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ExpressionCommalistNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {expressionCommalist, ExpressionCommalist}),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {"[" ++ ExpressionCommalistNew ++ "]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
-    RT;
+%%pt_to_source(FType, Fun, Ctx, Lvl, {listLiteral, ExpressionCommalist} = ST) ->
+%%    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+%%    NewCtx = case FType of
+%%                 top_down -> Fun(ST, Ctx);
+%%                 bottom_up -> Ctx
+%%             end,
+%%    {ExpressionCommalistNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {expressionCommalist, ExpressionCommalist}),
+%%    NewCtx2 = case FType of
+%%                  top_down -> NewCtx1;
+%%                  bottom_up -> Fun(ST, NewCtx1)
+%%              end,
+%%    RT = {"[" ++ ExpressionCommalistNew ++ "]", NewCtx2},
+%%    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+%%    RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % literal
@@ -1426,7 +1428,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, Variable, Relationship
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"[" ++ VariableNew ++ "=" ++ RelationshipsPatternNew ++ ExpressionNew ++ "]", NewCtx6},
+    RT = {"[" ++ VariableNew ++ "=" ++ RelationshipsPatternNew ++ "|" ++ ExpressionNew ++ "]", NewCtx6},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, Variable, RelationshipsPattern, WhereExpression, Expression} = ST) ->
@@ -1549,9 +1551,13 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
              end,
     {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
         case F of
-            {ListType, _}
-                when Type == patternElementChainList, ListType == patternElementChain;
-                Type == propertyLookupList, ListType == propertyLookup ->
+            {patternElementChain, _, _}
+                when Type == patternElementChainList ->
+                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {Acc ++ SubAcc, CtxAcc1};
+            {propertyLookup, _}
+                when Type == propertyLookupList ->
                 ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ SubAcc, CtxAcc1}
@@ -1858,7 +1864,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {regularQuery, SingularQuery, UnionList} = ST
 % relationshipDetail
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pt_to_source(FType, Fun, Ctx, _Lvl, {relationshipDetail, [], CharQuestionMark, [], [], []} = ST) ->
+pt_to_source(FType, Fun, Ctx, _Lvl, {relationshipDetail, [], [], [], []} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -1868,10 +1874,10 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {relationshipDetail, [], CharQuestionMark, [
                   top_down -> NewCtx;
                   bottom_up -> Fun(ST, NewCtx)
               end,
-    RT = {"[" ++ CharQuestionMark ++ "]", NewCtx1},
+    RT = {"[]", NewCtx1},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, [], [], Properties} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], [], Properties} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -1882,10 +1888,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, []
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"[" ++ CharQuestionMark ++ PropertiesNew ++ "]", NewCtx2},
+    RT = {"[" ++ PropertiesNew ++ "]", NewCtx2},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, [], RangeLiteral, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], RangeLiteral, []} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -1896,10 +1902,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, []
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"[" ++ CharQuestionMark ++ RangeLiteralNew ++ "]", NewCtx2},
+    RT = {"[" ++ RangeLiteralNew ++ "]", NewCtx2},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, [], RangeLiteral, Properties} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], RangeLiteral, Properties} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -1915,10 +1921,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, []
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"[" ++ CharQuestionMark ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx4},
+    RT = {"[" ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx4},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, RelationshipTypes, [], []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, [], []} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -1929,10 +1935,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, Re
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"[" ++ CharQuestionMark ++ RelationshipTypesNew ++ "]", NewCtx2},
+    RT = {"[" ++ RelationshipTypesNew ++ "]", NewCtx2},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, RelationshipTypes, [], Properties} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, [], Properties} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -1948,10 +1954,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, Re
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"[" ++ CharQuestionMark ++ RelationshipTypesNew ++ PropertiesNew ++ "]", NewCtx4},
+    RT = {"[" ++ RelationshipTypesNew ++ PropertiesNew ++ "]", NewCtx4},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, RelationshipTypes, RangeLiteral, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, RangeLiteral, []} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -1967,10 +1973,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, Re
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"[" ++ CharQuestionMark ++ RelationshipTypesNew ++ RangeLiteralNew ++ "]", NewCtx4},
+    RT = {"[" ++ RelationshipTypesNew ++ RangeLiteralNew ++ "]", NewCtx4},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, RelationshipTypes, RangeLiteral, Properties} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, RangeLiteral, Properties} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -1991,10 +1997,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], CharQuestionMark, Re
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"[" ++ CharQuestionMark ++ RelationshipTypesNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx6},
+    RT = {"[" ++ RelationshipTypesNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx6},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, [], [], []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], [], []} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2005,10 +2011,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMa
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"[" ++ VariableNew ++ CharQuestionMark ++ "]", NewCtx2},
+    RT = {"[" ++ VariableNew ++ "]", NewCtx2},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, [], [], Properties} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], [], Properties} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2024,10 +2030,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMa
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"[" ++ VariableNew ++ CharQuestionMark ++ PropertiesNew ++ "]", NewCtx4},
+    RT = {"[" ++ VariableNew ++ PropertiesNew ++ "]", NewCtx4},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, [], RangeLiteral, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], RangeLiteral, []} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2043,10 +2049,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMa
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RangeLiteralNew ++ "]", NewCtx4},
+    RT = {"[" ++ VariableNew ++ RangeLiteralNew ++ "]", NewCtx4},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, [], RangeLiteral, Properties} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], RangeLiteral, Properties} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2067,10 +2073,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMa
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx6},
+    RT = {"[" ++ VariableNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx6},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, RelationshipTypes, [], []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTypes, [], []} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2086,10 +2092,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMa
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RelationshipTypesNew ++ "]", NewCtx4},
+    RT = {"[" ++ VariableNew ++ RelationshipTypesNew ++ "]", NewCtx4},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, RelationshipTypes, [], Properties} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTypes, [], Properties} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2110,10 +2116,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMa
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RelationshipTypesNew ++ PropertiesNew ++ "]", NewCtx6},
+    RT = {"[" ++ VariableNew ++ RelationshipTypesNew ++ PropertiesNew ++ "]", NewCtx6},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, RelationshipTypes, RangeLiteral, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTypes, RangeLiteral, []} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2134,10 +2140,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMa
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RelationshipTypesNew ++ RangeLiteralNew ++ "]", NewCtx6},
+    RT = {"[" ++ VariableNew ++ RelationshipTypesNew ++ RangeLiteralNew ++ "]", NewCtx6},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMark, RelationshipTypes, RangeLiteral, Properties} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTypes, RangeLiteral, Properties} = ST) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2163,7 +2169,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, CharQuestionMa
                   top_down -> NewCtx7;
                   bottom_up -> Fun(ST, NewCtx7)
               end,
-    RT = {"[" ++ VariableNew ++ CharQuestionMark ++ RelationshipTypesNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx8},
+    RT = {"[" ++ VariableNew ++ RelationshipTypesNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx8},
     ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 

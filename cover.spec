@@ -23,5 +23,6 @@
 level, details}.
 {excl_mods, [
     oclexer, 
-    ocparse
+    ocparse,
+    ocparse_generator
 ]}.

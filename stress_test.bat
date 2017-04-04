@@ -21,6 +21,7 @@ rem under the License.
 rem
 rem ----------------------------------------------------------------------------
 
+call rebar3 compile
 
 Setlocal EnableDelayedExpansion
 

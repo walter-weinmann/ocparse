@@ -53,6 +53,7 @@ common_test_source(Source) ->
             %% -----------------------------------------------------------------
             NSource_TD = case ?PARSER_MODULE:pt_to_source_td(ParseTree) of
                              {error, Error_TD} ->
+                                 ct:pal("~n[TD] Error ParseTree -> NewSource : Source   ~n > ~p", [Source]),
                                  ct:pal("~n[TD] Error ParseTree -> NewSource : ParseTree~n > ~p", [ParseTree]),
                                  throw({error, Error_TD});
                              NS_TD ->
@@ -106,6 +107,7 @@ common_test_source(Source) ->
             %% -----------------------------------------------------------------
             NSource_BU = case ?PARSER_MODULE:pt_to_source_bu(ParseTree) of
                              {error, Error_BU} ->
+                                 ct:pal("~n[BU] Error ParseTree -> NewSource : Source   ~n > ~p", [Source]),
                                  ct:pal("~n[BU] Error ParseTree -> NewSource : ParseTree~n > ~p", [ParseTree]),
                                  throw({error, "[BU] Error ParseTree -> NewSource : " ++ Error_BU});
                              NS_BU ->
