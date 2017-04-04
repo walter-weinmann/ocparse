@@ -21,49 +21,49 @@
 %% -----------------------------------------------------------------------------
 
 %% -*- erlang -*-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Definitions.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Rules.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% number literals
 ((\.[0-9]+)(e|E)[-]?[0-9]+)                               : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
 (([0-9]+)(e|E)[-]?[0-9]+)                                 : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
 (([0-9]+\.[0-9]+)(e|E)[-]?[0-9]+)                         : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
 ([0-9]*\.[0-9]+)                                          : {token, {'REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
-(0(x|X)([0-9]|[A-Fa-f])+)                                 : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
+(0x([0-9]|[A-Fa-f])+)                                     : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
 (0[0-7]+)                                                 : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
 (0|([1-9][0-9]*))                                         : {token, {'DECIMAL_INTEGER', TokenLine, TokenChars}}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% symbolic names
 (`([^`]*)*`)                                              : {token, {'ESCAPED_SYMBOLIC_NAME', TokenLine, TokenChars}}.
-([A-Za-z_@#][A-Za-z0-9_@#]*)                              : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
+([A-Za-z_@#][A-Za-z0-9_@#]*)                              : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatterns).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% string literals
 (\'([^\\\']*)*\')                                         : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
 (\"([^\\\"]*)*\")                                         : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % comments
 ((//).*[\n\r]?)                                           : skip_token.
 ((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% punctuation
 (\.\.|\-\-|\+=|\<\-\-\>|\<\-\-|\-\-\>)                    : {token, {list_to_atom(TokenChars), TokenLine}}.
 (=~|\<\>|!=|\<=|\>=)                                      : {token, {list_to_atom(TokenChars), TokenLine}}.
-([\^\.\|\?\*\+\(\)\[\]\{\}\-])                            : {token, {list_to_atom(TokenChars), TokenLine}}.
-([=\<\>/%:,;!0\$])                                        : {token, {list_to_atom(TokenChars), TokenLine}}.
+([\^\.\|\*\+\(\)\[\]\{\}\-])                              : {token, {list_to_atom(TokenChars), TokenLine}}.
+([=\<\>/%:,;0\$])                                         : {token, {list_to_atom(TokenChars), TokenLine}}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% white space
 ([\n\r\s\t]+)                                             : skip_token.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Erlang code.
 
 %% -----------------------------------------------------------------------------
@@ -90,7 +90,7 @@ Erlang code.
 
 -export([reserved_keywords/0]).
 
--define(TokenPatters, [
+-define(TokenPatterns, [
 
     {"^(?i)(ALL)$",              'ALL'},
     {"^(?i)(ALLSHORTESTPATHS)$", 'ALLSHORTESTPATHS'},
@@ -177,7 +177,7 @@ Erlang code.
 -define(Dbg(F,A), ok).
 -endif.
 
-reserved_keywords() -> [T || {_, T} <- ?TokenPatters].
+reserved_keywords() -> [T || {_, T} <- ?TokenPatterns].
 
 match_any(TokenChars, TokenLen, _TokenLine, []) ->
     {token, {'UNESCAPED_SYMBOLIC_NAME', TokenLen, TokenChars}};

@@ -17,7 +17,7 @@ RETURN m
 ### Parsing the example code:
 
 ```erlang
-1> {ok, {ParseTree, Tokens}} = ocparse:parsetree_with_tokens("MATCH (m:Movie) WHERE m.title = 'The Matrix' RETURN m").
+1> {ok, {ParseTree, Tokens}} = ocparse:source_to_pt("MATCH (m:Movie) WHERE m.title = 'The Matrix' RETURN m").
 
 {ok,
  {{cypher,
@@ -32,7 +32,7 @@ RETURN m
              {anonymousPatternPart,{patternElement,{...},...}}}]},
           {where,
            {expression,
-            {expression12,{expression11,{expression10,...},[]},[]}}}}},
+            {orExpression,{xorExpression,{andExpression,...},[]},[]}}}}},
         {clause,
          {return,[],
           {returnBody,
@@ -76,14 +76,16 @@ RETURN m
              []}}}]},
         {where,
          {expression,
-          {expression12,
-           {expression11,{expression10,{expression9,{...},...},[]},[]},
+          {orExpression,
+           {xorExpression,
+            {andExpression,{notExpression,{...},...},[]},
+            []},
            []}}}}},
       {clause,
        {return,[],
         {returnBody,
          {returnItems,[],[],
-          [{returnItem,{expression,{expression12,...}},[]}]},
+          [{returnItem,{expression,{orExpression,...}},[]}]},
          [],[],[]}}}]},
     []}}},
  []}
@@ -113,7 +115,13 @@ RETURN m
 ### Compile the code from a parse tree:
 
 ```erlang
-4> ocparse:parsetree_to_string(ParseTree).
+4> ocparse:pt_to_source_td(ParseTree).
+
+<<"match (m :Movie) where m .title = 'The Matrix' return m">>
+```
+
+```erlang
+5> ocparse:pt_to_source_bu(ParseTree).
 
 <<"match (m :Movie) where m .title = 'The Matrix' return m">>
 ```
@@ -136,41 +144,38 @@ The output of the parse tree in the Erlang shell is shortened (cause not known).
             {patternElement,
              {nodePattern,
               {variable,{symbolicName,"m"}},
-              {nodeLabels,
-               [{nodeLabel,{labelName,{symbolicName,"Movie"}}}]},
+              {nodeLabels,[{nodeLabel,{labelName,{symbolicName,"Movie"}}}]},
               []},
              []}}}]},
         {where,
          {expression,
-          {expression12,
-           {expression11,
-            {expression10,
-             {expression9,
-              {expression8,
-               {expression7,
-                {expression6,
-                 {expression5,
-                  {expression4,
-                   {expression3,
-                    {expression2,
+          {orExpression,
+           {xorExpression,
+            {andExpression,
+             {notExpression,
+              {comparisonExpression,
+               {addOrSubtractExpression,
+                {multiplyDivideModuloExpression,
+                 {powerOfExpression,
+                  {unaryAddOrSubtractExpression,
+                   {stringListNullOperatorExpression,
+                    {propertyOrLabelsExpression,
                      {atom,{variable,{symbolicName,"m"}}},
                      [{propertyLookup,
-                       {propertyKeyName,{symbolicName,"title"}},
-                       []}]},
+                       {propertyKeyName,{symbolicName,"title"}}}]},
                     []},
                    []},
                   []},
                  []},
                 []},
                [{partialComparisonExpression,
-                 {expression7,
-                  {expression6,
-                   {expression5,
-                    {expression4,
-                     {expression3,
-                      {expression2,
-                       {atom,
-                        {literal,{stringLiteral,"'The Matrix'"}}},
+                 {addOrSubtractExpression,
+                  {multiplyDivideModuloExpression,
+                   {powerOfExpression,
+                    {unaryAddOrSubtractExpression,
+                     {stringListNullOperatorExpression,
+                      {propertyOrLabelsExpression,
+                       {atom,{literal,{stringLiteral,"'The Matrix'"}}},
                        []},
                       []},
                      []},
@@ -188,17 +193,17 @@ The output of the parse tree in the Erlang shell is shortened (cause not known).
          {returnItems,[],[],
           [{returnItem,
             {expression,
-             {expression12,
-              {expression11,
-               {expression10,
-                {expression9,
-                 {expression8,
-                  {expression7,
-                   {expression6,
-                    {expression5,
-                     {expression4,
-                      {expression3,
-                       {expression2,
+             {orExpression,
+              {xorExpression,
+               {andExpression,
+                {notExpression,
+                 {comparisonExpression,
+                  {addOrSubtractExpression,
+                   {multiplyDivideModuloExpression,
+                    {powerOfExpression,
+                     {unaryAddOrSubtractExpression,
+                      {stringListNullOperatorExpression,
+                       {propertyOrLabelsExpression,
                         {atom,{variable,{symbolicName,"m"}}},
                         []},
                        []},
@@ -258,14 +263,6 @@ The following tokens may not be used as `SymbolicName`:
 ```
 
 An exception is the use of the tokens `COUNT` and `EXISTS` as `FunctionName`.
-
-In the legacy version of the parser the following tokens are also excluded as `SymbolicName`:
-
-```
- ALLSHORTESTPATHS, ASSERT, CASE, COMMIT, CONSTRAINT, CSV, CYPHER, DROP, ELSE, END, EXPLAIN,
- FIELDTERMINATOR, FOREACH, FROM, HEADERS, INDEX, JOIN, LOAD, NODE, PERIODIC, PROFILE, REDUCE,
- REL, RELATIONSHIP, SCAN, SHORTESTPATH, START, THEN, UNIQUE, USING, WHEN
-```
 
 ### Unicode
 
@@ -332,14 +329,6 @@ Old: Atom = Literal
 New: ComparisonExpression = AddOrSubtractExpression, { [SP], PartialComparisonExpression } ;
 
 Old: Expression8 = Expression7, { [SP], PartialComparisonExpression } ;
-```
-
-- **EscapedChar**
-
-```
-New: EscapedChar = '\', ('\' | "'" | '"' | (B) | (F) | (N) | (R) | (T) | ((U), 4 * HexDigit) | ((U), 8 * HexDigit)) ;
-
-Old: EscapedChar = '\', ('\' | "'" | '"' | (B) | (F) | (N) | (R) | (T) | '_' | '%' | ((U), 4 * HexDigit) | ((U), 8 * HexDigit)) ;
 ```
 
 - **Expression**

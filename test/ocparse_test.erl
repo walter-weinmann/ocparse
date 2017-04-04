@@ -36,25 +36,25 @@
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 %% Common Test Driver.
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 
 common_test_source(Source) ->
-    %% --------------------------------------------------------
+    %% -------------------------------------------------------------------------
     %% 1. Source ==> ParseTree
-    %% --------------------------------------------------------
-    case ?PARSER_MODULE:parsetree_with_tokens(Source) of
+    %% -------------------------------------------------------------------------
+    case ?PARSER_MODULE:source_to_pt(Source) of
         {ok, {ParseTree, _Tokens}} ->
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% Test TopDown
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% 2. ParseTree ==> Source (=NSource_TD)
-            %% --------------------------------------------------------
-            NSource_TD = case ?PARSER_MODULE:parsetree_to_string_td(ParseTree) of
+            %% -----------------------------------------------------------------
+            NSource_TD = case ?PARSER_MODULE:pt_to_source_td(ParseTree) of
                              {error, Error_TD} ->
                                  ct:pal("~n[TD] Error ParseTree -> NewSource : ParseTree~n > ~p", [ParseTree]),
-                                 throw({error, "[TD] Error ParseTree -> NewSource : " ++ Error_TD});
+                                 throw({error, Error_TD});
                              NS_TD ->
                                  NS_TD
                          end,
@@ -68,18 +68,18 @@ common_test_source(Source) ->
                     ct:pal("~n[TD] Error Source == NewSource : NewSourceNet~n > ~p", [lists:flatten(remove_whitespace(binary_to_list(NSource_TD), ?WHITESPACE, []))]),
                     throw({error, "[TD] Error Source == NewSource"})
             end,
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% 3. Source (=NSource_TD) ==> ParseTree (=NPT_TD)
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             {ok, {NPTree_TD, _NToks_TD}}
                 = try
-                      {ok, {NPT_TD, NT_TD}} = ?PARSER_MODULE:parsetree_with_tokens(NSource_TD),
+                      {ok, {NPT_TD, NT_TD}} = ?PARSER_MODULE:source_to_pt(NSource_TD),
                       {ok, {NPT_TD, NT_TD}}
                   catch
                       _:_ ->
-                          ct:pal("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : Source   ~n > ~p", [Source]),
-                          ct:pal("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : NewSource~n > ~p", [NSource_TD]),
-                          throw({error, "[TD] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens"})
+                          ct:pal("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : Source   ~n > ~p", [Source]),
+                          ct:pal("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : NewSource~n > ~p", [NSource_TD]),
+                          throw({error, "[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt"})
                   end,
             if ParseTree /= NPTree_TD ->
                 ct:pal("~n[TD] Error ParseTree = NPTree : Source      ~n > ~p", [Source]),
@@ -99,12 +99,12 @@ common_test_source(Source) ->
                     ct:pal("~n[TD] Error redundant whitespace(s) : 1. Redundant WS~n > ~p", [StringNSource_TDMultipleSpace]),
                     throw({error, "[TD] Error redundant whitespace(s)"})
             end,
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% Test BottomUp
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% 2. ParseTree ==> Source (=NSource_BU)
-            %% --------------------------------------------------------
-            NSource_BU = case ?PARSER_MODULE:parsetree_to_string_bu(ParseTree) of
+            %% -----------------------------------------------------------------
+            NSource_BU = case ?PARSER_MODULE:pt_to_source_bu(ParseTree) of
                              {error, Error_BU} ->
                                  ct:pal("~n[BU] Error ParseTree -> NewSource : ParseTree~n > ~p", [ParseTree]),
                                  throw({error, "[BU] Error ParseTree -> NewSource : " ++ Error_BU});
@@ -120,18 +120,18 @@ common_test_source(Source) ->
                     ct:pal("~n[BU] Error Source == NewSource : NewSourceNet~n > ~p", [lists:flatten(remove_whitespace(binary_to_list(NSource_BU), ?WHITESPACE, []))]),
                     throw({error, "[BU] Error Source == NewSource"})
             end,
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% 3. Source (=NSource_BU) ==> ParseTree (=NPT_BU)
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             {ok, {NPTree_BU, _NToks_BU}}
                 = try
-                      {ok, {NPT_BU, NT_BU}} = ?PARSER_MODULE:parsetree_with_tokens(NSource_BU),
+                      {ok, {NPT_BU, NT_BU}} = ?PARSER_MODULE:source_to_pt(NSource_BU),
                       {ok, {NPT_BU, NT_BU}}
                   catch
                       _:_ ->
-                          ct:pal("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : Source   ~n > ~p", [Source]),
-                          ct:pal("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : NewSource~n > ~p", [NSource_BU]),
-                          throw({error, "[BU] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens"})
+                          ct:pal("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : Source   ~n > ~p", [Source]),
+                          ct:pal("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : NewSource~n > ~p", [NSource_BU]),
+                          throw({error, "[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt"})
                   end,
             if ParseTree /= NPTree_BU ->
                 ct:pal("~n[BU] Error ParseTree = NPTree : Source      ~n > ~p", [Source]),
@@ -160,9 +160,9 @@ common_test_source(Source) ->
             throw({error, "Failed parse_error : " ++ _Error})
     end.
 
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 %% EUnit Test Driver - Determine Files.
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 
 eunit_test_() ->
     WCard = case os:getenv(?ENV_VAR_FILE_WILDCARD) of
@@ -194,9 +194,9 @@ eunit_test_() ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":eunit_test_ ===>~nTestFiles: ~p~n", [TestFiles]),
     group_gen(TestFiles, Logs).
 
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 %% EUnit Test Driver - Processing Test Cases.
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 
 -define(D(__Lvl, __Fmt, __Args),
     case lists:member(__Lvl, Logs) of
@@ -226,21 +226,21 @@ eunit_test_() ->
 eunit_test_source(_TestGroup, Source, Logs) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":eunit_test_source ===>~nTestGroup = ~p~n, Source = ~p~n, Logs = ~p~n", [_TestGroup, Source, Logs]),
     ?D1("~n[TD] Source~n~s", [Source]),
-    %% --------------------------------------------------------
+    %% -------------------------------------------------------------------------
     %% 1. Source ==> ParseTree
-    %% --------------------------------------------------------
-    case ?PARSER_MODULE:parsetree_with_tokens(Source) of
+    %% -------------------------------------------------------------------------
+    case ?PARSER_MODULE:source_to_pt(Source) of
         {ok, {ParseTree, _Tokens}} ->
-            ?D2("~n[TD] ParseTree~n~p", [ParseTree]),
-            %% --------------------------------------------------------
+            ?D2("~n[TD] ParseTree~n~p Tokens~n~p", [ParseTree, _Tokens]),
+            %% -----------------------------------------------------------------
             %% Test TopDown
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% 2. ParseTree ==> Source (=NSource_TD)
-            %% --------------------------------------------------------
-            NSource_TD = case ?PARSER_MODULE:parsetree_to_string_td(ParseTree) of
+            %% -----------------------------------------------------------------
+            NSource_TD = case ?PARSER_MODULE:pt_to_source_td(ParseTree) of
                              {error, Error_TD} ->
                                  ?D_("~n[TD] Error ParseTree -> NewSource : ParseTree~n > ~p", [ParseTree]),
-                                 throw({error, "[TD] Error ParseTree -> NewSource : " ++ Error_TD});
+                                 throw({error, Error_TD});
                              NS_TD ->
                                  NS_TD
                          end,
@@ -255,19 +255,19 @@ eunit_test_source(_TestGroup, Source, Logs) ->
                     ?D_("~n[TD] Error Source == NewSource : NewSourceNet~n > ~p", [lists:flatten(remove_whitespace(binary_to_list(NSource_TD), ?WHITESPACE, []))]),
                     throw({error, "[TD] Error Source == NewSource"})
             end,
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% 3. Source (=NSource_TD) ==> ParseTree (=NPT_TD)
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             {ok, {NPTree_TD, _NToks_TD}}
                 = try
-                      {ok, {NPT_TD, NT_TD}} = ?PARSER_MODULE:parsetree_with_tokens(NSource_TD),
+                      {ok, {NPT_TD, NT_TD}} = ?PARSER_MODULE:source_to_pt(NSource_TD),
                       {ok, {NPT_TD, NT_TD}}
                   catch
                       _:_ ->
-                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : Source   ~n > ~p", [Source]),
-                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : TestGroup~n > ~p", [_TestGroup]),
-                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : NewSource~n > ~p", [NSource_TD]),
-                          throw({error, "[TD] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens"})
+                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : Source   ~n > ~p", [Source]),
+                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : TestGroup~n > ~p", [_TestGroup]),
+                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : NewSource~n > ~p", [NSource_TD]),
+                          throw({error, "[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt"})
                   end,
             if ParseTree /= NPTree_TD ->
                 ?D_("~n[TD] Error ParseTree = NPTree : Source      ~n > ~p", [Source]),
@@ -288,12 +288,12 @@ eunit_test_source(_TestGroup, Source, Logs) ->
                     throw({error, "[TD] Error redundant whitespace(s)"})
             end,
             ?D4("~n[TD] ParseTree~n~p", [ParseTree]),
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% Test BottomUp
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% 2. ParseTree ==> Source (=NSource_BU)
-            %% --------------------------------------------------------
-            NSource_BU = case ?PARSER_MODULE:parsetree_to_string_bu(ParseTree) of
+            %% -----------------------------------------------------------------
+            NSource_BU = case ?PARSER_MODULE:pt_to_source_bu(ParseTree) of
                              {error, Error_BU} ->
                                  ?D_("~n[BU] Error ParseTree -> NewSource : ParseTree~n > ~p", [ParseTree]),
                                  throw({error, "[BU] Error ParseTree -> NewSource : " ++ Error_BU});
@@ -310,19 +310,19 @@ eunit_test_source(_TestGroup, Source, Logs) ->
                     ?D_("~n[BU] Error Source == NewSource : NewSourceNet~n > ~p", [lists:flatten(remove_whitespace(binary_to_list(NSource_BU), ?WHITESPACE, []))]),
                     throw({error, "[BU] Error Source == NewSource"})
             end,
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             %% 3. Source (=NSource_BU) ==> ParseTree (=NPT_BU)
-            %% --------------------------------------------------------
+            %% -----------------------------------------------------------------
             {ok, {NPTree_BU, _NToks_BU}}
                 = try
-                      {ok, {NPT_BU, NT_BU}} = ?PARSER_MODULE:parsetree_with_tokens(NSource_BU),
+                      {ok, {NPT_BU, NT_BU}} = ?PARSER_MODULE:source_to_pt(NSource_BU),
                       {ok, {NPT_BU, NT_BU}}
                   catch
                       _:_ ->
-                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : Source   ~n > ~p", [Source]),
-                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : TestGroup~n > ~p", [_TestGroup]),
-                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens : NewSource~n > ~p", [NSource_BU]),
-                          throw({error, "[BU] Error " ++ atom_to_list(?MODULE) ++ ":parsetree_with_tokens"})
+                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : Source   ~n > ~p", [Source]),
+                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : TestGroup~n > ~p", [_TestGroup]),
+                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : NewSource~n > ~p", [NSource_BU]),
+                          throw({error, "[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt"})
                   end,
             if ParseTree /= NPTree_BU ->
                 ?D_("~n[BU] Error ParseTree = NPTree : Source      ~n > ~p", [Source]),
@@ -352,9 +352,9 @@ eunit_test_source(_TestGroup, Source, Logs) ->
             throw({error, "Failed parse_error : " ++ _Error})
     end.
 
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 %% EUnit Test Driver - Processing Files.
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 
 group_gen(TestFiles, Logs) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":group_gen ===>~nTestFiles = ~s, Logs = ~p~n", [TestFiles, Logs]),
@@ -394,9 +394,9 @@ group_gen(TestFiles, Logs) ->
             end
         end}.
 
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 %% Remove the whitespace characters from a string.
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 
 remove_whitespace([], _WhiteSpace, Acc) ->
     lists:reverse(Acc);
@@ -419,9 +419,9 @@ is_whitespace([Curr | Tail], Char) ->
             is_whitespace(Tail, Char)
     end.
 
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 %% EUnit Test Driver - Processing Groups.
-%%--------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 
 tests_gen(TestGroup, Tests, Opts, Logs) ->
     ?debugFmt(atom_to_list(?MODULE) ++ ":tests_gen ===>~nTestGroup = ~p~n, Tests = ~p~n, Opts = ~p~n, Logs = ~p~n", [TestGroup, Tests, Opts, Logs]),
