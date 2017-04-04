@@ -615,8 +615,7 @@ power_of_expression_addon_list -> power_of_expression_addon_list '^' unary_add_o
                                                                                                 : '$1' ++ [{"^", '$3'}].
 %% =============================================================================
 
-unary_add_or_subtract_expression ->                         string_list_null_operator_expression                                            
-                                                                                                : {unaryAddOrSubtractExpression, '$1', []}.
+unary_add_or_subtract_expression ->                         string_list_null_operator_expression: {unaryAddOrSubtractExpression, '$1', []}.
 unary_add_or_subtract_expression -> unary_add_or_subtract_expression_addon_list string_list_null_operator_expression                                            
                                                                                                 : {unaryAddOrSubtractExpression, '$2', '$1'}.
 
