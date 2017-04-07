@@ -30,7 +30,6 @@
     statement
 ]).
 -define(ALL_CLAUSE_CT_RELIABILITY, [
-    unaryAddOrSubtractExpression,
     create,
     cypher,
     delete,
@@ -44,18 +43,43 @@
     unwind,
     with
 ]).
--define(ALL_CLAUSE_EUNIT, []).
+-define(ALL_CLAUSE_EUNIT, [
+]).
 -define(CODE_TEMPLATES, code_templates).
+-define(CREATE_CODE_END,
+    [_CodeFirst | _] = Code,
+    {_, _MemorySize} = erlang:process_info(self(), memory),
+    ?debugFmt("~ntime (ms)          ===  ~12.. B rule: ~s ~n", [erlang:monotonic_time(1000) - _Start, atom_to_list(Rule)]),
+    ?debugFmt("~nmemory (bytes)     ===  ~12.. B rule: ~s ~n", [_MemorySize, atom_to_list(Rule)]),
+    ?debugFmt("~ncode size (bytes) <===  ~12.. B rule: ~s ~n", [length(_CodeFirst), atom_to_list(Rule)]),
+    ok
+).
+-define(CREATE_CODE_END_RULE,
+    [_CodeFirst | _] = Code,
+    {_, _MemorySize} = erlang:process_info(self(), memory),
+    ?debugFmt("~ntime (ms)          ===  ~12.. B rule: ~s ~n", [erlang:monotonic_time(1000) - _Start, atom_to_list(_Rule)]),
+    ?debugFmt("~nmemory (bytes)     ===  ~12.. B rule: ~s ~n", [_MemorySize, atom_to_list(_Rule)]),
+    ?debugFmt("~ncode size (bytes) <===  ~12.. B rule: ~s ~n", [length(_CodeFirst), atom_to_list(_Rule)]),
+    ok
+).
+-define(CREATE_CODE_START,
+    [garbage_collect(Pid) || Pid <- processes()],
+    _Start = erlang:monotonic_time(1000)
+).
 -define(DASH, "-").
 -define(LEFT_ARROW_HEAD, "<").
+
 -define(MAX_CLAUSE, 2000).
 -define(MAX_CYPHER, 2000).
 -define(MAX_QUERY, 2000).
--define(MAX_RULE_ATOM, 500).
--define(MAX_RULE_EXPRESSION, 500).
+-define(MAX_RULE_ATOM, 100).                 % cumulative
+-define(MAX_RULE_EXPRESSION, 100).           % cumulative
+-define(MAX_RULE_OTHERS, 2000).              % max of (MAX_CLAUSE, MAX_CYPHER, MAX_QUERY, MAX_STATEMENT)) 
 -define(MAX_STATEMENT, 2000).
+
 -define(PATH_CT, "test").
 -define(PATH_EUNIT, "test").
+
 -define(PRIME, 37).
 -define(RIGHT_ARROW_HEAD, ">").
 -define(SP, " ").
@@ -64,11 +88,18 @@
 -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Generate Test Data.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generate Test Data.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 generate() ->
+    file:delete(?CODE_TEMPLATES),
+    dets:open_file(?CODE_TEMPLATES, [
+        {auto_save, 0},
+        {repair, false}
+    ]),
+    dets:delete_all_objects(?CODE_TEMPLATES),
+
     create_code(),
 
     % performance common tests
@@ -80,53 +111,445 @@ generate() ->
     % reliability eunit tests
     ok = file_create_eunit_all(?ALL_CLAUSE_EUNIT),
 
-    ok.
+    dets:close(?CODE_TEMPLATES).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Creating code base.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Creating code base.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code() ->
-    try
-        ets:new(?CODE_TEMPLATES, [set, named_table])
-    catch
-        error:badarg ->
-            ets:delete(?CODE_TEMPLATES),
-            ets:new(?CODE_TEMPLATES, [set, named_table])
-    end,
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 1
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % --------------------------------------------------------------------------
-    % Atom = ...
-    %      | (N,U,L,L)
-    %      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
-    %      | ... ;
-    % --------------------------------------------------------------------------
-    AtomCount = ["Count(*)", "Count ( * )"],
-    insert_table(atom_count, AtomCount),
-    AtomNull = ["Null"],
-    insert_table(atom_null, AtomNull),
+    create_code(atomCount),
+    create_code(booleanLiteral),
+    create_code(decimalInteger),
+    create_code(escapedSymbolicName),
+    create_code(exponentDecimalReal),
+    create_code(hexInteger),
+    create_code(literalNull),
+    create_code(octalInteger),
+    create_code(regularDecimalReal),
+    create_code(stringLiteral),
+    create_code(unescapedSymbolicName),
 
-    % --------------------------------------------------------------------------
-    % BooleanLiteral = (T,R,U,E)
-    %                | (F,A,L,S,E)
-    %                ;
-    % --------------------------------------------------------------------------
-    BooleanLiteral = sort_list_random([
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 2
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(functionName),
+    create_code(labelName),
+    create_code(parameter),
+    create_code(propertyKeyName),
+    create_code(rangeLiteral),
+    create_code(relTypeName),
+    create_code(variable),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 3
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(nodeLabel),
+    create_code(propertyLookup),
+    create_code(relationshipTypes),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 4
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(nodeLabels),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 5
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code_expression(?MAX_RULE_EXPRESSION),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 6
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(functionInvocation),
+    create_code(idInColl),
+%%    currently not supported    
+%%    create_code(listLiteral),
+    create_code(mapLiteral),
+%%    currently not supported    
+%%    create_code(parenthesizedExpression),
+    create_code(where),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 7
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(filterExpression),
+    create_code(properties),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 8
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(atomFilter),
+    create_code(atomExtract),
+    create_code(atomAll),
+    create_code(atomAny),
+    create_code(atomNone),
+    create_code(atomSingle),
+    create_code(listComprehension),
+    create_code(nodePattern),
+    create_code(relationshipDetail),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 9
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(relationshipPattern),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 10
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(patternElementChain),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 11
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(patternElement),
+    create_code(relationshipsPattern),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 12
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(anonymousPatternPart),
+    create_code(patternComprehension),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 13
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code_expression(?MAX_RULE_EXPRESSION),
+    create_code(patternPart),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 50
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(delete),
+    create_code(limit),
+    create_code(pattern),
+    create_code(propertyExpression),
+    create_code(returnItem),
+    create_code(skip),
+    create_code(sortItem),
+    create_code(unwind),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 51
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(create),
+    create_code(match),
+    create_code(order),
+    create_code(removeItem),
+    create_code(returnItems),
+    create_code(setItem),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 52
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(remove),
+    create_code(returnBody),
+    create_code(set),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 53
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(mergeAction),
+    create_code(return),
+    create_code(with),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 54
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(merge),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 91
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(singleQuery),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 92
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(union),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 93
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(regularQuery),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 94
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(query),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 95
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(statement),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 100
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(cypher),
+
+    ok.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% AnonymousPatternPart = PatternElement ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(anonymousPatternPart = Rule) ->
+    ?CREATE_CODE_START,
+
+    [{patternElement, Code}] = dets:lookup(?CODE_TEMPLATES, patternElement),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Atom = ...
+%%      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ...
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(atomAll = Rule) ->
+    ?CREATE_CODE_START,
+    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    FilterExpression_Length = length(FilterExpression),
+
+    Code = [
+            "All" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Atom = ...
+%%      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ...
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(atomAny = Rule) ->
+    ?CREATE_CODE_START,
+    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    FilterExpression_Length = length(FilterExpression),
+
+    Code = [
+            "Any" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Atom = ...
+%%      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+%%      | ... ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(atomCount = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "Count(*)",
+        "Count ( * )"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Atom = ...
+%%      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
+%%      | ...
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(atomExtract = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    FilterExpression_Length = length(FilterExpression),
+
+    Code = [
+            "Extract" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 -> ?SP_OPT ++ "|" ++
+                    lists:nth(rand:uniform(Expression_Length), Expression);
+                _ -> []
+            end ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Atom = ...
+%%      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ...
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(atomFilter = Rule) ->
+    ?CREATE_CODE_START,
+    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    FilterExpression_Length = length(FilterExpression),
+
+    Code = [
+            "Filter" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Atom = ...
+%%      | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ...
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(atomNone = Rule) ->
+    ?CREATE_CODE_START,
+    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    FilterExpression_Length = length(FilterExpression),
+
+    Code = [
+            "None" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Atom = ...
+%%      | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ...
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(atomSingle = Rule) ->
+    ?CREATE_CODE_START,
+    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    FilterExpression_Length = length(FilterExpression),
+
+    Code = [
+            "Single" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% BooleanLiteral = (T,R,U,E)
+%%                | (F,A,L,S,E) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(booleanLiteral = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
         "true",
         "false"
-    ]),
-    BooleanLiteral_Length = length(BooleanLiteral),
-    insert_table(boolean_literal, BooleanLiteral),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses boolean_literal ~n", [BooleanLiteral_Length])),
-    % --------------------------------------------------------------------------
-    % DecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
-    %                | '0' ;
-    % --------------------------------------------------------------------------
-    DecimalInteger = sort_list_random([
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Create = (C,R,E,A,T,E), [SP], Pattern ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% Create = (C,R,E,A,T,E), SP, Pattern ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(create = Rule) ->
+    ?CREATE_CODE_START,
+    [{pattern, Pattern}] = dets:lookup(?CODE_TEMPLATES, pattern),
+    Pattern_Length = length(Pattern),
+
+    Code = [
+            "Create" ++ ?SP ++
+            lists:nth(rand:uniform(Pattern_Length), Pattern)
+        || _ <- lists:seq(1, ?MAX_CLAUSE)
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Cypher = [SP], QueryOptions, Statement, [[SP], ';'], [SP] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(cypher = Rule) ->
+    ?CREATE_CODE_START,
+    [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
+
+    CodeCurr = [
+            ?SP_OPT ++
+            S ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 -> ?SP_OPT ++ ";";
+                _ -> []
+            end
+            ++ ?SP_OPT
+        || S <- Statement
+    ],
+    Code = case length(CodeCurr) > ?MAX_CYPHER of
+               true -> lists:sublist(CodeCurr, 1, ?MAX_CYPHER);
+               _ -> CodeCurr
+           end,
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DecimalInteger = (('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'), [DigitString])
+%%                | '0' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(decimalInteger = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
         "0",
         "7",
         "12",
@@ -137,1275 +560,22 @@ create_code() ->
         "1234567",
         "87654321",
         "123456789"
-    ]),
-    DecimalInteger_Length = length(DecimalInteger),
-    insert_table(decimal_integer, DecimalInteger),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses decimal_integer ~n", [DecimalInteger_Length])),
-    % --------------------------------------------------------------------------
-    % (* Any character except "`", enclosed within `backticks`. Backticks are escaped with double backticks. *)EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
-    % --------------------------------------------------------------------------
-    EscapedSymbolicName = sort_list_random([
-        "`1esn`",
-        "`2esn`",
-        "`3esn`",
-        "`4esn`",
-        "`5esn`",
-        "`6esn`",
-        "`7esn`",
-        "`8esn`",
-        "`aesn`",
-        "`Aesn`",
-        "`besn`",
-        "`Besn`",
-        "`.esn`",
-        "`,esn`",
-        "`@esn`",
-        "``"
-    ]),
-    EscapedSymbolicName_Length = length(EscapedSymbolicName),
-    insert_table(escaped_symbolic_name, EscapedSymbolicName),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses escaped_symbolic_name ~n", [EscapedSymbolicName_Length])),
-    % --------------------------------------------------------------------------
-    % ExponentDecimalReal = ({ Digit | '.' }- | DecimalInteger), ((E) | (E)), (DigitString | DecimalInteger) ;
-    % --------------------------------------------------------------------------
-    ExponentDecimalReal = sort_list_random([
-        "9e0",
-        "9e1",
-        "9e-1",
-        "9e12",
-        "9e-12",
-        "0e0",
-        "0e-0",
-        "1e1",
-        "1e-1",
-        "12e12",
-        "12e-12",
-        ".9e0",
-        ".9e1",
-        ".9e-1",
-        ".9e12",
-        ".9e-12",
-        ".0e0",
-        ".0e-0",
-        ".1e1",
-        ".1e-1",
-        ".12e12",
-        ".12e-12",
-        "1.9e0",
-        "2.9e1",
-        "3.9e-1",
-        "4.9e12",
-        "5.9e-12",
-        "6.0e0",
-        "7.0e-0",
-        "8.1e1",
-        "9.1e-1",
-        "10.12e12",
-        "11.12e-12"
-    ]),
-    ExponentDecimalReal_Length = length(ExponentDecimalReal),
-    insert_table(exponent_decimal_real, ExponentDecimalReal),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses exponent_decimal_real ~n", [ExponentDecimalReal_Length])),
-    % --------------------------------------------------------------------------
-    % HexInteger = ('0',X), HexString ;
-    % --------------------------------------------------------------------------
-    HexInteger = sort_list_random([
-        "0x0",
-        "0x7",
-        "0xa",
-        "0xabc",
-        "0xabcdef",
-        "0x12a",
-        "0x3456abc",
-        "0x7890abcdef",
-        "0x0123456789ABCDEF"
-    ]),
-    HexInteger_Length = length(HexInteger),
-    insert_table(hex_integer, HexInteger),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses hex_integer ~n", [HexInteger_Length])),
-    % --------------------------------------------------------------------------
-    % OctalInteger = '0', OctalString ;
-    % --------------------------------------------------------------------------
-    OctalInteger = sort_list_random([
-        "00",
-        "01",
-        "07",
-        "010",
-        "0321"
-        "01234"
-        "054321"
-        "0123456"
-        "01234567"
-    ]),
-    OctalInteger_Length = length(OctalInteger),
-    insert_table(octal_integer, OctalInteger),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses octal_integer ~n", [OctalInteger_Length])),
-    % --------------------------------------------------------------------------
-    % RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | DecimalInteger) ;
-    % --------------------------------------------------------------------------
-    RegularDecimalReal = sort_list_random([".0", ".12", "0.0", "0.12", "12.0", "123.654"]),
-    RegularDecimalReal_Length = length(RegularDecimalReal),
-    insert_table(regular_decimal_real, RegularDecimalReal),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses regular_decimal_real ~n", [RegularDecimalReal_Length])),
-    % --------------------------------------------------------------------------
-    % StringLiteral = ('"', { ANY - ('"' | '\') | EscapedChar }, '"')
-    %               | ("'", { ANY - ("'" | '\') | EscapedChar }, "'") ;
-    % --------------------------------------------------------------------------
-    StringLiteral = sort_list_random([
-        "\\\"d_str\\\"",
-        "'s_str'"
-    ]),
-    StringLiteral_Length = length(StringLiteral),
-    insert_table(string_literal, StringLiteral),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses string_literal ~n", [StringLiteral_Length])),
-    % --------------------------------------------------------------------------
-    % UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
-    % --------------------------------------------------------------------------
-    UnescapedSymbolicName = sort_list_random([
-        "usn1",
-        "usn2",
-        "_usn3",
-        "_usn4",
-        "@usn5",
-        "@usn6",
-        "#usn7",
-        "#usn8",
-        "usna",
-        "usnb",
-        "_usnc",
-        "_usnd",
-        "@usne",
-        "@usnf",
-        "#usng"
-    ]),
-    UnescapedSymbolicName_Length = length(UnescapedSymbolicName),
-    insert_table(unescaped_symbolic_name, UnescapedSymbolicName),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses unescaped_symbolic_name ~n", [UnescapedSymbolicName_Length])),
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    store_code(integerLiteral, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Delete = [(D,E,T,A,C,H), SP], (D,E,L,E,T,E), [SP], Expression, { [SP], ',', [SP], Expression } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % --------------------------------------------------------------------------
-    % DoubleLiteral = ExponentDecimalReal
-    %               | RegularDecimalReal ;
-    % --------------------------------------------------------------------------
-    DoubleLiteral = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        ExponentDecimalReal,
-        RegularDecimalReal
-    ])))),
-    DoubleLiteral_Length = length(DoubleLiteral),
-    insert_table(double_literal, DoubleLiteral),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses double_literal ~n", [DoubleLiteral_Length])),
-    % --------------------------------------------------------------------------
-    % IntegerLiteral = HexInteger
-    %                | OctalInteger
-    %                | DecimalInteger ;
-    % --------------------------------------------------------------------------
-    IntegerLiteral = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        DecimalInteger,
-        HexInteger,
-        OctalInteger
-    ])))),
-    IntegerLiteral_Length = length(IntegerLiteral),
-    insert_table(integer_literal, IntegerLiteral),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses integer_literal ~n", [IntegerLiteral_Length])),
-    % --------------------------------------------------------------------------
-    % SymbolicName = UnescapedSymbolicName
-    %              | EscapedSymbolicName ;
-    % --------------------------------------------------------------------------
-    SymbolicName = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        EscapedSymbolicName,
-        UnescapedSymbolicName
-    ])))),
-    SymbolicName_Length = length(SymbolicName),
-    insert_table(symbolic_name, SymbolicName),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses symbolic_name ~n", [SymbolicName_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 3
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % FunctionName = SymbolicName ;
-    % --------------------------------------------------------------------------
-    FunctionName = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        SymbolicName,
-        ["count"]
-    ])))),
-    FunctionName_Length = length(FunctionName),
-    insert_table(function_name, FunctionName),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses function_name ~n", [FunctionName_Length])),
-    %---------------------------------------------------------------------------
-    % LiteralIds = IntegerLiteral, { [SP], ',', [SP], IntegerLiteral } ;
-    %---------------------------------------------------------------------------
-    LiteralIds = sort_list_random(
-        [
-                IL ++
-                case rand:uniform(?PRIME) rem 4 of
-                    1 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral);
-                    2 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral);
-                    3 -> ?SP_OPT ++ "," ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral);
-                    _ -> []
-                end
-            || IL <- IntegerLiteral
-        ]),
-    LiteralIds_Length = length(LiteralIds),
-    insert_table(literal_ids, LiteralIds),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses literal_ids ~n", [LiteralIds_Length])),
-    % --------------------------------------------------------------------------
-    % LabelName = SymbolicName ;
-    % --------------------------------------------------------------------------
-    LabelName = SymbolicName,
-    LabelName_Length = length(LabelName),
-    insert_table(label_name, LabelName),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses label_name ~n", [LabelName_Length])),
-    % --------------------------------------------------------------------------
-    % NumberLiteral = DoubleLiteral
-    %               | IntegerLiteral ;
-    % --------------------------------------------------------------------------
-    NumberLiteral = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        DoubleLiteral,
-        IntegerLiteral
-    ])))),
-    NumberLiteral_Length = length(NumberLiteral),
-    insert_table(number_literal, NumberLiteral),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses number_literal ~n", [NumberLiteral_Length])),
-    % --------------------------------------------------------------------------
-    % Parameter = '$', (SymbolicName | DecimalInteger) ;
-    % --------------------------------------------------------------------------
-    Parameter = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        ["$" ++ SN || SN <- SymbolicName],
-        ["$" ++ SN || SN <- SymbolicName]
-    ])))),
-    Parameter_Length = length(Parameter),
-    insert_table(parameter, Parameter),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses parameter ~n", [Parameter_Length])),
-    % --------------------------------------------------------------------------
-    % PropertyKeyName = SymbolicName ;
-    % --------------------------------------------------------------------------
-    PropertyKeyName = SymbolicName,
-    PropertyKeyName_Length = length(PropertyKeyName),
-    insert_table(property_key_name, PropertyKeyName),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses property_key_name ~n", [PropertyKeyName_Length])),
-    % --------------------------------------------------------------------------
-    % RangeLiteral = '*', [SP], [IntegerLiteral, [SP]], ['..', [SP], [IntegerLiteral, [SP]]] ;
-    % --------------------------------------------------------------------------
-    RangeLiteral = sort_list_random(
-        ["*", "*.."] ++
-        [
-                ?SP ++ case rand:uniform(?PRIME) rem 4 of
-                           1 -> "*" ++ IL ++ ?SP_OPT ++ ".." ++ ?SP_OPT ++
-                               lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++ ?SP_OPT;
-                           2 -> "*" ++ IL ++ ?SP_OPT ++ ".." ++ ?SP_OPT;
-                           3 -> "*" ++ IL ++ ?SP_OPT;
-                           _ -> "*" ++ ".." ++ ?SP_OPT ++ IL ++ ?SP_OPT
-                       end
-            || IL <- IntegerLiteral
-        ]),
-    RangeLiteral_Length = length(RangeLiteral),
-    insert_table(range_literal, RangeLiteral),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses range_literal ~n", [RangeLiteral_Length])),
-    % --------------------------------------------------------------------------
-    % RelTypeName = SymbolicName ;
-    % --------------------------------------------------------------------------
-    RelTypeName = SymbolicName,
-    RelTypeName_Length = length(RelTypeName),
-    insert_table(rel_type_name, RelTypeName),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses rel_type_name ~n", [RelTypeName_Length])),
-    % --------------------------------------------------------------------------
-    % Variable = SymbolicName ;
-    % --------------------------------------------------------------------------
-    Variable = SymbolicName,
-    Variable_Length = length(Variable),
-    insert_table(variable, Variable),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses variable ~n", [Variable_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 4
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % Literal_Part_1 = NumberLiteral
-    %      | StringLiteral
-    %      | BooleanLiteral
-    %      | (N,U,L,L)    
-    %      | ...
-    % --------------------------------------------------------------------------
-    Literal_Part_1 = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        AtomNull,
-        BooleanLiteral,
-        NumberLiteral,
-        StringLiteral
-    ])))),
-    Literal_Part_1_Length = length(Literal_Part_1),
-    insert_table(literal_part_1, Literal_Part_1),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses literal (1) ~n", [Literal_Part_1_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 5
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % Atom = Literal
-    %      | Parameter
-    %      | ...
-    %      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
-    %      | ...
-    %      | Variable ;
-    % --------------------------------------------------------------------------
-    Atom_Part_1 = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        AtomCount,
-        Literal_Part_1,
-        Parameter,
-        Variable
-    ])))),
-    Atom_Part_1_Length = length(Atom_Part_1),
-    insert_table(atom_part_1, Atom_Part_1),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses atom (1) ~n", [Atom_Part_1_Length])),
-    % --------------------------------------------------------------------------
-    % NodeLabel = ':', [SP], LabelName ;
-    % --------------------------------------------------------------------------
-    NodeLabel = sort_list_random([
-            ":" ++ ?SP_OPT ++ LN
-        || LN <- LabelName
-    ]),
-    NodeLabel_Length = length(NodeLabel),
-    insert_table(node_label, NodeLabel),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses node_label ~n", [NodeLabel_Length])),
-    % --------------------------------------------------------------------------
-    % PropertyLookup = '.', [SP], (PropertyKeyName) ;
-    % --------------------------------------------------------------------------
-    PropertyLookup =
-        sort_list_random([
-                ?SP_OPT ++ "." ++ ?SP_OPT ++ PK
-            || PK <- PropertyKeyName
-        ]),
-    PropertyLookup_Length = length(PropertyLookup),
-    insert_table(property_lookup, PropertyLookup),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses property_lookup ~n", [PropertyLookup_Length])),
-    % --------------------------------------------------------------------------
-    % RelationshipTypes = ':', [SP], RelTypeName, { [SP], '|', [':'], [SP], RelTypeName } ;
-    % --------------------------------------------------------------------------
-    RelationshipTypes = sort_list_random([
-            ":" ++ ?SP_OPT ++ RTN ++
-            case rand:uniform(?PRIME) rem 3 of
-                1 ->
-                    ?SP_OPT ++ "|" ++ ":" ++ ?SP_OPT ++ lists:nth(rand:uniform(RelTypeName_Length), RelTypeName);
-                2 ->
-                    ?SP_OPT ++ "|" ++ ?SP_OPT ++ lists:nth(rand:uniform(RelTypeName_Length), RelTypeName);
-                _ -> []
-            end
-        || RTN <- RelTypeName
-    ]),
-    RelationshipTypes_Length = length(RelationshipTypes),
-    insert_table(relationship_types, RelationshipTypes),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses relationship_types ~n", [RelationshipTypes_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 6
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % NodeLabels = NodeLabel, { [SP], NodeLabel } ;
-    % --------------------------------------------------------------------------
-    NodeLabels = sort_list_random([
-            NL ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 ->
-                    ?SP_OPT ++ lists:nth(rand:uniform(NodeLabel_Length), NodeLabel);
-                _ -> []
-            end
-        || NL <- NodeLabel]),
-    NodeLabels_Length = length(NodeLabels),
-    insert_table(node_labels, NodeLabels),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses node_labels ~n", [NodeLabels_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 7
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % Expression = OrExpression ;
-    % --------------------------------------------------------------------------
-    Expression_Part_1 = sort_list_random(create_code_expression(?MAX_RULE_EXPRESSION, Atom_Part_1, NodeLabels, PropertyLookup)),
-    Expression_Part_1_Length = length(Expression_Part_1),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses expression (1) ~n", [Expression_Part_1_Length])),
-    % --------------------------------------------------------------------------
-    % Where = (W,H,E,R,E), SP, Expression ;
-    % --------------------------------------------------------------------------
-    Where = sort_list_random([
-            "Where" ++ ?SP ++ E
-        || E <- Expression_Part_1
-    ]),
-    Where_Length = length(Where),
-    insert_table(where, Where),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses where ~n", [Where_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 8
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % FunctionInvocation = FunctionName, [SP], '(', [SP], [(D,I,S,T,I,N,C,T), [SP]], [Expression, [SP], { ',', [SP], Expression, [SP] }], ')' ;
-    % --------------------------------------------------------------------------
-    FunctionInvocation = sort_list_random([
-            lists:nth(rand:uniform(FunctionName_Length), FunctionName) ++ ?SP_OPT ++
-            "(" ++ ?SP_OPT ++
-            case rand:uniform(?PRIME) rem 6 of
-                1 -> "Distinct" ++ ?SP ++
-                    lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
-                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
-                2 -> "Distinct" ++ ?SP ++
-                    lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
-                3 -> "Distinct";
-                4 ->
-                    lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
-                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
-                5 ->
-                    lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
-                _ -> []
-            end ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    FunctionInvocation_Length = length(FunctionInvocation),
-    insert_table(function_invocation, FunctionInvocation),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses function_invocation ~n", [FunctionInvocation_Length])),
-    % --------------------------------------------------------------------------
-    % IdInColl = Variable, SP, (I,N), SP, Expression ;
-    % --------------------------------------------------------------------------
-    IdInColl_Targ = max(Variable_Length, 20),
-    IdInColl = sort_list_random([
-            lists:nth(rand:uniform(Variable_Length), Variable) ++
-            ?SP ++ "In" ++ ?SP ++
-            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1)
-        || _ <- lists:seq(1, IdInColl_Targ)
-    ]),
-    IdInColl_Length = length(IdInColl),
-    insert_table(id_in_coll, IdInColl),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses id_in_coll ~n", [IdInColl_Length])),
-    % --------------------------------------------------------------------------
-    % ListLiteral = '[', [SP], [Expression, [SP], { ',', [SP], Expression, [SP] }], ']' ;
-    % --------------------------------------------------------------------------
-    ListLiteral = sort_list_random([
-            "[" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
-            case rand:uniform(?PRIME) rem 3 of
-                1 ->
-                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
-                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
-                2 ->
-                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
-                _ -> []
-            end ++
-            "]"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    ListLiteral_Length = length(ListLiteral),
-    insert_table(list_literal, ListLiteral),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses list_literal ~n", [ListLiteral_Length])),
-    % --------------------------------------------------------------------------
-    % MapLiteral = '{', [SP], [PropertyKeyName, [SP], ':', [SP], Expression, [SP], { ',', [SP], PropertyKeyName, [SP], ':', [SP], Expression, [SP] }], '}' ;
-    % --------------------------------------------------------------------------
-    MapLiteral = sort_list_random([
-            "{" ++ ?SP_OPT ++ "}"
-    ] ++
-    [
-            "{" ++ ?SP_OPT ++ lists:nth(rand:uniform(PropertyKeyName_Length), PropertyKeyName) ++
-            ?SP_OPT ++ ":" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 ->
-                    "," ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(PropertyKeyName_Length), PropertyKeyName) ++
-                        ?SP_OPT ++ ":" ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ ?SP_OPT;
-                _ -> []
-            end ++
-            "}"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    MapLiteral_Length = length(MapLiteral),
-    insert_table(map_literal, MapLiteral),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses map_literal ~n", [MapLiteral_Length])),
-    % --------------------------------------------------------------------------
-    % ParenthesizedExpression = '(', [SP], Expression, [SP], ')' ;
-    % --------------------------------------------------------------------------
-    ParenthesizedExpression = sort_list_random([
-            "(" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-            ?SP_OPT ++ ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    ParenthesizedExpression_Length = length(ParenthesizedExpression),
-    insert_table(parenthesized_expression, ParenthesizedExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses parenthesized_expression ~n", [ParenthesizedExpression_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 9
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % FilterExpression = IdInColl, [[SP], Where] ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % FilterExpression = IdInColl, [SP, Where] ;
-    % --------------------------------------------------------------------------
-    FilterExpression = sort_list_random([
-            lists:nth(rand:uniform(IdInColl_Length), IdInColl) ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> ?SP ++ lists:nth(rand:uniform(Where_Length), Where);
-                _ -> []
-            end
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    FilterExpression_Length = length(FilterExpression),
-    insert_table(filter_expression, FilterExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses filter_expression ~n", [FilterExpression_Length])),
-    % --------------------------------------------------------------------------
-    % Literal = ...
-    %         | MapLiteral
-    %         | ListLiteral
-    %         ;
-    % --------------------------------------------------------------------------
-    Literal = sort_list_random(sets:to_list(sets:from_list(lists:append([
-%% wwe    ListLiteral,
-        Literal_Part_1,
-        MapLiteral
-    ])))),
-    Literal_Length = length(Literal),
-    insert_table(literal, Literal),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses literal ~n", [Literal_Length])),
-    % --------------------------------------------------------------------------
-    % Properties = MapLiteral
-    %            | Parameter ;
-    % --------------------------------------------------------------------------
-    Properties = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        MapLiteral,
-        Parameter
-    ])))),
-    Properties_Length = length(Properties),
-    insert_table(properties, Properties),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses properties ~n", [Properties_Length])),
-    % --------------------------------------------------------------------------
-    % Reduce = (R,E,D,U,C,E), [SP], '(', Variable, '=', Expression, ',', IdInColl, '|', Expression, ')' ;
-    % --------------------------------------------------------------------------
-    Reduce = sort_list_random([
-            "Reduce" ++ ?SP_OPT ++ "(" ++
-            lists:nth(rand:uniform(Variable_Length), Variable) ++
-            "=" ++
-            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-            "," ++
-            lists:nth(rand:uniform(IdInColl_Length), IdInColl) ++
-            "|" ++
-            lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    Reduce_Length = length(Reduce),
-    insert_table(reduce, Reduce),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses reduce ~n", [Reduce_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 10
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % ListComprehension = '[', FilterExpression, [[SP], '|', Expression], ']' ;
-    % --------------------------------------------------------------------------
-    ListComprehension = sort_list_random([
-            "[" ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 ->
-                    ?SP_OPT ++ "|" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
-                _ -> []
-            end ++
-            "]"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    ListComprehension_Length = length(ListComprehension),
-    insert_table(list_comprehension, ListComprehension),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses list_comprehension ~n", [ListComprehension_Length])),
-    % --------------------------------------------------------------------------
-    % NodePattern = '(', [SP], [Variable, [SP]], [NodeLabels, [SP]], [Properties, [SP]], ')' ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % NodePattern = '(', [SP], [Variable, SP], [NodeLabels, [SP]], [Properties, [SP]], ')' ;
-    % --------------------------------------------------------------------------
-    NodePattern = sort_list_random([
-            "(" ++ ?SP_OPT ++
-            case rand:uniform(?PRIME) rem 8 of
-                1 ->
-                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
-                        lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                2 ->
-                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
-                        lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT;
-                3 ->
-                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
-                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                4 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP;
-                5 ->
-                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT ++
-                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                6 ->
-                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT;
-                7 ->
-                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                _ -> []
-            end ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    NodePattern_Length = length(NodePattern),
-    insert_table(node_pattern, NodePattern),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses node_pattern ~n", [NodePattern_Length])),
-    % --------------------------------------------------------------------------
-    % RelationshipDetail = '[', [SP], [Variable, [SP]], [RelationshipTypes, [SP]], [RangeLiteral], [Properties, [SP]], ']' ;
-    % --------------------------------------------------------------------------
-    RelationshipDetail = sort_list_random(
-        [
-%% wwe            "[]" ++
-%% wwe            "[ ]" ++
-                "[" ++ ?SP_OPT ++
-                case rand:uniform(?PRIME) rem 15 of
-                    1 ->
-                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                    2 ->
-                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++ ?SP_OPT;
-                    3 ->
-                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
-                            lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                    4 ->
-                        lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT;
-                    5 ->
-                        lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                    6 ->
-                        lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++ ?SP_OPT;
-                    7 ->
-                        lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
-                            lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                    8 ->
-                        lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT;
-                    9 ->
-                        lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                    10 ->
-                        lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++ ?SP_OPT;
-                    11 ->
-                        lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
-                            lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                    12 ->
-                        lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT;
-                    13 ->
-                        lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                    14 ->
-                        lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++ ?SP_OPT;
-                    _ ->
-                        lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
-                            lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
-                            lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT
-                end ++
-                "]"
-            || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-        ]),
-    RelationshipDetail_Length = length(RelationshipDetail),
-    insert_table(relationship_detail, RelationshipDetail),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses relationship_detail ~n", [RelationshipDetail_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 11
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % RelationshipPattern = (LeftArrowHead, [SP], Dash, [SP], [RelationshipDetail], [SP], Dash, [SP], RightArrowHead)
-    %                     | (LeftArrowHead, [SP], Dash, [SP], [RelationshipDetail], [SP], Dash)
-    %                     | (                     Dash, [SP], [RelationshipDetail], [SP], Dash, [SP], RightArrowHead)
-    %                     | (                     Dash, [SP], [RelationshipDetail], [SP], Dash) ;
-    % --------------------------------------------------------------------------
-    RelationshipPattern = sort_list_random([
-        case rand:uniform(?PRIME) rem 4 of
-            1 -> ?LEFT_ARROW_HEAD ++ ?SP_OPT ++
-                ?DASH ++ ?SP_OPT ++
-                lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
-                ?SP_OPT ++ ?DASH ++
-                ?SP_OPT ++ ?RIGHT_ARROW_HEAD;
-            2 -> ?LEFT_ARROW_HEAD ++ ?SP_OPT ++
-                ?DASH ++ ?SP_OPT ++
-                lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
-                ?SP_OPT ++ ?DASH;
-            3 -> ?DASH ++ ?SP_OPT ++
-                lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
-                ?SP_OPT ++ ?DASH ++
-                ?SP_OPT ++ ?RIGHT_ARROW_HEAD;
-            _ -> ?DASH ++ ?SP_OPT ++
-                lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
-                ?SP_OPT ++ ?DASH
-        end
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    RelationshipPattern_Length = length(RelationshipPattern),
-    insert_table(relationship_pattern, RelationshipPattern),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses relationship_pattern ~n", [RelationshipPattern_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 12
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % PatternElementChain = RelationshipPattern, [SP], NodePattern ;
-    % --------------------------------------------------------------------------
-    PatternElementChain = sort_list_random([
-            lists:nth(rand:uniform(RelationshipPattern_Length), RelationshipPattern) ++
-            ?SP_OPT ++
-            lists:nth(rand:uniform(NodePattern_Length), NodePattern)
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    PatternElementChain_Length = length(PatternElementChain),
-    insert_table(pattern_element_chain, PatternElementChain),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses pattern_element_chain ~n", [PatternElementChain_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 13
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % PatternElement = (NodePattern, { [SP], PatternElementChain })
-    %                | ('(', PatternElement, ')') ;
-    % --------------------------------------------------------------------------
-    PatternElement = sort_list_random([
-        case rand:uniform(?PRIME) rem 7 of
-            1 -> "(" ++
-                "(" ++
-                lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ")" ++
-                ")";
-            2 -> "(" ++
-                lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ")";
-            3 -> "(" ++
-                lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ")";
-            4 -> "(" ++
-                lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ")";
-            5 -> lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
-            6 -> lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
-            _ -> lists:nth(rand:uniform(NodePattern_Length), NodePattern)
-        end
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    PatternElement_Length = length(PatternElement),
-    insert_table(pattern_element, PatternElement),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses pattern_element ~n", [PatternElement_Length])),
-    % --------------------------------------------------------------------------
-    % RelationshipsPattern = NodePattern, { [SP], PatternElementChain }- ;
-    % --------------------------------------------------------------------------
-    RelationshipsPattern = sort_list_random([
-            lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 ->
-                    ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
-                        ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
-                _ ->
-                    ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain)
-            end
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    RelationshipsPattern_Length = length(RelationshipsPattern),
-    insert_table(relationships_pattern, RelationshipsPattern),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses relationships_pattern ~n", [RelationshipsPattern_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 14
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % PatternComprehension = '[', [SP], [Variable, [SP], '=', [SP]], RelationshipsPattern, [SP], [(W,H,E,R,E), [SP], Expression, [SP]], '|', [SP], Expression, [SP], ']' ;
-    % --------------------------------------------------------------------------
-    PatternComprehension = sort_list_random([
-        case rand:uniform(?PRIME) rem 4 of
-            1 -> "[" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern) ++
-                ?SP_OPT ++ "|" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                ?SP_OPT ++ "]";
-            2 -> "[" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern) ++
-                ?SP_OPT ++ " where " ++
-                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                ?SP_OPT ++ "|" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                ?SP_OPT ++ "]";
-            3 -> "[" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(Variable_Length), Variable) ++
-                ?SP_OPT ++ "=" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern) ++
-                ?SP_OPT ++ "|" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                ?SP_OPT ++ "]";
-            _ -> "[" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(Variable_Length), Variable) ++
-                ?SP_OPT ++ "=" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern) ++
-                ?SP_OPT ++ " where " ++
-                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                ?SP_OPT ++ "|" ++
-                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
-                ?SP_OPT ++ "]"
-        end
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    PatternComprehension_Length = length(PatternComprehension),
-    insert_table(pattern_element, PatternComprehension),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses pattern_comprehension ~n", [PatternComprehension_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 15
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % AnonymousPatternPart = PatternElement ;
-    % --------------------------------------------------------------------------
-    AnonymousPathPattern = sort_list_random(PatternElement),
-    AnonymousPathPattern_Length = length(AnonymousPathPattern),
-    insert_table(anonymous_path_pattern, AnonymousPathPattern),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses anonymous_path_pattern ~n", [AnonymousPathPattern_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 50
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % Atom = ...
-    %      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
-    %      | ...
-    %      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ...
-    % --------------------------------------------------------------------------
-    AtomFilter = sort_list_random([
-            "Filter" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    AtomFilter_Length = length(AtomFilter),
-    insert_table(atom_filter, AtomFilter),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses atom (filter) ~n", [AtomFilter_Length])),
-
-    AtomExtract = sort_list_random([
-            "Extract" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> ?SP_OPT ++ "|" ++
-                    lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
-                _ -> []
-            end ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    AtomExtract_Length = length(AtomExtract),
-    insert_table(atom_extract, AtomExtract),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses atom (extract) ~n", [AtomExtract_Length])),
-
-    AtomAll = sort_list_random([
-            "All" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    AtomAll_Length = length(AtomAll),
-    insert_table(atom_all, AtomAll),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses atom (all) ~n", [AtomAll_Length])),
-
-    AtomAny = sort_list_random([
-            "Any" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    AtomAny_Length = length(AtomAny),
-    insert_table(atom_any, AtomAny),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses atom (any) ~n", [AtomAny_Length])),
-
-    AtomNone = sort_list_random([
-            "None" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    AtomNone_Length = length(AtomNone),
-    insert_table(atom_none, AtomNone),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses atom (none) ~n", [AtomNone_Length])),
-
-    AtomSingle = sort_list_random([
-            "Single" ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++ ?SP_OPT ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ]),
-    AtomSingle_Length = length(AtomSingle),
-    insert_table(atom_single, AtomSingle),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses atom (single) ~n", [AtomSingle_Length])),
-    % --------------------------------------------------------------------------
-    % Atom = Literal
-    %      | ...
-    %      | CaseExpression
-    %      | ...
-    %      | ListComprehension
-    %      | PatternComprehension
-    %      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
-    %      | Reduce
-    %      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
-    %      | ShortestPathPattern
-    %      | RelationshipsPattern
-    %      | ParenthesizedExpression
-    %      | FunctionInvocation
-    %      | ...
-    % --------------------------------------------------------------------------
-    Atom = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        Atom_Part_1,
-        Literal,
-        ListComprehension,
-        PatternComprehension,
-        AtomFilter,
-        AtomExtract,
-        AtomAll,
-        AtomAny,
-        AtomNone,
-        AtomSingle,
-        RelationshipsPattern,
-%%        ParenthesizedExpression,
-        FunctionInvocation
-    ])))),
-    Atom_Length = length(Atom),
-    insert_table(atom, Atom),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses atom ~n", [Atom_Length])),
-    % --------------------------------------------------------------------------
-    % Expression = OrExpression ;
-    % --------------------------------------------------------------------------
-    Expression = sort_list_random(create_code_expression(?MAX_RULE_EXPRESSION * 2, Atom, NodeLabels, PropertyLookup)),
+create_code(delete = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses expression ~n", [Expression_Length])),
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 51
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % Limit = (L,I,M,I,T), SP, Expression ;
-    % --------------------------------------------------------------------------
-    Limit_Targ = Expression_Length,
-    Limit = sort_list_random([
-            "Limit" ++ ?SP ++
-            lists:nth(rand:uniform(Expression_Length), Expression)
-        || _ <- lists:seq(1, Limit_Targ)
-    ]),
-    Limit_Length = length(Limit),
-    insert_table(limit, Limit),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses limit ~n", [Limit_Length])),
-    % --------------------------------------------------------------------------
-    % PatternPart = (Variable, [SP], '=', [SP], AnonymousPatternPart)
-    %             | AnonymousPatternPart ;
-    % --------------------------------------------------------------------------
-    PatternPart_Targ = AnonymousPathPattern_Length,
-    PatternPart = sort_list_random([
-        case rand:uniform(?PRIME) rem 2 of
-            1 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
-                ?SP_OPT ++ "=" ++ ?SP_OPT ++
-                lists:nth(rand:uniform(AnonymousPathPattern_Length), AnonymousPathPattern);
-            _ ->
-                lists:nth(rand:uniform(AnonymousPathPattern_Length), AnonymousPathPattern)
-        end
-        || _ <- lists:seq(1, PatternPart_Targ)
-    ]),
-    PatternPart_Length = length(PatternPart),
-    insert_table(pattern_part, PatternPart),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses pattern_part ~n", [PatternPart_Length])),
-    % --------------------------------------------------------------------------
-    % PropertyExpression = Atom, { [SP], PropertyLookup }- ;
-    % --------------------------------------------------------------------------
-    PropertyExpression_Targ = max(Atom_Length, PropertyLookup_Length),
-    PropertyExpression = sort_list_random([
-            lists:nth(rand:uniform(Atom_Length), Atom) ++
-            case rand:uniform(?PRIME) rem 3 of
-                3 ->
-                    ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup) ++
-                        ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup) ++
-                        ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup);
-                2 ->
-                    ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup) ++
-                        ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup);
-                _ ->
-                    ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup)
-            end
-        || _ <- lists:seq(1, PropertyExpression_Targ)
-    ]),
-    PropertyExpression_Length = length(PropertyExpression),
-    insert_table(property_expression, PropertyExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses property_expression ~n", [PropertyExpression_Length])),
-    % --------------------------------------------------------------------------
-    % RemoveItem = (Variable, NodeLabels)
-    %            | PropertyExpression ;
-    % --------------------------------------------------------------------------
-    RemoveItem_Targ = max(NodeLabels_Length, PropertyExpression_Length),
-    RemoveItem = sort_list_random([
-        case rand:uniform(?PRIME) rem 2 of
-            1 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
-            lists:nth(rand:uniform(NodeLabels_Length), NodeLabels);
-            _ ->
-                lists:nth(rand:uniform(PropertyExpression_Length), PropertyExpression)
-        end
-        || _ <- lists:seq(1, RemoveItem_Targ)
-    ]),
-    RemoveItem_Length = length(RemoveItem),
-    insert_table(remove_item, RemoveItem),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses remove_item ~n", [RemoveItem_Length])),
-    % --------------------------------------------------------------------------
-    % ReturnItem = (Expression, SP, (A,S), SP, Variable)
-    %            | Expression ;
-    % --------------------------------------------------------------------------
-    ReturnItem_Targ = max(Expression_Length, Variable_Length),
-    ReturnItem = sort_list_random([
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> ?SP ++ "As" ++ ?SP ++
-                    lists:nth(rand:uniform(Variable_Length), Variable);
-                _ -> []
-            end
-        || _ <- lists:seq(1, ReturnItem_Targ)
-    ]),
-    ReturnItem_Length = length(ReturnItem),
-    insert_table(return_item, ReturnItem),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses return_item ~n", [ReturnItem_Length])),
-    % --------------------------------------------------------------------------
-    % SetItem = (PropertyExpression, [SP], '=', [SP], Expression)
-    %         | (Variable, [SP], '=', [SP], Expression)
-    %         | (Variable, [SP], '+=', [SP], Expression)
-    %         | (Variable, [SP], NodeLabels) ;
-    % --------------------------------------------------------------------------
-    SetItem_Targ = max(Expression_Length, max(NodeLabels_Length, max(PropertyExpression_Length, Variable_Length))),
-    SetItem = sort_list_random([
-        case rand:uniform(?PRIME) rem 4 of
-            1 ->
-                lists:nth(rand:uniform(PropertyExpression_Length), PropertyExpression) ++
-                    ?SP_OPT ++ "=" ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
-            2 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
-                ?SP_OPT ++ "=" ++ ?SP_OPT ++
-                lists:nth(rand:uniform(Expression_Length), Expression);
-            3 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
-                ?SP_OPT ++ "+=" ++ ?SP_OPT ++
-                lists:nth(rand:uniform(Expression_Length), Expression);
-            _ ->
-                lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels)
-        end
-        || _ <- lists:seq(1, SetItem_Targ)
-    ]),
-    SetItem_Length = length(SetItem),
-    insert_table(set_item, SetItem),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses set_item ~n", [SetItem_Length])),
-    % --------------------------------------------------------------------------
-    % Skip = (S,K,I,P), SP, Expression ;
-    % --------------------------------------------------------------------------
-    Skip_Targ = Expression_Length, Variable_Length,
-    Skip = sort_list_random([
-            "Skip" ++ ?SP ++
-            lists:nth(rand:uniform(Expression_Length), Expression)
-        || _ <- lists:seq(1, Skip_Targ)
-    ]),
-    Skip_Length = length(Skip),
-    insert_table(skip, Skip),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses skip ~n", [Skip_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 52
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % Pattern = PatternPart, { [SP], ',', [SP], PatternPart } ;
-    % --------------------------------------------------------------------------
-    Pattern_Targ = PatternPart_Length,
-    Pattern = sort_list_random([
-            lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
-            case rand:uniform(?PRIME) rem 4 of
-                1 ->
-                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
-                2 ->
-                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
-                3 ->
-                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
-                _ -> []
-            end
-        || _ <- lists:seq(1, Pattern_Targ)
-    ]),
-    Pattern_Length = length(Pattern),
-    insert_table(pattern, Pattern),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses pattern ~n", [Pattern_Length])),
-    % --------------------------------------------------------------------------
-    % ReturnItems = ('*', { [SP], ',', [SP], ReturnItem })
-    %             | (ReturnItem, { [SP], ',', [SP], ReturnItem }) ;
-    % --------------------------------------------------------------------------
-    ReturnItems_Targ = ReturnItem_Length,
-    ReturnItems = sort_list_random([
-        "*"
-    ] ++
-    [
-        case rand:uniform(?PRIME) rem 5 of
-            1 -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
-            2 -> "*" ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
-            3 -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
-            4 -> "*" ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
-            _ -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem)
-        end
-        || _ <- lists:seq(1, ReturnItems_Targ)
-    ]),
-    ReturnItems_Length = length(ReturnItems),
-    insert_table(return_items, ReturnItems),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses return_items ~n", [ReturnItems_Length])),
-    % --------------------------------------------------------------------------
-    % SortItem = Expression, [[SP], ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % SortItem = Expression, [SP, ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
-    % --------------------------------------------------------------------------
-    SortItem_Targ = Expression_Length,
-    SortItem = sort_list_random([
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
-            case rand:uniform(?PRIME) rem 4 of
-                1 -> ?SP ++ "Descending";
-                2 -> ?SP ++ "Desc";
-                3 -> ?SP ++ "Ascending";
-                _ -> ?SP ++ "Asc"
-            end
-        || _ <- lists:seq(1, SortItem_Targ)
-    ]),
-    SortItem_Length = length(SortItem),
-    insert_table(sort_item, SortItem),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses sort_item ~n", [SortItem_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 53
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % Order = (O,R,D,E,R), SP, (B,Y), SP, SortItem, { ',', [SP], SortItem } ;
-    % --------------------------------------------------------------------------
-    Order_Targ = SortItem_Length,
-    Order = sort_list_random([
-            "Order" ++ ?SP ++ "By" ++ ?SP ++
-            lists:nth(rand:uniform(SortItem_Length), SortItem) ++
-            case rand:uniform(?PRIME) rem 3 of
-                1 ->
-                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem) ++
-                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem);
-                2 ->
-                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem);
-                _ -> []
-            end
-        || _ <- lists:seq(1, Order_Targ)
-    ]),
-    Order_Length = length(Order),
-    insert_table(order, Order),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses order ~n", [Order_Length])),
-    % --------------------------------------------------------------------------
-    % ReturnBody = ReturnItems, [SP, Order], [SP, Skip], [SP, Limit] ;
-    % --------------------------------------------------------------------------
-    ReturnBody_Targ = max(Limit_Length, max(Order_Length, max(ReturnItems_Length, Skip_Length))),
-    ReturnBody = sort_list_random([
-            lists:nth(rand:uniform(ReturnItems_Length), ReturnItems) ++
-            case rand:uniform(?PRIME) rem 8 of
-                1 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order) ++
-                    ?SP ++ lists:nth(rand:uniform(Skip_Length), Skip) ++
-                    ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
-                2 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order) ++
-                    ?SP ++ lists:nth(rand:uniform(Skip_Length), Skip);
-                3 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order) ++
-                    ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
-                4 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order);
-                5 -> ?SP ++ lists:nth(rand:uniform(Skip_Length), Skip) ++
-                    ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
-                6 -> ?SP ++ lists:nth(rand:uniform(Skip_Length), Skip);
-                7 -> ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
-                _ -> []
-            end
-        || _ <- lists:seq(1, ReturnBody_Targ)
-    ]),
-    ReturnBody_Length = length(ReturnBody),
-    insert_table(return_body, ReturnBody),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses return_body ~n", [ReturnBody_Length])),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 90
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % Create = (C,R,E,A,T,E), [SP], Pattern ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % Create = (C,R,E,A,T,E), SP, Pattern ;
-    % --------------------------------------------------------------------------
-    Create = sort_list_random([
-            "Create" ++ ?SP ++
-            lists:nth(rand:uniform(Pattern_Length), Pattern)
-        || _ <- lists:seq(1, ?MAX_CLAUSE)
-    ]),
-    Create_Length = length(Create),
-    insert_table(create, Create),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses create ~n", [Create_Length])),
-    % --------------------------------------------------------------------------
-    % Delete = [(D,E,T,A,C,H), SP], (D,E,L,E,T,E), [SP], Expression, { [SP], ',', [SP], Expression } ;
-    % --------------------------------------------------------------------------
-    Delete = sort_list_random([
+    Code = [
         case rand:uniform(?PRIME) rem 6 of
             1 -> "Detach" ++ ?SP ++
                 "Delete" ++ ?SP ++
@@ -1430,17 +600,353 @@ create_code() ->
                 lists:nth(rand:uniform(Expression_Length), Expression)
         end
         || _ <- lists:seq(1, ?MAX_CLAUSE)
-    ]),
-    Delete_Length = length(Delete),
-    insert_table(delete, Delete),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses delete ~n", [Delete_Length])),
-    % --------------------------------------------------------------------------
-    % Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), [SP], Pattern, [[SP], Where] ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), SP, Pattern, [SP, Where] ;
-    % --------------------------------------------------------------------------
-    Match = sort_list_random([
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% (* Any character except "`", enclosed within `backticks`. Backticks are escaped with double backticks. *)EscapedSymbolicName = { '`', { ANY - ('`') }, '`' }- ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(escapedSymbolicName = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "`1esn_SN`",
+        "`2esn_SN`",
+        "`3esn_SN`",
+        "`4esn_SN`",
+        "`5esn_SN`",
+        "`6esn_SN`",
+        "`7esn_SN`",
+        "`8esn_SN`",
+        "`aesn_SN`",
+        "`Aesn_SN`",
+        "`besn_SN`",
+        "`Besn_SN`",
+        "`.esn_SN`",
+        "`,esn_SN`",
+        "`@esn_SN`",
+        "``"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(symbolicName, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ExponentDecimalReal = ({ Digit | '.' }- | DecimalInteger), ((E) | (E)), (DigitString | DecimalInteger) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(exponentDecimalReal = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "9e0",
+        "9e1",
+        "9e-1",
+        "9e12",
+        "9E-12",
+        "0e0",
+        "0e-0",
+        "1e1",
+        "1e-1",
+        "12e12",
+        "12e-12",
+        ".9e0",
+        ".9e1",
+        ".9e-1",
+        ".9e12",
+        ".9e-12",
+        ".0e0",
+        ".0e-0",
+        ".1E1",
+        ".1e-1",
+        ".12e12",
+        ".12e-12",
+        "1.9e0",
+        "2.9e1",
+        "3.9e-1",
+        "4.9E12",
+        "5.9e-12",
+        "6.0e0",
+        "7.0e-0",
+        "8.1e1",
+        "9.1E-1",
+        "10.12e12",
+        "11.12e-12"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% FilterExpression = IdInColl, [[SP], Where] ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% FilterExpression = IdInColl, [SP, Where] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(filterExpression = Rule) ->
+    ?CREATE_CODE_START,
+    [{idInColl, IdInColl}] = dets:lookup(?CODE_TEMPLATES, idInColl),
+    IdInColl_Length = length(IdInColl),
+
+    [{where, Where}] = dets:lookup(?CODE_TEMPLATES, where),
+    Where_Length = length(Where),
+
+    Code = [
+            lists:nth(rand:uniform(IdInColl_Length), IdInColl) ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 -> ?SP ++ lists:nth(rand:uniform(Where_Length), Where);
+                _ -> []
+            end
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% FunctionInvocation = FunctionName, [SP], '(', [SP], [(D,I,S,T,I,N,C,T), [SP]], [Expression, [SP], { ',', [SP], Expression, [SP] }], ')' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(functionInvocation = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{functionName, FunctionName}] = dets:lookup(?CODE_TEMPLATES, functionName),
+    FunctionName_Length = length(FunctionName),
+
+    Code = [
+            lists:nth(rand:uniform(FunctionName_Length), FunctionName) ++ ?SP_OPT ++
+            "(" ++ ?SP_OPT ++
+            case rand:uniform(?PRIME) rem 6 of
+                1 -> "Distinct" ++ ?SP ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
+                2 -> "Distinct" ++ ?SP ++
+                    lists:nth(rand:uniform(Expression_Length), Expression);
+                3 -> "Distinct";
+                4 ->
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
+                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
+                5 ->
+                    lists:nth(rand:uniform(Expression_Length), Expression);
+                _ -> []
+            end ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% FunctionName = SymbolicName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(functionName = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [re:replace(SN, "_SN", "_FN", [{return, list}]) || SN <- SymbolicName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% HexInteger = ('0',X), HexString ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(hexInteger = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "0x0",
+        "0x7",
+        "0xa",
+        "0xabc",
+        "0xabcdef",
+        "0x12a",
+        "0x3456abc",
+        "0x7890abcdef",
+        "0x0123456789ABCDEF"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    store_code(integerLiteral, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% IdInColl = Variable, SP, (I,N), SP, Expression ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(idInColl = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    TargetSize = min(?MAX_STATEMENT, max(Variable_Length, 20)),
+
+    Code = [
+            lists:nth(rand:uniform(Variable_Length), Variable) ++
+            ?SP ++ "In" ++ ?SP ++
+            lists:nth(rand:uniform(Expression_Length), Expression)
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LabelName = SymbolicName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(labelName = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [re:replace(SN, "_SN", "_LN", [{return, list}]) || SN <- SymbolicName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Limit = (L,I,M,I,T), SP, Expression ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(limit = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    TargetSize = min(?MAX_STATEMENT, Expression_Length),
+
+    Code = [
+            "Limit" ++ ?SP ++
+            lists:nth(rand:uniform(Expression_Length), Expression)
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ListComprehension = '[', FilterExpression, [[SP], '|', Expression], ']' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(listComprehension = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    FilterExpression_Length = length(FilterExpression),
+
+    Code = [
+            "[" ++
+            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression) ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 ->
+                    ?SP_OPT ++ "|" ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                _ -> []
+            end ++
+            "]"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ListLiteral = '[', [SP], [Expression, [SP], { ',', [SP], Expression, [SP] }], ']' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(listLiteral = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+            "[" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 ->
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
+                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
+                2 ->
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
+                _ -> []
+            end ++
+            "]"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Literal = ...
+%%         | (N,U,L,L)
+%%         | ... ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(literalNull = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "Null"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MapLiteral = '{', [SP], [PropertyKeyName, [SP], ':', [SP], Expression, [SP], { ',', [SP], PropertyKeyName, [SP], ':', [SP], Expression, [SP] }], '}' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(mapLiteral = Rule) ->
+    ?CREATE_CODE_START,
+
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{propertyKeyName, PropertyKeyName}] = dets:lookup(?CODE_TEMPLATES, propertyKeyName),
+    PropertyKeyName_Length = length(PropertyKeyName),
+
+    Code = [
+            "{" ++ ?SP_OPT ++ "}"
+    ] ++
+        [
+                "{" ++ ?SP_OPT ++ lists:nth(rand:uniform(PropertyKeyName_Length), PropertyKeyName) ++
+                ?SP_OPT ++ ":" ++ ?SP_OPT ++
+                lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
+                case rand:uniform(?PRIME) rem 2 of
+                    1 ->
+                        "," ++ ?SP_OPT ++
+                            lists:nth(rand:uniform(PropertyKeyName_Length), PropertyKeyName) ++
+                            ?SP_OPT ++ ":" ++ ?SP_OPT ++
+                            lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
+                    _ -> []
+                end ++
+                "}"
+            || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+        ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), [SP], Pattern, [[SP], Where] ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% Match = [(O,P,T,I,O,N,A,L), SP], (M,A,T,C,H), SP, Pattern, [SP, Where] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(match = Rule) ->
+    ?CREATE_CODE_START,
+    [{pattern, Pattern}] = dets:lookup(?CODE_TEMPLATES, pattern),
+    Pattern_Length = length(Pattern),
+    [{where, Where}] = dets:lookup(?CODE_TEMPLATES, where),
+    Where_Length = length(Where),
+
+    Code = [
         case rand:uniform(?PRIME) rem 12 of
             1 -> "Optional" ++ ?SP ++
                 "Match" ++ ?SP ++
@@ -1480,14 +986,743 @@ create_code() ->
                 lists:nth(rand:uniform(Pattern_Length), Pattern)
         end
         || _ <- lists:seq(1, ?MAX_CLAUSE)
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Merge = (M,E,R,G,E), [SP], PatternPart, { SP, MergeAction } ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% Merge = (M,E,R,G,E), SP, PatternPart, { SP, MergeAction } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(merge = Rule) ->
+    ?CREATE_CODE_START,
+    [{mergeAction, MergeAction}] = dets:lookup(?CODE_TEMPLATES, mergeAction),
+    dets:delete(?CODE_TEMPLATES, mergeAction),
+    MergeAction_Length = length(MergeAction),
+    [{patternPart, PatternPart}] = dets:lookup(?CODE_TEMPLATES, patternPart),
+    dets:delete(?CODE_TEMPLATES, patternPart),
+    PatternPart_Length = length(PatternPart),
+
+    Code = [
+            "Merge" ++ ?SP ++
+            lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 ->
+                    ?SP ++ lists:nth(rand:uniform(MergeAction_Length), MergeAction) ++
+                        ?SP ++ lists:nth(rand:uniform(MergeAction_Length), MergeAction);
+                2 ->
+                    ?SP ++ lists:nth(rand:uniform(MergeAction_Length), MergeAction);
+                _ -> []
+            end
+        || _ <- lists:seq(1, ?MAX_CLAUSE)
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MergeAction = ((O,N), SP, (M,A,T,C,H), SP, Set)
+%%             | ((O,N), SP, (C,R,E,A,T,E), SP, Set) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(mergeAction = Rule) ->
+    ?CREATE_CODE_START,
+    [{set, Set}] = dets:lookup(?CODE_TEMPLATES, set),
+    Set_Length = length(Set),
+
+    Code = [
+            "On" ++ ?SP ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 -> "Match" ++ ?SP ++
+                    lists:nth(rand:uniform(Set_Length), Set);
+                _ -> "Create" ++ ?SP ++
+                    lists:nth(rand:uniform(Set_Length), Set)
+            end
+        || _ <- lists:seq(1, Set_Length)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NodeLabel = ':', [SP], LabelName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(nodeLabel = Rule) ->
+    ?CREATE_CODE_START,
+    [{labelName, LabelName}] = dets:lookup(?CODE_TEMPLATES, labelName),
+
+    Code = [":" ++ ?SP_OPT ++ LN || LN <- LabelName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NodeLabels = NodeLabel, { [SP], NodeLabel } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(nodeLabels = Rule) ->
+    ?CREATE_CODE_START,
+    [{nodeLabel, NodeLabel}] = dets:lookup(?CODE_TEMPLATES, nodeLabel),
+    NodeLabel_Length = length(NodeLabel),
+
+    Code = [
+            NL ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 ->
+                    ?SP_OPT ++ lists:nth(rand:uniform(NodeLabel_Length), NodeLabel);
+                _ -> []
+            end
+        || NL <- NodeLabel],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NodePattern = '(', [SP], [Variable, [SP]], [NodeLabels, [SP]], [Properties, [SP]], ')' ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% NodePattern = '(', [SP], [Variable, SP], [NodeLabels, [SP]], [Properties, [SP]], ')' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(nodePattern = Rule) ->
+    ?CREATE_CODE_START,
+    [{nodeLabels, NodeLabels}] = dets:lookup(?CODE_TEMPLATES, nodeLabels),
+    NodeLabels_Length = length(NodeLabels),
+    [{properties, Properties}] = dets:lookup(?CODE_TEMPLATES, properties),
+    Properties_Length = length(Properties),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    Code = [
+            "(" ++ ?SP_OPT ++
+            case rand:uniform(?PRIME) rem 8 of
+                1 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
+                        lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                2 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
+                        lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT;
+                3 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                4 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP;
+                5 ->
+                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                6 ->
+                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT;
+                7 ->
+                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                _ -> []
+            end ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OctalInteger = '0', OctalString ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(octalInteger = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "00",
+        "01",
+        "07",
+        "010",
+        "0321"
+        "01234"
+        "054321"
+        "0123456"
+        "01234567"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    store_code(integerLiteral, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Order = (O,R,D,E,R), SP, (B,Y), SP, SortItem, { ',', [SP], SortItem } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(order = Rule) ->
+    ?CREATE_CODE_START,
+    [{sortItem, SortItem}] = dets:lookup(?CODE_TEMPLATES, sortItem),
+    SortItem_Length = length(SortItem),
+
+    TargetSize = min(?MAX_STATEMENT, SortItem_Length),
+
+    Code = [
+            "Order" ++ ?SP ++ "By" ++ ?SP ++
+            lists:nth(rand:uniform(SortItem_Length), SortItem) ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 ->
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem) ++
+                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem);
+                2 ->
+                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(SortItem_Length), SortItem);
+                _ -> []
+            end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Parameter = '$', (SymbolicName | DecimalInteger) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(parameter = Rule) ->
+    ?CREATE_CODE_START,
+    [{decimalInteger, DecimalInteger}] = dets:lookup(?CODE_TEMPLATES, decimalInteger),
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = lists:append(
+        ["$" ++ re:replace(SN, "symbolic_name", "parameter", [{return, list}]) || SN <- SymbolicName],
+        ["$" ++ DI || DI <- DecimalInteger]
+    ),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ParenthesizedExpression = '(', [SP], Expression, [SP], ')' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(parenthesizedExpression = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+            "(" ++ ?SP_OPT ++
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            ?SP_OPT ++ ")"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Pattern = PatternPart, { [SP], ',', [SP], PatternPart } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(pattern = Rule) ->
+    ?CREATE_CODE_START,
+    [{patternPart, PatternPart}] = dets:lookup(?CODE_TEMPLATES, patternPart),
+    PatternPart_Length = length(PatternPart),
+
+    TargetSize = min(?MAX_STATEMENT, PatternPart_Length),
+
+    Code = [
+            lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
+            case rand:uniform(?PRIME) rem 4 of
+                1 ->
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
+                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
+                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
+                2 ->
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
+                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
+                3 ->
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
+                _ -> []
+            end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PatternComprehension = '[', [SP], [Variable, [SP], '=', [SP]], RelationshipsPattern, [SP], [(W,H,E,R,E), [SP], Expression, [SP]], '|', [SP], Expression, [SP], ']' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(patternComprehension = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{relationshipsPattern, RelationshipsPattern}] = dets:lookup(?CODE_TEMPLATES, relationshipsPattern),
+    RelationshipsPattern_Length = length(RelationshipsPattern),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    Code = [
+        case rand:uniform(?PRIME) rem 4 of
+            1 -> "[" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern) ++
+                ?SP_OPT ++ "|" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "]";
+            2 -> "[" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern) ++
+                ?SP_OPT ++ " where " ++
+                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "|" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "]";
+            3 -> "[" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(Variable_Length), Variable) ++
+                ?SP_OPT ++ "=" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern) ++
+                ?SP_OPT ++ "|" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "]";
+            _ -> "[" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(Variable_Length), Variable) ++
+                ?SP_OPT ++ "=" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern) ++
+                ?SP_OPT ++ " where " ++
+                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "|" ++
+                ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "]"
+        end
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PatternElement = (NodePattern, { [SP], PatternElementChain })
+%%                | ('(', PatternElement, ')') ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(patternElement = Rule) ->
+    ?CREATE_CODE_START,
+    [{nodePattern, NodePattern}] = dets:lookup(?CODE_TEMPLATES, nodePattern),
+    NodePattern_Length = length(NodePattern),
+    [{patternElementChain, PatternElementChain}] = dets:lookup(?CODE_TEMPLATES, patternElementChain),
+    PatternElementChain_Length = length(PatternElementChain),
+
+    Code = [
+        case rand:uniform(?PRIME) rem 7 of
+            1 -> "(" ++ "(" ++
+                lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ")" ++ ")";
+            2 -> "(" ++
+                lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ")";
+            3 -> "(" ++
+                lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ")";
+            4 -> "(" ++
+                lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
+                ")";
+            5 -> lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
+            6 -> lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
+            _ -> lists:nth(rand:uniform(NodePattern_Length), NodePattern)
+        end
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PatternElementChain = RelationshipPattern, [SP], NodePattern ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(patternElementChain = Rule) ->
+    ?CREATE_CODE_START,
+    [{nodePattern, NodePattern}] = dets:lookup(?CODE_TEMPLATES, nodePattern),
+    NodePattern_Length = length(NodePattern),
+    [{relationshipPattern, RelationshipPattern}] = dets:lookup(?CODE_TEMPLATES, relationshipPattern),
+    RelationshipPattern_Length = length(RelationshipPattern),
+
+    Code = [
+            lists:nth(rand:uniform(RelationshipPattern_Length), RelationshipPattern) ++
+            ?SP_OPT ++
+            lists:nth(rand:uniform(NodePattern_Length), NodePattern)
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PatternPart = (Variable, [SP], '=', [SP], AnonymousPatternPart)
+%%             | AnonymousPatternPart ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(patternPart = Rule) ->
+    ?CREATE_CODE_START,
+    [{anonymousPatternPart, AnonymousPatternPart}] = dets:lookup(?CODE_TEMPLATES, anonymousPatternPart),
+    AnonymousPatternPart_Length = length(AnonymousPatternPart),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    TargetSize = min(?MAX_STATEMENT, AnonymousPatternPart_Length),
+
+    Code = [
+        case rand:uniform(?PRIME) rem 2 of
+            1 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
+                ?SP_OPT ++ "=" ++ ?SP_OPT ++
+                lists:nth(rand:uniform(AnonymousPatternPart_Length), AnonymousPatternPart);
+            _ ->
+                lists:nth(rand:uniform(AnonymousPatternPart_Length), AnonymousPatternPart)
+        end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Properties = MapLiteral
+%%            | Parameter ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(properties = Rule) ->
+    ?CREATE_CODE_START,
+    [{mapLiteral, MapLiteral}] = dets:lookup(?CODE_TEMPLATES, mapLiteral),
+    [{parameter, Parameter}] = dets:lookup(?CODE_TEMPLATES, parameter),
+
+    Code = lists:append([
+        MapLiteral,
+        Parameter
     ]),
-    Match_Length = length(Match),
-    insert_table(match, Match),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses match ~n", [Match_Length])),
-    % --------------------------------------------------------------------------
-    % Remove = (R,E,M,O,V,E), SP, RemoveItem, { [SP], ',', [SP], RemoveItem } ;
-    % --------------------------------------------------------------------------
-    Remove = sort_list_random([
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PropertyExpression = Atom, { [SP], PropertyLookup }- ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(propertyExpression = Rule) ->
+    ?CREATE_CODE_START,
+    [{atom, Atom}] = dets:lookup(?CODE_TEMPLATES, atom),
+    Atom_Length = length(Atom),
+    [{propertyLookup, PropertyLookup}] = dets:lookup(?CODE_TEMPLATES, propertyLookup),
+    PropertyLookup_Length = length(PropertyLookup),
+
+    TargetSize = min(?MAX_STATEMENT, max(Atom_Length, PropertyLookup_Length)),
+
+    Code = [
+            lists:nth(rand:uniform(Atom_Length), Atom) ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 ->
+                    ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup) ++
+                        ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup) ++
+                        ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup);
+                2 ->
+                    ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup) ++
+                        ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup);
+                _ ->
+                    ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup)
+            end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PropertyKeyName = SymbolicName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(propertyKeyName = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [re:replace(SN, "_SN", "_PKN", [{return, list}]) || SN <- SymbolicName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PropertyLookup = '.', [SP], (PropertyKeyName) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(propertyLookup = Rule) ->
+    ?CREATE_CODE_START,
+    [{propertyKeyName, PropertyKeyName}] = dets:lookup(?CODE_TEMPLATES, propertyKeyName),
+
+    Code = ["." ++ ?SP_OPT ++ PK || PK <- PropertyKeyName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Query = RegularQuery
+%%       | BulkImportQuery ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(query = Rule) ->
+    ?CREATE_CODE_START,
+    [{regularQuery, RegularQuery}] = dets:lookup(?CODE_TEMPLATES, regularQuery),
+    dets:delete(?CODE_TEMPLATES, regularQuery),
+    RegularQuery_Length = length(RegularQuery),
+
+    Code = case RegularQuery_Length > ?MAX_QUERY of
+               true -> lists:sublist(RegularQuery, 1, ?MAX_QUERY);
+               _ -> RegularQuery
+           end,
+    store_code(Rule, Code, ?MAX_QUERY, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RangeLiteral = '*', [SP], [IntegerLiteral, [SP]], ['..', [SP], [IntegerLiteral, [SP]]] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(rangeLiteral = Rule) ->
+    ?CREATE_CODE_START,
+    [{integerLiteral, IntegerLiteral}] = dets:lookup(?CODE_TEMPLATES, integerLiteral),
+    IntegerLiteral_Length = length(IntegerLiteral),
+
+    Code = ["*", "*.."] ++
+        [
+                ?SP ++ case rand:uniform(?PRIME) rem 4 of
+                           1 -> "*" ++ IL ++ ?SP_OPT ++ ".." ++ ?SP_OPT ++
+                               lists:nth(rand:uniform(IntegerLiteral_Length), IntegerLiteral) ++ ?SP_OPT;
+                           2 -> "*" ++ IL ++ ?SP_OPT ++ ".." ++ ?SP_OPT;
+                           3 -> "*" ++ IL ++ ?SP_OPT;
+                           _ -> "*.." ++ ?SP_OPT ++ IL ++ ?SP_OPT
+                       end
+            || IL <- IntegerLiteral
+        ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | DecimalInteger) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(regularDecimalReal = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        ".0",
+        ".12",
+        "0.0",
+        "0.12",
+        "12.0",
+        "123.654"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RegularQuery = SingleQuery, { [SP], Union } ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% RegularQuery = SingleQuery, { SP, Union } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(regularQuery = Rule) ->
+    ?CREATE_CODE_START,
+    [{singleQuery, SingleQuery}] = dets:lookup(?CODE_TEMPLATES, singleQuery),
+    dets:delete(?CODE_TEMPLATES, singleQuery),
+    [{union, Union}] = dets:lookup(?CODE_TEMPLATES, union),
+    dets:delete(?CODE_TEMPLATES, union),
+    Union_Length = length(Union),
+
+    Code = [
+            SQ ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 -> ?SP ++ lists:nth(rand:uniform(Union_Length), Union) ++
+                    ?SP ++ lists:nth(rand:uniform(Union_Length), Union);
+                2 -> ?SP ++ lists:nth(rand:uniform(Union_Length), Union);
+                _ -> []
+            end
+        || SQ <- SingleQuery
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RelationshipDetail = '[', [SP], [Variable, [SP]], [RelationshipTypes, [SP]], [RangeLiteral], [Properties, [SP]], ']' ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(relationshipDetail = Rule) ->
+    ?CREATE_CODE_START,
+    [{properties, Properties}] = dets:lookup(?CODE_TEMPLATES, properties),
+    Properties_Length = length(Properties),
+    [{rangeLiteral, RangeLiteral}] = dets:lookup(?CODE_TEMPLATES, rangeLiteral),
+    RangeLiteral_Length = length(RangeLiteral),
+    [{relationshipTypes, RelationshipTypes}] = dets:lookup(?CODE_TEMPLATES, relationshipTypes),
+    RelationshipTypes_Length = length(RelationshipTypes),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    Code = [
+%%            currently not suported
+%%            "[]" ++
+%%            "[ ]" ++
+            "[" ++ ?SP_OPT ++
+            case rand:uniform(?PRIME) rem 15 of
+                1 ->
+                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                2 ->
+                    lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++ ?SP_OPT;
+                3 ->
+                    lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                4 ->
+                    lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT;
+                5 ->
+                    lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                6 ->
+                    lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++ ?SP_OPT;
+                7 ->
+                    lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                8 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT;
+                9 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                10 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++ ?SP_OPT;
+                11 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                12 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT;
+                13 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
+                14 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++ ?SP_OPT;
+                _ ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RelationshipTypes_Length), RelationshipTypes) ++ ?SP_OPT ++
+                        lists:nth(rand:uniform(RangeLiteral_Length), RangeLiteral) ++
+                        lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT
+            end ++
+            "]"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% RelationshipPattern = (LeftArrowHead, [SP], Dash, [SP], [RelationshipDetail], [SP], Dash, [SP], RightArrowHead)
+%                     | (LeftArrowHead, [SP], Dash, [SP], [RelationshipDetail], [SP], Dash)
+%                     | (                     Dash, [SP], [RelationshipDetail], [SP], Dash, [SP], RightArrowHead)
+%                     | (                     Dash, [SP], [RelationshipDetail], [SP], Dash) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(relationshipPattern = Rule) ->
+    ?CREATE_CODE_START,
+    [{relationshipDetail, RelationshipDetail}] = dets:lookup(?CODE_TEMPLATES, relationshipDetail),
+    RelationshipDetail_Length = length(RelationshipDetail),
+
+    Code = [
+        case rand:uniform(?PRIME) rem 4 of
+            1 -> ?LEFT_ARROW_HEAD ++ ?SP_OPT ++
+                ?DASH ++ ?SP_OPT ++
+                lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
+                ?SP_OPT ++ ?DASH ++
+                ?SP_OPT ++ ?RIGHT_ARROW_HEAD;
+            2 -> ?LEFT_ARROW_HEAD ++ ?SP_OPT ++
+                ?DASH ++ ?SP_OPT ++
+                lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
+                ?SP_OPT ++ ?DASH;
+            3 -> ?DASH ++ ?SP_OPT ++
+                lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
+                ?SP_OPT ++ ?DASH ++
+                ?SP_OPT ++ ?RIGHT_ARROW_HEAD;
+            _ -> ?DASH ++ ?SP_OPT ++
+                lists:nth(rand:uniform(RelationshipDetail_Length), RelationshipDetail) ++
+                ?SP_OPT ++ ?DASH
+        end
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RelationshipsPattern = NodePattern, { [SP], PatternElementChain }- ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(relationshipsPattern = Rule) ->
+    ?CREATE_CODE_START,
+    [{nodePattern, NodePattern}] = dets:lookup(?CODE_TEMPLATES, nodePattern),
+    NodePattern_Length = length(NodePattern),
+    [{patternElementChain, PatternElementChain}] = dets:lookup(?CODE_TEMPLATES, patternElementChain),
+    PatternElementChain_Length = length(PatternElementChain),
+
+    Code = [
+            lists:nth(rand:uniform(NodePattern_Length), NodePattern) ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 ->
+                    ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain) ++
+                        ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain);
+                _ ->
+                    ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain)
+            end
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RelationshipTypes = ':', [SP], RelTypeName, { [SP], '|', [':'], [SP], RelTypeName } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(relationshipTypes = Rule) ->
+    ?CREATE_CODE_START,
+    [{relTypeName, RelTypeName}] = dets:lookup(?CODE_TEMPLATES, relTypeName),
+    RelTypeName_Length = length(RelTypeName),
+
+    Code = [
+            ":" ++ ?SP_OPT ++ RTN ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 ->
+                    ?SP_OPT ++ "|" ++ ":" ++ ?SP_OPT ++ lists:nth(rand:uniform(RelTypeName_Length), RelTypeName);
+                2 ->
+                    ?SP_OPT ++ "|" ++ ?SP_OPT ++ lists:nth(rand:uniform(RelTypeName_Length), RelTypeName);
+                _ -> []
+            end
+        || RTN <- RelTypeName
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RelTypeName = SymbolicName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(relTypeName = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [re:replace(SN, "_SN", "_RTN", [{return, list}]) || SN <- SymbolicName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Remove = (R,E,M,O,V,E), SP, RemoveItem, { [SP], ',', [SP], RemoveItem } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(remove = Rule) ->
+    ?CREATE_CODE_START,
+    [{removeItem, RemoveItem}] = dets:lookup(?CODE_TEMPLATES, removeItem),
+    dets:delete(?CODE_TEMPLATES, removeItem),
+    RemoveItem_Length = length(RemoveItem),
+
+    Code = [
             "Remove" ++ ?SP ++
             lists:nth(rand:uniform(RemoveItem_Length), RemoveItem) ++
             case rand:uniform(?PRIME) rem 3 of
@@ -1500,14 +1735,49 @@ create_code() ->
                 _ -> []
             end
         || _ <- lists:seq(1, ?MAX_CLAUSE)
-    ]),
-    Remove_Length = length(Remove),
-    insert_table(remove, Remove),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses remove ~n", [Remove_Length])),
-    % --------------------------------------------------------------------------
-    % Return = (R,E,T,U,R,N), [[SP], (D,I,S,T,I,N,C,T)], SP, ReturnBody ;
-    % --------------------------------------------------------------------------
-    Return = sort_list_random([
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RemoveItem = (Variable, NodeLabels)
+%%            | PropertyExpression ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(removeItem = Rule) ->
+    ?CREATE_CODE_START,
+    [{nodeLabels, NodeLabels}] = dets:lookup(?CODE_TEMPLATES, nodeLabels),
+    NodeLabels_Length = length(NodeLabels),
+    [{propertyExpression, PropertyExpression}] = dets:lookup(?CODE_TEMPLATES, propertyExpression),
+    PropertyExpression_Length = length(PropertyExpression),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    TargetSize = min(?MAX_STATEMENT, max(NodeLabels_Length, PropertyExpression_Length)),
+
+    Code = [
+        case rand:uniform(?PRIME) rem 2 of
+            1 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
+            lists:nth(rand:uniform(NodeLabels_Length), NodeLabels);
+            _ ->
+                lists:nth(rand:uniform(PropertyExpression_Length), PropertyExpression)
+        end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Return = (R,E,T,U,R,N), [[SP], (D,I,S,T,I,N,C,T)], SP, ReturnBody ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(return = Rule) ->
+    ?CREATE_CODE_START,
+    [{returnBody, ReturnBody}] = dets:lookup(?CODE_TEMPLATES, returnBody),
+    ReturnBody_Length = length(ReturnBody),
+
+    Code = [
             "Return" ++ ?SP ++
             case rand:uniform(?PRIME) rem 2 of
                 1 -> "Distinct" ++ ?SP;
@@ -1515,17 +1785,130 @@ create_code() ->
             end ++
             lists:nth(rand:uniform(ReturnBody_Length), ReturnBody)
         || _ <- lists:seq(1, ?MAX_CLAUSE)
-    ]),
-    Return_Length = length(Return),
-    insert_table(return, Return),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses return ~n", [Return_Length])),
-    % --------------------------------------------------------------------------
-    % Set = (S,E,T), [SP], SetItem, { ',', SetItem } ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % Set = (S,E,T), SP, SetItem, { ',', SetItem } ;
-    % --------------------------------------------------------------------------
-    Set = sort_list_random([
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ReturnBody = ReturnItems, [SP, Order], [SP, Skip], [SP, Limit] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(returnBody = Rule) ->
+    ?CREATE_CODE_START,
+    [{limit, Limit}] = dets:lookup(?CODE_TEMPLATES, limit),
+    dets:delete(?CODE_TEMPLATES, limit),
+    Limit_Length = length(Limit),
+    [{order, Order}] = dets:lookup(?CODE_TEMPLATES, order),
+    dets:delete(?CODE_TEMPLATES, order),
+    Order_Length = length(Order),
+    [{returnItems, ReturnItems}] = dets:lookup(?CODE_TEMPLATES, returnItems),
+    dets:delete(?CODE_TEMPLATES, returnItems),
+    ReturnItems_Length = length(ReturnItems),
+    [{skip, Skip}] = dets:lookup(?CODE_TEMPLATES, skip),
+    dets:delete(?CODE_TEMPLATES, skip),
+    Skip_Length = length(Skip),
+
+    TargetSize = min(?MAX_STATEMENT, max(Limit_Length, max(Order_Length, max(ReturnItems_Length, Skip_Length)))),
+
+    Code = [
+            lists:nth(rand:uniform(ReturnItems_Length), ReturnItems) ++
+            case rand:uniform(?PRIME) rem 8 of
+                1 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order) ++
+                    ?SP ++ lists:nth(rand:uniform(Skip_Length), Skip) ++
+                    ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
+                2 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order) ++
+                    ?SP ++ lists:nth(rand:uniform(Skip_Length), Skip);
+                3 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order) ++
+                    ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
+                4 -> ?SP ++ lists:nth(rand:uniform(Order_Length), Order);
+                5 -> ?SP ++ lists:nth(rand:uniform(Skip_Length), Skip) ++
+                    ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
+                6 -> ?SP ++ lists:nth(rand:uniform(Skip_Length), Skip);
+                7 -> ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
+                _ -> []
+            end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ReturnItem = (Expression, SP, (A,S), SP, Variable)
+%%            | Expression ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(returnItem = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    TargetSize = min(?MAX_STATEMENT, max(Expression_Length, Variable_Length)),
+
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 -> ?SP ++ "As" ++ ?SP ++
+                    lists:nth(rand:uniform(Variable_Length), Variable);
+                _ -> []
+            end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ReturnItems = ('*', { [SP], ',', [SP], ReturnItem })
+%%             | (ReturnItem, { [SP], ',', [SP], ReturnItem }) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(returnItems = Rule) ->
+    ?CREATE_CODE_START,
+    [{returnItem, ReturnItem}] = dets:lookup(?CODE_TEMPLATES, returnItem),
+    ReturnItem_Length = length(ReturnItem),
+
+    TargetSize = min(?MAX_STATEMENT, ReturnItem_Length),
+
+    Code = lists:append(
+        [
+            "*"
+        ],
+        [
+            case rand:uniform(?PRIME) rem 5 of
+                1 -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
+                2 -> "*" ++
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
+                3 -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem) ++
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
+                4 -> "*" ++
+                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(ReturnItem_Length), ReturnItem);
+                _ -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem)
+            end
+            || _ <- lists:seq(1, TargetSize)
+        ]
+    ),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Set = (S,E,T), [SP], SetItem, { ',', SetItem } ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% Set = (S,E,T), SP, SetItem, { ',', SetItem } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(set = Rule) ->
+    ?CREATE_CODE_START,
+    [{setItem, SetItem}] = dets:lookup(?CODE_TEMPLATES, setItem),
+    dets:delete(?CODE_TEMPLATES, setItem),
+    SetItem_Length = length(SetItem),
+
+    Code = [
             "Set" ++ ?SP ++
             lists:nth(rand:uniform(SetItem_Length), SetItem) ++
             case rand:uniform(?PRIME) rem 3 of
@@ -1535,30 +1918,278 @@ create_code() ->
                 _ -> []
             end
         || _ <- lists:seq(1, ?MAX_CLAUSE)
-    ]),
-    Set_Length = length(Set),
-    insert_table(set, Set),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses set ~n", [Set_Length])),
-    % --------------------------------------------------------------------------
-    % Unwind = (U,N,W,I,N,D), [SP], Expression, SP, (A,S), SP, Variable ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % Unwind = (U,N,W,I,N,D), SP, Expression, SP, (A,S), SP, Variable ;
-    % --------------------------------------------------------------------------
-    Unwind = sort_list_random([
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SetItem = (PropertyExpression, [SP], '=', [SP], Expression)
+%%         | (Variable, [SP], '=', [SP], Expression)
+%%         | (Variable, [SP], '+=', [SP], Expression)
+%%         | (Variable, [SP], NodeLabels) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(setItem = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{nodeLabels, NodeLabels}] = dets:lookup(?CODE_TEMPLATES, nodeLabels),
+    NodeLabels_Length = length(NodeLabels),
+    [{propertyExpression, PropertyExpression}] = dets:lookup(?CODE_TEMPLATES, propertyExpression),
+    PropertyExpression_Length = length(PropertyExpression),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    TargetSize = min(?MAX_STATEMENT, max(Expression_Length, max(NodeLabels_Length, max(PropertyExpression_Length, Variable_Length)))),
+
+    Code = [
+        case rand:uniform(?PRIME) rem 4 of
+            1 ->
+                lists:nth(rand:uniform(PropertyExpression_Length), PropertyExpression) ++
+                    ?SP_OPT ++ "=" ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression_Length), Expression);
+            2 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
+                ?SP_OPT ++ "=" ++ ?SP_OPT ++
+                lists:nth(rand:uniform(Expression_Length), Expression);
+            3 -> lists:nth(rand:uniform(Variable_Length), Variable) ++
+                ?SP_OPT ++ "+=" ++ ?SP_OPT ++
+                lists:nth(rand:uniform(Expression_Length), Expression);
+            _ ->
+                lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP_OPT ++
+                    lists:nth(rand:uniform(NodeLabels_Length), NodeLabels)
+        end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SingleQuery = Clause, { [SP], Clause } ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% SingleQuery = Clause, { SP, Clause } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(singleQuery = Rule) ->
+    ?CREATE_CODE_START,
+    [{clause, Clause}] = dets:lookup(?CODE_TEMPLATES, clause),
+    dets:delete(?CODE_TEMPLATES, clause),
+    Clause_Length = length(Clause),
+
+    Code = [
+            C ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 -> ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause) ++
+                    ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause);
+                2 -> ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause);
+                _ -> []
+            end
+        || C <- Clause
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Skip = (S,K,I,P), SP, Expression ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(skip = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    TargetSize = min(?MAX_STATEMENT, max(Expression_Length, Variable_Length)),
+
+    Code = [
+            "Skip" ++ ?SP ++
+            lists:nth(rand:uniform(Expression_Length), Expression)
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SortItem = Expression, [[SP], ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% SortItem = Expression, [SP, ((A,S,C,E,N,D,I,N,G) | (A,S,C) | (D,E,S,C,E,N,D,I,N,G) | (D,E,S,C))] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(sortItem = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    TargetSize = min(?MAX_STATEMENT, Expression_Length),
+
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> ?SP ++ "Descending";
+                2 -> ?SP ++ "Desc";
+                3 -> ?SP ++ "Ascending";
+                _ -> ?SP ++ "Asc"
+            end
+        || _ <- lists:seq(1, TargetSize)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Statement = Command
+%%           | Query ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(statement = Rule) ->
+    ?CREATE_CODE_START,
+    [{query, Query}] = dets:lookup(?CODE_TEMPLATES, query),
+    Query_Length = length(Query),
+
+    Code = case Query_Length > ?MAX_STATEMENT of
+               true -> lists:sublist(Query, 1, ?MAX_STATEMENT);
+               _ -> Query
+           end,
+    store_code(Rule, Code, ?MAX_STATEMENT, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% StringLiteral = ('"', { ANY - ('"' | '\') | EscapedChar }, '"')
+%%               | ("'", { ANY - ("'" | '\') | EscapedChar }, "'") ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(stringLiteral = Rule) ->
+    ?CREATE_CODE_START,
+    Code = [
+        "\\\"d_str\\\"",
+        "\\\"d_str_1\\\"",
+        "\\\"d_str_2\\\"",
+        "'s_str'",
+        "'s_str_1'",
+        "'s_str_2'"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(unescapedSymbolicName = Rule) ->
+    ?CREATE_CODE_START,
+    Code = [
+        "usn1_SN",
+        "usn2_SN",
+        "_usn3_SN",
+        "_usn4_SN",
+        "@usn5_SN",
+        "@usn6_SN",
+        "#usn7_SN",
+        "#usn8_SN",
+        "usna_SN",
+        "usnb_SN",
+        "_usnc_SN",
+        "_usnd_SN",
+        "@usne_SN",
+        "@usnf_SN",
+        "#usng_SN"
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(symbolicName, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Union = ((U,N,I,O,N), SP, (A,L,L), [SP], SingleQuery)
+%%       | ((U,N,I,O,N), [SP], SingleQuery) ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% Union = ((U,N,I,O,N), SP, (A,L,L), SP, SingleQuery)
+%%       | ((U,N,I,O,N), SP, SingleQuery) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(union = Rule) ->
+    ?CREATE_CODE_START,
+    [{singleQuery, SingleQuery}] = dets:lookup(?CODE_TEMPLATES, singleQuery),
+
+    Code = [
+            "Union" ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 -> ?SP ++ "All";
+                _ -> []
+            end ++
+            ?SP ++ SQ
+        || SQ <- SingleQuery
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Unwind = (U,N,W,I,N,D), [SP], Expression, SP, (A,S), SP, Variable ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% Unwind = (U,N,W,I,N,D), SP, Expression, SP, (A,S), SP, Variable ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(unwind = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    Variable_Length = length(Variable),
+
+    Code = [
             "Unwind" ++ ?SP ++
             lists:nth(rand:uniform(Expression_Length), Expression) ++
             ?SP ++ "As" ++ ?SP ++
             lists:nth(rand:uniform(Variable_Length), Variable)
         || _ <- lists:seq(1, ?MAX_CLAUSE)
-    ]),
-    Unwind_Length = length(Unwind),
-    insert_table(unwind, Unwind),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses unwind ~n", [Unwind_Length])),
-    % --------------------------------------------------------------------------
-    % With = (W,I,T,H), [[SP], (D,I,S,T,I,N,C,T)], SP, ReturnBody, [[SP], Where] ;
-    % --------------------------------------------------------------------------
-    With = sort_list_random([
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Variable = SymbolicName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(variable = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [re:replace(SN, "_SN", "_V", [{return, list}]) || SN <- SymbolicName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(atom, Code, ?MAX_RULE_ATOM, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Where = (W,H,E,R,E), SP, Expression ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(where = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+
+    Code = ["Where" ++ ?SP ++ E || E <- Expression],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% With = (W,I,T,H), [[SP], (D,I,S,T,I,N,C,T)], SP, ReturnBody, [[SP], Where] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(with = Rule) ->
+    ?CREATE_CODE_START,
+    [{returnBody, ReturnBody}] = dets:lookup(?CODE_TEMPLATES, returnBody),
+    dets:delete(?CODE_TEMPLATES, returnBody),
+    ReturnBody_Length = length(ReturnBody),
+    [{where, Where}] = dets:lookup(?CODE_TEMPLATES, where),
+    dets:delete(?CODE_TEMPLATES, where),
+    Where_Length = length(Where),
+
+    Code = [
             "With" ++ ?SP ++
             case rand:uniform(?PRIME) rem 4 of
                 1 -> "Distinct" ++ ?SP ++
@@ -1573,263 +2204,258 @@ create_code() ->
                 lists:nth(rand:uniform(ReturnBody_Length), ReturnBody)
             end
         || _ <- lists:seq(1, ?MAX_CLAUSE)
-    ]),
-    With_Length = length(With),
-    insert_table(with, With),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses with ~n", [With_Length])),
+    ],
+    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(clause, Code, ?MAX_CLAUSE, false),
+    ?CREATE_CODE_END.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 91
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% AddOrSubtractExpression = MultiplyDivideModuloExpression, { ([SP], '+', [SP], MultiplyDivideModuloExpression) | ([SP], '-', [SP], MultiplyDivideModuloExpression) } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % --------------------------------------------------------------------------
-    % Clause = LoadCSV
-    %        | Match
-    %        | Unwind
-    %        | ...
-    %        | Create
-    %        | CreateUnique
-    %        | ...
-    %        | Delete
-    %        | Remove
-    %        | ...
-    %        | With
-    %        | Return ;
-    % --------------------------------------------------------------------------
-    Clause_Part_1 = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        Match,
-        Unwind,
-        Create,
-        Delete,
-        Remove,
-        With,
-        Return
-    ])))),
-    Clause_Part_1_Length = length(Clause_Part_1),
-    insert_table(clause_part_1, Clause_Part_1),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses clause (1) ~n", [Clause_Part_1_Length])),
+create_code(addOrSubtractExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 92
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % MergeAction = ((O,N), SP, (M,A,T,C,H), SP, Set)
-    %             | ((O,N), SP, (C,R,E,A,T,E), SP, Set) ;
-    % --------------------------------------------------------------------------
-    MergeAction = sort_list_random([
-            "On" ++ ?SP ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> "Match" ++ ?SP ++
-                    lists:nth(rand:uniform(Set_Length), Set);
-                _ -> "Create" ++ ?SP ++
-                    lists:nth(rand:uniform(Set_Length), Set)
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            case rand:uniform(?PRIME) rem 5 of
+                1 ->
+                    ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                2 ->
+                    ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                3 ->
+                    ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                4 ->
+                    ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                _ -> []
             end
-        || _ <- lists:seq(1, Set_Length)
-    ]),
-    MergeAction_Length = length(MergeAction),
-    insert_table(merge_action, MergeAction),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses merge_action ~n", [MergeAction_Length])),
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, Max, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 93
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% AndExpression = NotExpression, { SP, (A,N,D), SP, NotExpression } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % --------------------------------------------------------------------------
-    % Merge = (M,E,R,G,E), [SP], PatternPart, { SP, MergeAction } ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % Merge = (M,E,R,G,E), SP, PatternPart, { SP, MergeAction } ;
-    % --------------------------------------------------------------------------
-    Merge = sort_list_random([
-            "Merge" ++ ?SP ++
-            lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
+create_code(andExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
             case rand:uniform(?PRIME) rem 3 of
                 1 ->
-                    ?SP ++ lists:nth(rand:uniform(MergeAction_Length), MergeAction) ++
-                        ?SP ++ lists:nth(rand:uniform(MergeAction_Length), MergeAction);
+                    ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
                 2 ->
-                    ?SP ++ lists:nth(rand:uniform(MergeAction_Length), MergeAction);
+                    ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
                 _ -> []
             end
-        || _ <- lists:seq(1, ?MAX_CLAUSE)
-    ]),
-    Merge_Length = length(Merge),
-    insert_table(merge, Merge),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses merge ~n", [Merge_Length])),
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 94
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ComparisonExpression = AddOrSubtractExpression, { [SP], PartialComparisonExpression } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % --------------------------------------------------------------------------
-    % Clause = ...
-    %        | Merge
-    %        | ...
-    %        | Foreach
-    %        | ...
-    % --------------------------------------------------------------------------
-    Clause = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        Clause_Part_1,
-        Merge
-    ])))),
-    Clause_Length = length(Clause),
-    insert_table(clause, Clause),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses clause ~n", [Clause_Length])),
+create_code(comparisonExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{addOrSubtractExpression, AddOrSubtractExpression}] = dets:lookup(?CODE_TEMPLATES, addOrSubtractExpression),
+    dets:delete(?CODE_TEMPLATES, addOrSubtractExpression),
+    AddOrSubtractExpression_Length = length(AddOrSubtractExpression),
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 95
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % --------------------------------------------------------------------------
-    % SingleQuery = Clause, { [SP], Clause } ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % SingleQuery = Clause, { SP, Clause } ;
-    % --------------------------------------------------------------------------
-    SingleQuery = sort_list_random([
-            C ++
+    Code = [
+            lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression) ++
             case rand:uniform(?PRIME) rem 3 of
-                1 -> ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause) ++
-                    ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause);
-                2 -> ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause);
+                1 -> ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    ?SP_OPT ++
+                    lists:nth(rand:uniform(Expression_Length), Expression);
+                2 -> ?SP_OPT ++
+                lists:nth(rand:uniform(Expression_Length), Expression);
                 _ -> []
             end
-        || C <- Clause
-    ]),
-    SingleQuery_Length = length(SingleQuery),
-    insert_table(single_query, SingleQuery),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses single_query ~n", [SingleQuery_Length])),
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 96
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MultiplyDivideModuloExpression = PowerOfExpression, { ([SP], '*', [SP], PowerOfExpression) | ([SP], '/', [SP], PowerOfExpression) | ([SP], '%', [SP], PowerOfExpression) } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % --------------------------------------------------------------------------
-    % Union = ((U,N,I,O,N), SP, (A,L,L), [SP], SingleQuery)
-    %       | ((U,N,I,O,N), [SP], SingleQuery) ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % Union = ((U,N,I,O,N), SP, (A,L,L), SP, SingleQuery)
-    %       | ((U,N,I,O,N), SP, SingleQuery) ;
-    % --------------------------------------------------------------------------
-    Union = sort_list_random([
-            "Union" ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> ?SP ++ "All";
+create_code(multiplyDivideModuloExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            case rand:uniform(?PRIME) rem 7 of
+                1 ->
+                    ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                2 ->
+                    ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                3 ->
+                    ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                4 ->
+                    ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                5 ->
+                    ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                6 ->
+                    ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                _ -> []
+            end
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NotExpression = { (N,O,T), [SP] }, ComparisonExpression ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% NotExpression = { (N,O,T), SP }, ComparisonExpression ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(notExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+            case rand:uniform(?PRIME) rem 3 of
+                1 -> "Not" ++ ?SP ++ "Not" ++ ?SP;
+                2 -> "Not" ++ ?SP;
                 _ -> []
             end ++
-            ?SP ++ SQ
-        || SQ <- SingleQuery
-    ]),
-    Union_Length = length(Union),
-    insert_table(union, Union),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses union ~n", [Union_Length])),
+            lists:nth(rand:uniform(Expression_Length), Expression)
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 97
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OrExpression = XorExpression, { SP, (O,R), SP, XorExpression } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % --------------------------------------------------------------------------
-    % RegularQuery = SingleQuery, { [SP], Union } ;
-    % --------------------------------------------------------------------------
-    % wwe ???
-    % RegularQuery = SingleQuery, { SP, Union } ;
-    % --------------------------------------------------------------------------
-    RegularQuery = sort_list_random([
-            SQ ++
+create_code(orExpression = _Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
             case rand:uniform(?PRIME) rem 3 of
-                1 -> ?SP ++ lists:nth(rand:uniform(Union_Length), Union) ++
-                    ?SP ++ lists:nth(rand:uniform(Union_Length), Union);
-                2 -> ?SP ++ lists:nth(rand:uniform(Union_Length), Union);
+                1 ->
+                    ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                2 ->
+                    ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
                 _ -> []
             end
-        || SQ <- SingleQuery
-    ]),
-    RegularQuery_Length = length(RegularQuery),
-    insert_table(regular_query, RegularQuery),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses regular_query ~n", [RegularQuery_Length])),
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(expression, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END_RULE;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 98
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PartialComparisonExpression = ('=', [SP], AddOrSubtractExpression)
+%%                             | ('<>', [SP], AddOrSubtractExpression)
+%%                             | ('!=', [SP], AddOrSubtractExpression)
+%%                             | ('<', [SP], AddOrSubtractExpression)
+%%                             | ('>', [SP], AddOrSubtractExpression)
+%%                             | ('<=', [SP], AddOrSubtractExpression)
+%%                             | ('>=', [SP], AddOrSubtractExpression) ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % --------------------------------------------------------------------------
-    % Query = RegularQuery
-    %       | BulkImportQuery ;
-    % --------------------------------------------------------------------------
-    Query_Curr = sort_list_random(RegularQuery),
-    Query = case length(Query_Curr) > ?MAX_QUERY of
-                true -> lists:sublist(Query_Curr, 1, ?MAX_QUERY);
-                _ -> Query_Curr
-            end,
-    Query_Length = length(Query),
-    insert_table(query, Query),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses query ~n", [Query_Length])),
+create_code(partialComparisonExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 99
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Code = [
+        case rand:uniform(?PRIME) rem 7 of
+            1 ->
+                "=" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            2 ->
+                "<>" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            3 ->
+                "!=" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            4 ->
+                "<" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            5 ->
+                ">" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            6 ->
+                "<=" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            _ ->
+                ">=" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression)
+        end
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
 
-    % --------------------------------------------------------------------------
-    % Statement = Command
-    %           | Query ;
-    % --------------------------------------------------------------------------
-    Statement_Curr = sort_list_random(Query),
-    Statement = case length(Statement_Curr) > ?MAX_STATEMENT of
-                    true -> lists:sublist(Statement_Curr, 1, ?MAX_STATEMENT);
-                    _ -> Statement_Curr
-                end,
-    Statement_Length = length(Statement),
-    insert_table(statement, Statement),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses statement ~n", [Statement_Length])),
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PowerOfExpression = UnaryAddOrSubtractExpression, { [SP], '^', [SP], UnaryAddOrSubtractExpression } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 100
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+create_code(powerOfExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
 
-    % --------------------------------------------------------------------------
-    % Cypher = [SP], QueryOptions, Statement, [[SP], ';'], [SP] ;
-    % --------------------------------------------------------------------------
-    Cypher_Curr = sort_list_random([
-            ?SP_OPT ++
-            S ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> ?SP_OPT ++ ";";
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 ->
+                    ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                2 ->
+                    ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
                 _ -> []
             end
-            ++ ?SP_OPT
-        || S <- Statement
-    ]),
-    Cypher = case length(Cypher_Curr) > ?MAX_CYPHER of
-                 true -> lists:sublist(Cypher_Curr, 1, ?MAX_CYPHER);
-                 _ -> Cypher_Curr
-             end,
-    Cypher_Length = length(Cypher),
-    insert_table(cypher, Cypher),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses cypher ~n", [Cypher_Length])),
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
 
-    ok.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PropertyOrLabelsExpression = Atom, { PropertyLookup | NodeLabels } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Creating code of rules Expression, ... .
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_code_expression(Max, Atom, NodeLabels, PropertyLookup) ->
+create_code(propertyOrLabelsExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{atom, Atom}] = dets:lookup(?CODE_TEMPLATES, atom),
     Atom_Length = length(Atom),
+    [{nodeLabels, NodeLabels}] = dets:lookup(?CODE_TEMPLATES, nodeLabels),
     NodeLabels_Length = length(NodeLabels),
+    [{propertyLookup, PropertyLookup}] = dets:lookup(?CODE_TEMPLATES, propertyLookup),
     PropertyLookup_Length = length(PropertyLookup),
-    % --------------------------------------------------------------------------
-    % PropertyOrLabelsExpression = Atom, { PropertyLookup | NodeLabels } ;
-    % --------------------------------------------------------------------------
-    PropertyOrLabelsExpression_Prev = case ets:lookup(?CODE_TEMPLATES, propertyOrLabelsExpression) of
-                                          [{_, PropertyOrLabelsExpression_Exist}] ->
-                                              PropertyOrLabelsExpression_Exist;
-                                          _ -> []
-                                      end,
-    PropertyOrLabelsExpression_Curr = sort_list_random(sets:to_list(sets:from_list(
-        PropertyOrLabelsExpression_Prev ++
-        [lists:nth(rand:uniform(Atom_Length), Atom) ++
+
+    Code = [
+            lists:nth(rand:uniform(Atom_Length), Atom) ++
             case rand:uniform(?PRIME) rem 7 of
                 1 -> lists:nth(rand:uniform(NodeLabels_Length), NodeLabels);
                 2 -> lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++
@@ -1846,416 +2472,194 @@ create_code_expression(Max, Atom, NodeLabels, PropertyLookup) ->
                     lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup);
                 _ -> []
             end
-            || _ <- lists:seq(1, Max)
-        ]
-    ))),
-    PropertyOrLabelsExpression = case length(PropertyOrLabelsExpression_Curr) > Max of
-                                     true ->
-                                         lists:sublist(PropertyOrLabelsExpression_Curr, 1, Max);
-                                     _ -> PropertyOrLabelsExpression_Curr
-                                 end,
-    PropertyOrLabelsExpression_Length = length(PropertyOrLabelsExpression),
-    insert_table(propertyOrLabelsExpression, PropertyOrLabelsExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses property_or_labels_expression ~n", [PropertyOrLabelsExpression_Length])),
-    % --------------------------------------------------------------------------
-    % StringListNullOperatorExpression = PropertyOrLabelsExpression, { ([SP], '[', Expression, ']')
-    %                                  | ([SP], '[', [Expression], '..', [Expression], ']')
-    %                                  | ((([SP], '=~')
-    %                                  | (SP, (I,N))
-    %                                  | (SP, (S,T,A,R,T,S), SP, (W,I,T,H))
-    %                                  | (SP, (E,N,D,S), SP, (W,I,T,H))
-    %                                  | (SP, (C,O,N,T,A,I,N,S))), [SP], PropertyOrLabelsExpression)
-    %                                  | (SP, (I,S), SP, (N,U,L,L))
-    %                                  | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
-    % --------------------------------------------------------------------------
-    StringListNullOperatorExpression_Prev = case ets:lookup(?CODE_TEMPLATES, stringListNullOperatorExpression) of
-                                                [{_, StringListNullOperatorExpression_Exist}] ->
-                                                    StringListNullOperatorExpression_Exist;
-                                                _ -> []
-                                            end,
-    StringListNullOperatorExpression = sort_list_random(sets:to_list(sets:from_list(
-        StringListNullOperatorExpression_Prev ++
-        [lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% StringListNullOperatorExpression = PropertyOrLabelsExpression, { ([SP], '[', Expression, ']')
+%%                                  | ([SP], '[', [Expression], '..', [Expression], ']')
+%%                                  | ((([SP], '=~')
+%%                                  | (SP, (I,N))
+%%                                  | (SP, (S,T,A,R,T,S), SP, (W,I,T,H))
+%%                                  | (SP, (E,N,D,S), SP, (W,I,T,H))
+%%                                  | (SP, (C,O,N,T,A,I,N,S))), [SP], PropertyOrLabelsExpression)
+%%                                  | (SP, (I,S), SP, (N,U,L,L))
+%%                                  | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(stringListNullOperatorExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+%%       currently not supported    
+%%       [
+%%            "[..]",
+%%            "[ .. ]"
+%%        ],
+
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
             case rand:uniform(?PRIME) rem 23 of
                 1 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]" ++
                     ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]";
                 2 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ".." ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]" ++
                     ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ".." ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]";
                 3 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ".." ++ "]" ++
                     ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ".." ++ "]";
                 4 -> ?SP_OPT ++ "[" ++ ".." ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]" ++
                     ?SP_OPT ++ "[" ++ ".." ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]";
                 5 -> ?SP ++ "=~" ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ?SP ++ "=~" ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 6 -> ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 7 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 8 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 9 -> ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 10 -> ?SP ++ "Is" ++ ?SP ++ "Null" ++
                     ?SP ++ "Is" ++ ?SP ++ "Null";
                 11 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null" ++
                     ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
                 12 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]";
                 13 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ".." ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]";
                 14 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++
                     ".." ++ "]";
                 15 -> ?SP_OPT ++ "[" ++
-                    ".." ++ lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
+                    ".." ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
                     "]";
                 16 -> ?SP ++ "=~" ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 17 -> ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 18 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 19 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 20 -> ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
+                    lists:nth(rand:uniform(Expression_Length), Expression);
                 21 -> ?SP ++ "Is" ++ ?SP ++ "Null";
                 22 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
                 _ -> []
             end
-            || _ <- lists:seq(1, Max)
-        ]
-    ))),
-    StringListNullOperatorExpression_Length = length(StringListNullOperatorExpression),
-    insert_table(stringListNullOperatorExpression, StringListNullOperatorExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses string_list_null_operator_expression ~n", [StringListNullOperatorExpression_Length])),
-    % --------------------------------------------------------------------------
-    % UnaryAddOrSubtractExpression = { ('+' | '-'), SP }, StringListNullOperatorExpression ;
-    % --------------------------------------------------------------------------
-    UnaryAddOrSubtractExpression_Prev = case ets:lookup(?CODE_TEMPLATES, unaryAddOrSubtractExpression) of
-                                            [{_, UnaryAddOrSubtractExpression_Exist}] ->
-                                                UnaryAddOrSubtractExpression_Exist;
-                                            _ -> []
-                                        end,
-    UnaryAddOrSubtractExpression = sort_list_random(sets:to_list(sets:from_list(
-        UnaryAddOrSubtractExpression_Prev ++
-        [
-                case rand:uniform(?PRIME) rem 5 of
-                    1 -> "+" ++ ?SP ++ "+" ++ ?SP;
-                    2 -> "-" ++ ?SP ++ "-" ++ ?SP;
-                    3 -> "+" ++ ?SP;
-                    4 -> "-" ++ ?SP;
-                    _ -> []
-                end ++
-                lists:nth(rand:uniform(StringListNullOperatorExpression_Length), StringListNullOperatorExpression)
-            || _ <- lists:seq(1, Max)
-        ]))),
-    UnaryAddOrSubtractExpression_Length = length(UnaryAddOrSubtractExpression),
-    insert_table(unaryAddOrSubtractExpression, UnaryAddOrSubtractExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses unary_add_or_subtract_expression ~n", [UnaryAddOrSubtractExpression_Length])),
-    % --------------------------------------------------------------------------
-    % PowerOfExpression = UnaryAddOrSubtractExpression, { [SP], '^', [SP], UnaryAddOrSubtractExpression } ;
-    % --------------------------------------------------------------------------
-    PowerOfExpression_Prev = case ets:lookup(?CODE_TEMPLATES, powerOfExpression) of
-                                 [{_, PowerOfExpression_Exist}] ->
-                                     PowerOfExpression_Exist;
-                                 _ -> []
-                             end,
-    PowerOfExpression = sort_list_random(sets:to_list(sets:from_list(
-        PowerOfExpression_Prev ++
-        [
-                lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression) ++
-                case rand:uniform(?PRIME) rem 3 of
-                    1 ->
-                        ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression) ++
-                            ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression);
-                    2 ->
-                        ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression);
-                    _ -> []
-                end
-            || _ <- lists:seq(1, Max)
-        ]))),
-    PowerOfExpression_Length = length(PowerOfExpression),
-    insert_table(powerOfExpression, PowerOfExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses power_of_expression ~n", [PowerOfExpression_Length])),
-    % --------------------------------------------------------------------------
-    % MultiplyDivideModuloExpression = PowerOfExpression, { ([SP], '*', [SP], PowerOfExpression) | ([SP], '/', [SP], PowerOfExpression) | ([SP], '%', [SP], PowerOfExpression) } ;
-    % --------------------------------------------------------------------------
-    MultiplyDivideModuloExpression_Prev = case ets:lookup(?CODE_TEMPLATES, multiplyDivideModuloExpression) of
-                                              [{_, MultiplyDivideModuloExpression_Exist}] ->
-                                                  MultiplyDivideModuloExpression_Exist;
-                                              _ -> []
-                                          end,
-    MultiplyDivideModuloExpression = sort_list_random(sets:to_list(sets:from_list(
-        MultiplyDivideModuloExpression_Prev ++
-        [
-                lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
-                case rand:uniform(?PRIME) rem 7 of
-                    1 ->
-                        ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
-                            ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
-                    2 ->
-                        ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
-                            ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
-                    3 ->
-                        ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
-                            ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
-                    4 ->
-                        ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
-                    5 ->
-                        ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
-                    6 ->
-                        ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
-                    _ -> []
-                end
-            || _ <- lists:seq(1, Max)
-        ]))),
-    MultiplyDivideModuloExpression_Length = length(MultiplyDivideModuloExpression),
-    insert_table(multiplyDivideModuloExpression, MultiplyDivideModuloExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses multiply_divide_modulo_expression ~n", [MultiplyDivideModuloExpression_Length])),
-    % --------------------------------------------------------------------------
-    % AddOrSubtractExpression = MultiplyDivideModuloExpression, { ([SP], '+', [SP], MultiplyDivideModuloExpression) | ([SP], '-', [SP], MultiplyDivideModuloExpression) } ;
-    % --------------------------------------------------------------------------
-    AddOrSubtractExpression_Prev = case ets:lookup(?CODE_TEMPLATES, addOrSubtractExpression) of
-                                       [{_, AddOrSubtractExpression_Exist}] ->
-                                           AddOrSubtractExpression_Exist;
-                                       _ -> []
-                                   end,
-    AddOrSubtractExpression = sort_list_random(sets:to_list(sets:from_list(
-        AddOrSubtractExpression_Prev ++
-        [
-                lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression) ++
-                case rand:uniform(?PRIME) rem 5 of
-                    1 ->
-                        ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression) ++
-                            ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression);
-                    2 ->
-                        ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression) ++
-                            ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression);
-                    3 ->
-                        ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression);
-                    4 ->
-                        ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression);
-                    _ -> []
-                end
-            || _ <- lists:seq(1, Max)
-        ]))),
-    AddOrSubtractExpression_Length = length(AddOrSubtractExpression),
-    insert_table(addOrSubtractExpression, AddOrSubtractExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses add_or_subtract_expression ~n", [AddOrSubtractExpression_Length])),
-    % --------------------------------------------------------------------------
-    % PartialComparisonExpression = ('=', [SP], AddOrSubtractExpression)
-    %                             | ('<>', [SP], AddOrSubtractExpression)
-    %                             | ('!=', [SP], AddOrSubtractExpression)
-    %                             | ('<', [SP], AddOrSubtractExpression)
-    %                             | ('>', [SP], AddOrSubtractExpression)
-    %                             | ('<=', [SP], AddOrSubtractExpression)
-    %                             | ('>=', [SP], AddOrSubtractExpression) ;
-    % --------------------------------------------------------------------------
-    PartialComparisonExpression_Prev = case ets:lookup(?CODE_TEMPLATES, partial_comparison_expression) of
-                                           [{_, PartialComparisonExpression_Exist}] ->
-                                               PartialComparisonExpression_Exist;
-                                           _ -> []
-                                       end,
-    PartialComparisonExpression = sort_list_random(sets:to_list(sets:from_list(
-        PartialComparisonExpression_Prev ++
-        [
-            case rand:uniform(?PRIME) rem 7 of
-                1 ->
-                    "=" ++ ?SP_OPT ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
-                2 ->
-                    "<>" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
-                3 ->
-                    "!=" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
-                4 ->
-                    "<" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
-                5 ->
-                    ">" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
-                6 ->
-                    "<=" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
-                _ ->
-                    ">=" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression)
-            end
-            || _ <- lists:seq(1, Max)
-        ]))),
-    PartialComparisonExpression_Length = length(PartialComparisonExpression),
-    insert_table(partial_comparison_expression, PartialComparisonExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses partial_comparison_expression ~n", [PartialComparisonExpression_Length])),
-    % --------------------------------------------------------------------------
-    % ComparisonExpression = AddOrSubtractExpression, { [SP], PartialComparisonExpression } ;
-    % --------------------------------------------------------------------------
-    ComparisonExpression_Prev = case ets:lookup(?CODE_TEMPLATES, comparisonExpression) of
-                                    [{_, ComparisonExpression_Exist}] ->
-                                        ComparisonExpression_Exist;
-                                    _ -> []
-                                end,
-    ComparisonExpression = sort_list_random(sets:to_list(sets:from_list(
-        ComparisonExpression_Prev ++
-        [
-                lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression) ++
-                case rand:uniform(?PRIME) rem 3 of
-                    1 -> ?SP_OPT ++
-                        lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression) ++
-                        ?SP_OPT ++
-                        lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression);
-                    2 -> ?SP_OPT ++
-                    lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression);
-                    _ -> []
-                end
-            || _ <- lists:seq(1, Max)
-        ]))),
-    ComparisonExpression_Length = length(ComparisonExpression),
-    insert_table(comparisonExpression, ComparisonExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses comparison_expression ~n", [ComparisonExpression_Length])),
-    % --------------------------------------------------------------------------
-    % NotExpression = { (N,O,T), [SP] }, ComparisonExpression ;
-    % --------------------------------------------------------------------------
-    NotExpression_Prev = case ets:lookup(?CODE_TEMPLATES, notExpression) of
-                             [{_, NotExpression_Exist}] -> NotExpression_Exist;
-                             _ -> []
-                         end,
-    NotExpression = sort_list_random(sets:to_list(sets:from_list(
-        NotExpression_Prev ++
-        [
-                case rand:uniform(?PRIME) rem 3 of
-                    1 -> "Not" ++ ?SP_OPT ++ "Not" ++ ?SP_OPT;
-                    2 -> "Not" ++ ?SP_OPT;
-                    _ -> []
-                end ++
-                lists:nth(rand:uniform(ComparisonExpression_Length), ComparisonExpression)
-            || _ <- lists:seq(1, Max)
-        ]))),
-    NotExpression_Length = length(NotExpression),
-    insert_table(notExpression, NotExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses not_expression ~n", [NotExpression_Length])),
-    % --------------------------------------------------------------------------
-    % AndExpression = NotExpression, { SP, (A,N,D), SP, NotExpression } ;
-    % --------------------------------------------------------------------------
-    AndExpression_Prev = case ets:lookup(?CODE_TEMPLATES, andExpression) of
-                             [{_, AndExpression_Exist}] -> AndExpression_Exist;
-                             _ -> []
-                         end,
-    AndExpression = sort_list_random(sets:to_list(sets:from_list(
-        AndExpression_Prev ++
-        [
-                lists:nth(rand:uniform(NotExpression_Length), NotExpression) ++
-                case rand:uniform(?PRIME) rem 3 of
-                    1 ->
-                        ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(NotExpression_Length), NotExpression) ++
-                            ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(NotExpression_Length), NotExpression);
-                    2 ->
-                        ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(NotExpression_Length), NotExpression);
-                    _ -> []
-                end
-            || _ <- lists:seq(1, Max)
-        ]))),
-    AndExpression_Length = length(AndExpression),
-    insert_table(andExpression, AndExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses and_expression ~n", [AndExpression_Length])),
-    % --------------------------------------------------------------------------
-    % XorExpression = AndExpression, { SP, (X,O,R), SP, AndExpression } ;
-    % --------------------------------------------------------------------------
-    XorExpression_Prev = case ets:lookup(?CODE_TEMPLATES, xorExpression) of
-                             [{_, XorExpression_Exist}] -> XorExpression_Exist;
-                             _ -> []
-                         end,
-    XorExpression = sort_list_random(sets:to_list(sets:from_list(
-        XorExpression_Prev ++
-        [
-                lists:nth(rand:uniform(AndExpression_Length), AndExpression) ++
-                case rand:uniform(?PRIME) rem 3 of
-                    1 ->
-                        ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(AndExpression_Length), AndExpression) ++
-                            ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(AndExpression_Length), AndExpression);
-                    2 ->
-                        ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(AndExpression_Length), AndExpression);
-                    _ -> []
-                end
-            || _ <- lists:seq(1, Max)
-        ]))),
-    XorExpression_Length = length(XorExpression),
-    insert_table(xorExpression, XorExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses xor_expression ~n", [XorExpression_Length])),
-    % --------------------------------------------------------------------------
-    % OrExpression = XorExpression, { SP, (O,R), SP, XorExpression } ;
-    % --------------------------------------------------------------------------
-    OrExpression_Prev = case ets:lookup(?CODE_TEMPLATES, orExpression) of
-                            [{_, OrExpression_Exist}] -> OrExpression_Exist;
-                            _ -> []
-                        end,
-    OrExpression = sort_list_random(sets:to_list(sets:from_list(
-        OrExpression_Prev ++
-        [
-                lists:nth(rand:uniform(XorExpression_Length), XorExpression) ++
-                case rand:uniform(?PRIME) rem 3 of
-                    1 ->
-                        ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(XorExpression_Length), XorExpression) ++
-                            ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(XorExpression_Length), XorExpression);
-                    2 ->
-                        ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(XorExpression_Length), XorExpression);
-                    _ -> []
-                end
-            || _ <- lists:seq(1, Max)
-        ]))),
-    OrExpression_Length = length(OrExpression),
-    insert_table(orExpression, OrExpression),
-    erlang:display(io:format("create_code ===> ~5.. B generated clauses or_expression ~n", [OrExpression_Length])),
-    % --------------------------------------------------------------------------
-    % Expression = OrExpression ;
-    % --------------------------------------------------------------------------
-    Expression = sort_list_random(sets:to_list(sets:from_list(lists:append([
-        AddOrSubtractExpression,
-        AndExpression,
-        ComparisonExpression,
-        MultiplyDivideModuloExpression,
-        NotExpression,
-        OrExpression,
-        PowerOfExpression,
-        PropertyOrLabelsExpression,
-        StringListNullOperatorExpression,
-        UnaryAddOrSubtractExpression,
-        XorExpression
-    ])))),
-    insert_table(expression, Expression),
-    Expression.
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Creating EUnit data files.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% UnaryAddOrSubtractExpression = { ('+' | '-'), SP }, StringListNullOperatorExpression ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(unaryAddOrSubtractExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+            case rand:uniform(?PRIME) rem 5 of
+                1 -> "+" ++ ?SP ++ "+" ++ ?SP;
+                2 -> "-" ++ ?SP ++ "-" ++ ?SP;
+                3 -> "+" ++ ?SP;
+                4 -> "-" ++ ?SP;
+                _ -> []
+            end ++
+            lists:nth(rand:uniform(Expression_Length), Expression)
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% XorExpression = AndExpression, { SP, (X,O,R), SP, AndExpression } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(xorExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 ->
+                    ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                2 ->
+                    ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                _ -> []
+            end
+        || _ <- lists:seq(1, Max)
+    ],
+    store_code(Rule, Code, 0, false),
+    store_code(expression, Code, Max, false),
+    ?CREATE_CODE_END.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Creating code of rules ...Expression.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code_expression(Max) ->
+    create_code(propertyOrLabelsExpression, Max),
+    create_code(stringListNullOperatorExpression, Max),
+    create_code(unaryAddOrSubtractExpression, Max),
+    create_code(powerOfExpression, Max),
+    create_code(multiplyDivideModuloExpression, Max),
+    create_code(addOrSubtractExpression, Max),
+    create_code(partialComparisonExpression, Max),
+    create_code(comparisonExpression, Max),
+    create_code(notExpression, Max),
+    create_code(andExpression, Max),
+    create_code(xorExpression, Max),
+    create_code(orExpression, Max).
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Creating EUnit data files.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 file_create_eunit_all([]) ->
     ok;
@@ -2264,7 +2668,8 @@ file_create_eunit_all([Rule | Rules]) ->
     file_create_eunit_all(Rules).
 
 file_create_eunit(Rule) ->
-    [{Rule, Code}] = ets:lookup(?CODE_TEMPLATES, Rule),
+    [{Rule, Code}] = dets:lookup(?CODE_TEMPLATES, Rule),
+    erlang:display(io:format("final eunit  tests ===> ~12.. B type ~s rule: ~s ~n", [length(Code), atom_to_list(reliability), atom_to_list(Rule)])),
     FileName = "reliability_" ++ atom_to_list(Rule) ++ ".tst",
     {ok, File, _} = file:path_open([?PATH_EUNIT], FileName, [write]),
 
@@ -2287,9 +2692,9 @@ file_write_eunit(File, [H | T]) ->
     io:format(File, "~s~n", ["\"" ++ H ++ "\"."]),
     file_write_eunit(File, T).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Creating Common Test data files.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Creating Common Test data files.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 file_create_ct_all(_Type, []) ->
     ok;
@@ -2298,8 +2703,8 @@ file_create_ct_all(Type, [Rule | Rules]) ->
     file_create_ct_all(Type, Rules).
 
 file_create_ct(Type, Rule) ->
-    [{Rule, Code}] = ets:lookup(?CODE_TEMPLATES, Rule),
-    erlang:display(io:format("~5.. B records ===> type: ~s rule: ~s ~n", [length(Code), atom_to_list(Type), atom_to_list(Rule)])),
+    [{Rule, Code}] = dets:lookup(?CODE_TEMPLATES, Rule),
+    erlang:display(io:format("final common tests ===> ~12.. B type: ~s rule: ~s ~n", [length(Code), atom_to_list(Type), atom_to_list(Rule)])),
 
     FileName = atom_to_list(Type) ++ "_" ++ atom_to_list(Rule) ++ "_SUITE",
     {ok, File, _} = file:path_open([?PATH_CT], FileName ++ ".erl", [write]),
@@ -2365,17 +2770,40 @@ file_write_ct(Type, File, [H | T]) ->
                                                                      end]),
     file_write_ct(Type, File, T).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Insert generated code into helper table.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Store generated code in helper table.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-insert_table(Rule, Code) ->
-    ets:insert(?CODE_TEMPLATES, {Rule, Code}).
+store_code(Rule, Code, Max, Sort) ->
+    FRandom = fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end,
+    FSmallest = fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end,
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Randomising unique lists.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    case Max == 0 of
+        true ->
+            ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [length(Code), atom_to_list(Rule)]);
+        _ ->
+            CodeNew = case length(Code) > Max of
+                          true ->
+                              lists:sublist(lists:sort(FSmallest, Code), 1, Max);
+                          _ ->
+                              Code
+                      end,
 
-sort_list_random(L) ->
-    F = fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end,
-    lists:sort(F, sets:to_list(sets:from_list(L))).
+            CodeTotal = sets:to_list(sets:from_list(case dets:lookup(?CODE_TEMPLATES, Rule) of
+                                                        [{Rule, CodeOld}] ->
+                                                            lists:append([CodeOld, CodeNew]);
+                                                        _ ->
+                                                            CodeNew
+                                                    end)),
+
+            CodeSorted = case Sort of
+                             true ->
+                                 lists:sort(FRandom, CodeTotal);
+                             _ ->
+                                 CodeTotal
+                         end,
+
+            dets:insert(?CODE_TEMPLATES, {Rule, CodeSorted}),
+            ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [length(CodeSorted), atom_to_list(Rule)])
+    end.
+

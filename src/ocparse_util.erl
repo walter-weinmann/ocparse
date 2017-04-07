@@ -32,7 +32,7 @@
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {"[" = Type, {expression, _} = Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -43,10 +43,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {"[" = Type, {expression, _} = Value} = ST) -
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {Type ++ ValueNew ++ "]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {"[", [], {expression, _} = Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -57,10 +57,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {"[", [], {expression, _} = Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"[.." ++ ValueNew ++ "]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {"[", {expression, _} = Value, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -71,10 +71,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {"[", {expression, _} = Value, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"[" ++ ValueNew ++ "..]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {"[", {expression, _} = Value1, {expression, _} = Value2} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -90,7 +90,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {"[", {expression, _} = Value1, {expression, 
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ Value1New ++ ".." ++ Value2New ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, {Expression, _, _} = Value} = ST)
     when Expression == andExpression andalso Type == "xor" orelse
@@ -111,7 +111,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {Expression, _, _} = Value} = ST)
             Type == "ends with") orelse
     Expression == unaryAddOrSubtractExpression andalso Type == "^" orelse
     Expression == xorExpression andalso Type == "or" ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -122,7 +122,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {Expression, _, _} = Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {Type ++ " " ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,7 +140,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value, []} = ST)
     Type == stringListNullOperatorExpression;
     Type == unaryAddOrSubtractExpression;
     Type == xorExpression ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -151,12 +151,12 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value, []} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
     when Type == notExpression;
     Type == unaryAddOrSubtractExpression ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -171,8 +171,13 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {ExpressionAddonListNew ++ " " ++ ExpressionNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    RT = {ExpressionAddonListNew ++ case lists:suffix(" ", ExpressionAddonListNew) of
+                                        true ->
+                                            [];
+                                        false ->
+                                            " "
+                                    end ++ ExpressionNew, NewCtx4},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
     when Type == addOrSubtractExpression;
@@ -183,7 +188,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
     Type == powerOfExpression;
     Type == stringListNullOperatorExpression;
     Type == xorExpression ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -199,7 +204,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {ExpressionNew ++ " " ++ ExpressionAddonListNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -218,7 +223,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     Type == unaryAddOrSubtractExpressionAddonList orelse
     Type == xorExpressionAddonList)
     andalso is_list(Values) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -228,7 +233,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
             {Operator, _, _}
                 when Type == comparisonExpressionAddonList andalso Operator == partialComparisonExpression orelse
                 Type == stringListNullOperatorExpressionAddonList andalso Operator == "[" ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
                             0 -> [];
@@ -253,7 +258,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                         Operator == "ends with" orelse
                         Operator == "contains") orelse
                 Type == xorExpressionAddonList andalso Operator == "xor" ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
                             0 -> [];
@@ -263,7 +268,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                 when Type == notExpressionAddonList andalso Operator == "not" orelse
                 Type == stringListNullOperatorExpressionAddonList andalso Operator == "is null" orelse
                 Type == stringListNullOperatorExpressionAddonList andalso Operator == "is not null" ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {Acc ++ case length(Acc) of
                             0 -> [];
                             _ -> " "
@@ -271,8 +276,8 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
             {Operator}
                 when Type == unaryAddOrSubtractExpressionAddonList andalso Operator == "+" orelse
                 Type == unaryAddOrSubtractExpressionAddonList andalso Operator == "-" ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
-                {Acc ++ Operator, CtxAcc}
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                {Acc ++ Operator ++ " ", CtxAcc}
         end
                                        end,
         {[], NewCtx},
@@ -282,7 +287,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValuesNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -303,7 +308,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
     Type == sortItem;
     Type == statement;
     Type == variable ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -314,7 +319,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -330,7 +335,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, _} = Value} = ST)
     Type == patternComprehension;
     Type == terminal;
     Type == variable ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -341,7 +346,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, _} = Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, Value}} = ST)
     when Type == all;
@@ -349,7 +354,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, Value}} = ST)
     Type == filter;
     Type == none;
     Type == single ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -360,10 +365,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, Value}} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {atom_to_list(Type) ++ "(" ++ ValueNew ++ ")", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {atom, {extract = Type, FilterExpression, []}} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -374,10 +379,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {extract = Type, FilterExpression, []}
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {atom_to_list(Type) ++ "(" ++ FilterExpressionNew ++ ")", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {atom, {extract = Type, FilterExpression, Expression}} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -393,13 +398,13 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {extract = Type, FilterExpression, Exp
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {atom_to_list(Type) ++ "(" ++ FilterExpressionNew ++ "|" ++ ExpressionNew ++ ")", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, _, _} = Value} = ST)
     when Type == functionInvocation;
     Type == listComprehension;
     Type == relationshipsPattern ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -410,10 +415,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, _, _} = Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {atom, {functionInvocation, _, _, _} = Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -424,11 +429,11 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {functionInvocation, _, _, _} = Value}
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, _, _, _, _} = Value} = ST)
     when Type == patternComprehension ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -439,7 +444,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, _, _, _, _} = Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -447,7 +452,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, _, _, _, _} = Value} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {booleanLiteral, {terminal, _} = Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -458,7 +463,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {booleanLiteral, {terminal, _} = Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -471,7 +476,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
     Type == numberLiteral andalso (
         SubType == doubleLiteral orelse
             SubType == integerLiteral) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -482,10 +487,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {clause, {create, _} = Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -496,14 +501,14 @@ pt_to_source(FType, Fun, Ctx, Lvl, {clause, {create, _} = Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {clause, {Type, _, _} = Value} = ST)
     when Type == delete;
     Type == merge;
     Type == return;
     Type == unwind ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -514,10 +519,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {clause, {Type, _, _} = Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {clause, {with, _, _, _} = Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -528,10 +533,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {clause, {with, _, _, _} = Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {clause, {match, _, _, _} = Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -542,7 +547,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {clause, {match, _, _, _} = Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -555,7 +560,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     Type == nodeLabels;
     Type == unionList,
     is_list(Values) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -565,7 +570,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
             {ListType, _}
                 when Type == clauseList, ListType == clause;
                 Type == nodeLabels, ListType == nodeLabel ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
                             0 -> [];
@@ -574,7 +579,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
             {ListType, _, _}
                 when Type == mergeActionList, ListType == mergeAction;
                 Type == unionList, ListType == union ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
                             0 -> [];
@@ -589,7 +594,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -597,7 +602,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {create, Pattern} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -608,12 +613,12 @@ pt_to_source(FType, Fun, Ctx, Lvl, {create, Pattern} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"create " ++ PatternNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
     when Type == limit;
     Type == skip ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -624,7 +629,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {atom_to_list(Type) ++ " " ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -632,7 +637,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {cypher, Value, Semicolon} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -643,7 +648,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {cypher, Value, Semicolon} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew ++ Semicolon, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -651,7 +656,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {cypher, Value, Semicolon} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {delete, Detach, ExpressionCommalist} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -665,7 +670,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {delete, Detach, ExpressionCommalist} = ST) -
               [] -> [];
               _ -> "detach "
           end ++ "delete " ++ ExpressionCommalistNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -686,7 +691,7 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {Type, Value} = ST)
     Type == symbolicName orelse
     Type == terminal orelse
     Type == "*" andalso Value == "*" ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -696,7 +701,7 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {Type, Value} = ST)
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {Value, NewCtx1},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -714,7 +719,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     Type == setItemCommalist;
     Type == sortItemCommalist;
     Type == variableCommalist, is_list(Values) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -728,7 +733,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                 Type == returnItemCommalist, ListType == returnItem;
                 Type == sortItemCommalist, ListType == sortItem;
                 Type == variableCommalist, ListType == variable ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
                             0 -> [];
@@ -740,7 +745,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                 Type == returnItemCommalist, ListType == returnItem;
                 Type == setItemCommalist, ListType == setItem;
                 Type == sortItemCommalist, ListType == sortItem ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
                             0 -> [];
@@ -748,7 +753,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                         end ++ SubAcc, CtxAcc1};
             {ListType, _, _, _}
                 when Type == setItemCommalist, ListType == setItem ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
                             0 -> [];
@@ -756,7 +761,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                         end ++ SubAcc, CtxAcc1};
             {{propertyKeyName, _}, {expression, _}}
                 when Type == propertyKeyNameExpressionCommalist ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
                             0 -> [];
@@ -771,7 +776,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -779,7 +784,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {filterExpression, IdInColl, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -790,10 +795,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {filterExpression, IdInColl, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {IdInCollNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {filterExpression, IdInColl, Where} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -809,7 +814,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {filterExpression, IdInColl, Where} = ST) ->
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {IdInCollNew ++ " " ++ WhereNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -817,7 +822,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {filterExpression, IdInColl, Where} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {functionInvocation, FunctionName, Distinct, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -828,11 +833,11 @@ pt_to_source(FType, Fun, Ctx, Lvl, {functionInvocation, FunctionName, Distinct, 
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {FunctionNameNew ++ "(" ++ Distinct ++ ")", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {functionInvocation, FunctionName, Distinct, ExpressionCommalist} = ST)
     when is_list(ExpressionCommalist) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -851,7 +856,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {functionInvocation, FunctionName, Distinct, 
                                         0 -> [];
                                         _ -> Distinct ++ " "
                                     end ++ ExpressionCommalistNew ++ ")", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -859,7 +864,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {functionInvocation, FunctionName, Distinct, 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {idInColl, Variable, Expression} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -875,7 +880,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {idInColl, Variable, Expression} = ST) ->
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {VariableNew ++ " in " ++ ExpressionNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -883,7 +888,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {idInColl, Variable, Expression} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {listComprehension, FilterExpression, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -894,10 +899,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {listComprehension, FilterExpression, []} = S
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"[" ++ FilterExpressionNew ++ "]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {listComprehension, FilterExpression, Expression} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -913,7 +918,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {listComprehension, FilterExpression, Express
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ FilterExpressionNew ++ "|" ++ ExpressionNew ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -923,7 +928,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {listComprehension, FilterExpression, Express
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%pt_to_source(FType, Fun, Ctx, Lvl, {listLiteral, ExpressionCommalist} = ST) ->
-%%    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
 %%    NewCtx = case FType of
 %%                 top_down -> Fun(ST, Ctx);
 %%                 bottom_up -> Ctx
@@ -934,7 +939,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {listComprehension, FilterExpression, Express
 %%                  bottom_up -> Fun(ST, NewCtx1)
 %%              end,
 %%    RT = {"[" ++ ExpressionCommalistNew ++ "]", NewCtx2},
-%%    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
 %%    RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -948,7 +953,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {literal, {Type, _} = Value} = ST)
     Type == numberLiteral;
     Type == stringLiteral;
     Type == terminal ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -959,7 +964,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {literal, {Type, _} = Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -968,7 +973,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {literal, {Type, _} = Value} = ST)
 
 pt_to_source(FType, Fun, Ctx, Lvl, {mapLiteral, Value} = ST)
     when is_list(Value) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -979,7 +984,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {mapLiteral, Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"{" ++ ValueNew ++ "}", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -987,7 +992,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {mapLiteral, Value} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {match, Optional, Pattern, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1001,10 +1006,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {match, Optional, Pattern, []} = ST) ->
               [] -> [];
               _ -> "optional "
           end ++ "match " ++ PatternNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {match, Optional, Pattern, Where} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1023,7 +1028,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {match, Optional, Pattern, Where} = ST) ->
               [] -> [];
               _ -> "optional "
           end ++ "match " ++ PatternNew ++ " " ++ WhereNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1031,7 +1036,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {match, Optional, Pattern, Where} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {merge, PatternPart, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1042,10 +1047,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {merge, PatternPart, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"merge " ++ PatternPartNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {merge, PatternPart, MergeActionList} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1061,7 +1066,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {merge, PatternPart, MergeActionList} = ST) -
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"merge " ++ PatternPartNew ++ " " ++ MergeActionListNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1069,7 +1074,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {merge, PatternPart, MergeActionList} = ST) -
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {mergeAction, Type, Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1080,7 +1085,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {mergeAction, Type, Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"on " ++ Type ++ " " ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1092,7 +1097,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
     Type == properties;
     Type == relType;
     Type == where ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1107,7 +1112,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
               where -> "where ";
               _ -> []
           end ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1115,7 +1120,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, _Lvl, {nodePattern, [], [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1125,10 +1130,10 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {nodePattern, [], [], []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {"()", NewCtx1},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, [], [], Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1139,10 +1144,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, [], [], Properties} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"(" ++ PropertiesNew ++ ")", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, [], NodeLabels, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1153,10 +1158,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, [], NodeLabels, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"(" ++ NodeLabelsNew ++ ")", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, [], NodeLabels, Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1172,10 +1177,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, [], NodeLabels, Properties} = S
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"(" ++ NodeLabelsNew ++ PropertiesNew ++ ")", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1186,10 +1191,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, [], []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"(" ++ VariableNew ++ ")", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, [], Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1205,10 +1210,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, [], Properties} = ST)
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"(" ++ VariableNew ++ " " ++ PropertiesNew ++ ")", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1224,10 +1229,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, []} = ST)
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"(" ++ VariableNew ++ " " ++ NodeLabelsNew ++ ")", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1248,7 +1253,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, Propertie
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {"(" ++ VariableNew ++ " " ++ NodeLabelsNew ++ PropertiesNew ++ ")", NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1256,7 +1261,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, Propertie
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {order, SortItemCommalist} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1267,7 +1272,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {order, SortItemCommalist} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"order by " ++ SortItemCommalistNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1275,7 +1280,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {order, SortItemCommalist} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {parameter, {symbolicName, _} = Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1286,10 +1291,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {parameter, {symbolicName, _} = Value} = ST) 
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"$" ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, _Lvl, {parameter, Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1299,7 +1304,7 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {parameter, Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {"$" ++ Value, NewCtx1},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1307,7 +1312,7 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {parameter, Value} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%pt_to_source(FType, Fun, Ctx, Lvl, {parenthesizedExpression, Value} = ST) ->
-%%    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
 %%    NewCtx = case FType of
 %%                 top_down -> Fun(ST, Ctx);
 %%                 bottom_up -> Ctx
@@ -1318,7 +1323,7 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {parameter, Value} = ST) ->
 %%                  bottom_up -> Fun(ST, NewCtx1)
 %%              end,
 %%    RT = {"(" ++ ValueNew ++ ")", NewCtx2},
-%%    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
 %%    RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1326,7 +1331,7 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {parameter, Value} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {partialComparisonExpression, Value, Terminal} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1337,7 +1342,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {partialComparisonExpression, Value, Terminal
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {Terminal ++ " " ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1346,7 +1351,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {partialComparisonExpression, Value, Terminal
 
 pt_to_source(FType, Fun, Ctx, Lvl, {pattern, Value} = ST)
     when is_list(Value) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1357,7 +1362,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {pattern, Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1365,7 +1370,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {pattern, Value} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, [], RelationshipsPattern, [], Expression} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1381,10 +1386,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, [], RelationshipsPatte
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ RelationshipsPatternNew ++ "|" ++ ExpressionNew ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, [], RelationshipsPattern, WhereExpression, Expression} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1405,10 +1410,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, [], RelationshipsPatte
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {"[" ++ RelationshipsPatternNew ++ " where " ++ WhereExpressionNew ++ "|" ++ ExpressionNew ++ "]", NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, Variable, RelationshipsPattern, [], Expression} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1429,10 +1434,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, Variable, Relationship
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {"[" ++ VariableNew ++ "=" ++ RelationshipsPatternNew ++ "|" ++ ExpressionNew ++ "]", NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, Variable, RelationshipsPattern, WhereExpression, Expression} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1458,7 +1463,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, Variable, Relationship
                   bottom_up -> Fun(ST, NewCtx7)
               end,
     RT = {"[" ++ VariableNew ++ "=" ++ RelationshipsPatternNew ++ " where " ++ WhereExpressionNew ++ "|" ++ ExpressionNew ++ "]", NewCtx8},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1466,7 +1471,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternComprehension, Variable, Relationship
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {patternElement, PatternElement, "("} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1477,10 +1482,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternElement, PatternElement, "("} = ST) -
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"(" ++ PatternElementNew ++ ")", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {patternElement, NodePattern, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1491,10 +1496,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternElement, NodePattern, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {NodePatternNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {patternElement, NodePattern, PatternElementChainList} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1510,7 +1515,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternElement, NodePattern, PatternElementC
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {NodePatternNew ++ PatternElementChainListNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1518,7 +1523,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternElement, NodePattern, PatternElementC
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {patternElementChain, Value_1, Value_2} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1534,7 +1539,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternElementChain, Value_1, Value_2} = ST)
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {Value_1New ++ Value_2New, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1544,7 +1549,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternElementChain, Value_1, Value_2} = ST)
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     when Type == patternElementChainList;
     Type == propertyLookupList, is_list(Values) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1553,12 +1558,12 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
         case F of
             {patternElementChain, _, _}
                 when Type == patternElementChainList ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ SubAcc, CtxAcc1};
             {propertyLookup, _}
                 when Type == propertyLookupList ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ SubAcc, CtxAcc1}
         end
@@ -1570,7 +1575,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1578,7 +1583,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {patternPart, [], Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1589,10 +1594,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternPart, [], Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {patternPart, Value_1, Value_2} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1608,7 +1613,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternPart, Value_1, Value_2} = ST) ->
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {Value_1New ++ "=" ++ Value_2New, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1616,7 +1621,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternPart, Value_1, Value_2} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {propertyExpression, Atom, PropertyLookUpList} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1632,7 +1637,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyExpression, Atom, PropertyLookUpList
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {AtomNew ++ " " ++ PropertyLookUpListNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1640,7 +1645,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyExpression, Atom, PropertyLookUpList
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {{propertyKeyName, _} = PropertyKeyName, {expression, _} = Expression} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1656,7 +1661,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {{propertyKeyName, _} = PropertyKeyName, {exp
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {PropertyKeyNameNew ++ ":" ++ ExpressionNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1664,7 +1669,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {{propertyKeyName, _} = PropertyKeyName, {exp
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {propertyLookup, Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1675,7 +1680,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyLookup, Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"." ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1683,7 +1688,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyLookup, Value} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {propertyOrLabelsExpression, Atom, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1694,11 +1699,11 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyOrLabelsExpression, Atom, []} = ST) 
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {AtomNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {propertyOrLabelsExpression, Atom, Addons} = ST)
     when is_list(Addons) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1711,11 +1716,11 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyOrLabelsExpression, Atom, Addons} = 
     {AddonsNew, NewCtx3} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
         case F of
             {nodeLabels, _} ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ SubAcc, CtxAcc1};
             {propertyLookup, _} ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ SubAcc, CtxAcc1}
         end
@@ -1727,7 +1732,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyOrLabelsExpression, Atom, Addons} = 
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {AtomNew ++ " " ++ AddonsNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1735,7 +1740,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyOrLabelsExpression, Atom, Addons} = 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, _Lvl, {rangeLiteral, [], [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1745,10 +1750,10 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {rangeLiteral, [], [], []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {"*", NewCtx1},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, _Lvl, {rangeLiteral, [], ".." = Op, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1758,10 +1763,10 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {rangeLiteral, [], ".." = Op, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {"*" ++ Op, NewCtx1},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, [], ".." = Op, Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1772,10 +1777,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, [], ".." = Op, Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"*" ++ Op ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value, [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1786,10 +1791,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value, [], []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"*" ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value, ".." = Op, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1800,10 +1805,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value, ".." = Op, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"*" ++ ValueNew ++ Op, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value_1, ".." = Op, Value_2} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1819,7 +1824,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value_1, ".." = Op, Value_2} =
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"*" ++ Value_1New ++ Op ++ Value_2New, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1827,7 +1832,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value_1, ".." = Op, Value_2} =
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {regularQuery, SingularQuery, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1838,10 +1843,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {regularQuery, SingularQuery, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {SingularQueryNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {regularQuery, SingularQuery, UnionList} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1857,7 +1862,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {regularQuery, SingularQuery, UnionList} = ST
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {SingularQueryNew ++ " " ++ UnionListNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1865,7 +1870,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {regularQuery, SingularQuery, UnionList} = ST
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, _Lvl, {relationshipDetail, [], [], [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1875,10 +1880,10 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {relationshipDetail, [], [], [], []} = ST) -
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {"[]", NewCtx1},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], [], Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1889,10 +1894,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], [], Properties} 
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"[" ++ PropertiesNew ++ "]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], RangeLiteral, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1903,10 +1908,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], RangeLiteral, []
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"[" ++ RangeLiteralNew ++ "]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], RangeLiteral, Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1922,10 +1927,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], [], RangeLiteral, Pr
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1936,10 +1941,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, [
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"[" ++ RelationshipTypesNew ++ "]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, [], Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1955,10 +1960,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, [
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ RelationshipTypesNew ++ PropertiesNew ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, RangeLiteral, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1974,10 +1979,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, R
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ RelationshipTypesNew ++ RangeLiteralNew ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, RangeLiteral, Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -1998,10 +2003,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, [], RelationshipTypes, R
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {"[" ++ RelationshipTypesNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2012,10 +2017,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], [], []} = 
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"[" ++ VariableNew ++ "]", NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], [], Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2031,10 +2036,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], [], Proper
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ VariableNew ++ PropertiesNew ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], RangeLiteral, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2050,10 +2055,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], RangeLiter
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ VariableNew ++ RangeLiteralNew ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], RangeLiteral, Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2074,10 +2079,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, [], RangeLiter
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {"[" ++ VariableNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTypes, [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2093,10 +2098,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTy
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"[" ++ VariableNew ++ RelationshipTypesNew ++ "]", NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTypes, [], Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2117,10 +2122,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTy
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {"[" ++ VariableNew ++ RelationshipTypesNew ++ PropertiesNew ++ "]", NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTypes, RangeLiteral, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2141,10 +2146,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTy
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {"[" ++ VariableNew ++ RelationshipTypesNew ++ RangeLiteralNew ++ "]", NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTypes, RangeLiteral, Properties} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2170,7 +2175,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTy
                   bottom_up -> Fun(ST, NewCtx7)
               end,
     RT = {"[" ++ VariableNew ++ RelationshipTypesNew ++ RangeLiteralNew ++ PropertiesNew ++ "]", NewCtx8},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2178,7 +2183,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipDetail, Variable, RelationshipTy
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, _Lvl, {relationshipPattern, Left, [], Right} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2188,10 +2193,10 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {relationshipPattern, Left, [], Right} = ST)
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {Left ++ Right, NewCtx1},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipPattern, Left, Value, Right} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2202,7 +2207,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipPattern, Left, Value, Right} = S
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {Left ++ ValueNew ++ Right, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2210,7 +2215,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipPattern, Left, Value, Right} = S
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipsPattern, NodePattern, PatternElementChainList} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2226,7 +2231,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipsPattern, NodePattern, PatternEl
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {NodePatternNew ++ PatternElementChainListNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2234,7 +2239,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipsPattern, NodePattern, PatternEl
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {relationshipTypes, RelType, RelTypeVerticalbarlist} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2250,7 +2255,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipTypes, RelType, RelTypeVerticalb
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {":" ++ RelTypeNew ++ RelTypeVerticalbarlistNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2259,7 +2264,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipTypes, RelType, RelTypeVerticalb
 
 pt_to_source(FType, Fun, Ctx, Lvl, {relTypeVerticalbarlist, Values} = ST)
     when is_list(Values) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2267,7 +2272,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relTypeVerticalbarlist, Values} = ST)
     {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
         case F of
             {{relTypeName, _} = RTN, Colon} ->
-                ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, RTN),
                 {Acc ++ "|" ++ Colon ++ SubAcc, CtxAcc1}
         end
@@ -2279,7 +2284,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relTypeVerticalbarlist, Values} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2287,7 +2292,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relTypeVerticalbarlist, Values} = ST)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {remove, Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2298,7 +2303,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {remove, Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"remove " ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2306,7 +2311,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {remove, Value} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {removeItem, Value_1, Value_2} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2322,7 +2327,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {removeItem, Value_1, Value_2} = ST) ->
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {Value_1New ++ Value_2New, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2330,7 +2335,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {removeItem, Value_1, Value_2} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {return, Distinct, ReturnBody} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2344,7 +2349,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {return, Distinct, ReturnBody} = ST) ->
                            [] -> [];
                            _ -> "distinct "
                        end ++ ReturnBodyNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2352,7 +2357,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {return, Distinct, ReturnBody} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, [], [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2363,10 +2368,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, [], [], []} = ST) -
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ReturnItemsNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, [], [], Limit} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2382,10 +2387,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, [], [], Limit} = ST
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {ReturnItemsNew ++ " " ++ LimitNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, [], Skip, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2401,10 +2406,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, [], Skip, []} = ST)
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {ReturnItemsNew ++ " " ++ SkipNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, [], Skip, Limit} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2425,10 +2430,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, [], Skip, Limit} = 
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {ReturnItemsNew ++ " " ++ SkipNew ++ " " ++ LimitNew, NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, [], []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2444,10 +2449,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, [], []} = ST
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {ReturnItemsNew ++ " " ++ OrderNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, [], Limit} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2468,10 +2473,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, [], Limit} =
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {ReturnItemsNew ++ " " ++ OrderNew ++ " " ++ LimitNew, NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, Skip, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2492,10 +2497,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, Skip, []} = 
                   bottom_up -> Fun(ST, NewCtx5)
               end,
     RT = {ReturnItemsNew ++ " " ++ OrderNew ++ " " ++ SkipNew, NewCtx6},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, Skip, Limit} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2521,7 +2526,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, Skip, Limit}
                   bottom_up -> Fun(ST, NewCtx7)
               end,
     RT = {ReturnItemsNew ++ " " ++ OrderNew ++ " " ++ SkipNew ++ " " ++ LimitNew, NewCtx8},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2529,7 +2534,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnBody, ReturnItems, Order, Skip, Limit}
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {returnItem, Expression, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2540,10 +2545,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnItem, Expression, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ExpressionNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnItem, Expression, Variable} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2559,7 +2564,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnItem, Expression, Variable} = ST) ->
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {ExpressionNew ++ " as " ++ VariableNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2567,7 +2572,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnItem, Expression, Variable} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, _Lvl, {returnItems, Asterik, Comma, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2577,10 +2582,10 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {returnItems, Asterik, Comma, []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {Asterik ++ Comma, NewCtx1},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {returnItems, Asterik, Comma, ReturnItemCommalist} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2591,7 +2596,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnItems, Asterik, Comma, ReturnItemComma
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {Asterik ++ Comma ++ ReturnItemCommalistNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2599,7 +2604,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {returnItems, Asterik, Comma, ReturnItemComma
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {set, Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2610,7 +2615,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {set, Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"set " ++ ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2618,7 +2623,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {set, Value} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {setItem, Value_1, Operation, Value_2} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2637,7 +2642,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {setItem, Value_1, Operation, Value_2} = ST) 
                             [] -> [];
                             _ -> " " ++ Operation ++ " "
                         end ++ Value_2New, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2645,7 +2650,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {setItem, Value_1, Operation, Value_2} = ST) 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {singleQuery, Value} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2656,7 +2661,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {singleQuery, Value} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2664,7 +2669,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {singleQuery, Value} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {sortItem, Value, Type} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2678,7 +2683,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {sortItem, Value, Type} = ST) ->
                           [] -> [];
                           _ -> " "
                       end ++ Type, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2686,7 +2691,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {sortItem, Value, Type} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {union, All, SingleQuery} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2700,7 +2705,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {union, All, SingleQuery} = ST) ->
                           0 -> [];
                           _ -> All ++ " "
                       end ++ SingleQueryNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2708,7 +2713,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {union, All, SingleQuery} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {unwind, Expression, Variable} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2724,7 +2729,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {unwind, Expression, Variable} = ST) ->
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {"unwind " ++ ExpressionNew ++ " as " ++ VariableNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2732,7 +2737,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {unwind, Expression, Variable} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {with, Distinct, ReturnBody, []} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2746,10 +2751,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {with, Distinct, ReturnBody, []} = ST) ->
                          [] -> [];
                          _ -> "distinct "
                      end ++ ReturnBodyNew, NewCtx2},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {with, Distinct, ReturnBody, Where} = ST) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
@@ -2768,7 +2773,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {with, Distinct, ReturnBody, Where} = ST) ->
                          [] -> [];
                          _ -> "distinct "
                      end ++ ReturnBodyNew ++ " " ++ WhereNew, NewCtx4},
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2776,6 +2781,6 @@ pt_to_source(FType, Fun, Ctx, Lvl, {with, Distinct, ReturnBody, Where} = ST) ->
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(_FType, Fun, Ctx, _Lvl, PTree) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":pt_to_source/5 ===> Start ~p~n PTree: ~p~n", [_Lvl, PTree]),
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n PTree: ~p~n", [_Lvl, PTree]),
     Fun(PTree, Ctx),
     throw({"Parse tree not supported", PTree}).

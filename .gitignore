@@ -1,4 +1,6 @@
+*.log
 _build
+code_templates
 erl_crash.dump
 rebar.lock
 rebar3.crashdump

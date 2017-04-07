@@ -77,10 +77,10 @@ common_test_source(Source) ->
                       {ok, {NPT_TD, NT_TD}} = ?PARSER_MODULE:source_to_pt(NSource_TD),
                       {ok, {NPT_TD, NT_TD}}
                   catch
-                      _:_ ->
-                          ct:pal("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : Source   ~n > ~p", [Source]),
-                          ct:pal("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : NewSource~n > ~p", [NSource_TD]),
-                          throw({error, "[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt"})
+                      ExceptionTD:ReasonTD ->
+                          ct:pal("~n[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt : Source   ~n > ~p", [Source]),
+                          ct:pal("~n[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt : NewSource~n > ~p", [NSource_TD]),
+                          throw({error, "[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt " ++ atom_to_list(ExceptionTD) ++ " : " ++ ReasonTD})
                   end,
             if ParseTree /= NPTree_TD ->
                 ct:pal("~n[TD] Error ParseTree = NPTree : Source      ~n > ~p", [Source]),
@@ -130,10 +130,10 @@ common_test_source(Source) ->
                       {ok, {NPT_BU, NT_BU}} = ?PARSER_MODULE:source_to_pt(NSource_BU),
                       {ok, {NPT_BU, NT_BU}}
                   catch
-                      _:_ ->
-                          ct:pal("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : Source   ~n > ~p", [Source]),
-                          ct:pal("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : NewSource~n > ~p", [NSource_BU]),
-                          throw({error, "[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt"})
+                      ExceptionBU:ReasonBU ->
+                          ct:pal("~n[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt : Source   ~n > ~p", [Source]),
+                          ct:pal("~n[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt : NewSource~n > ~p", [NSource_BU]),
+                          throw({error, "[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt " ++ atom_to_list(ExceptionBU) ++ " : " ++ ReasonBU})
                   end,
             if ParseTree /= NPTree_BU ->
                 ct:pal("~n[BU] Error ParseTree = NPTree : Source      ~n > ~p", [Source]),
@@ -184,16 +184,16 @@ eunit_test_() ->
                    end;
                _ -> [0]
            end,
-    ?debugFmt(atom_to_list(?MODULE) ++ ":eunit_test_ ===>~nFile = ~s, Logs = ~p~n", [WCard, Logs]),
+    ?debugFmt(?MODULE_STRING ++ ":eunit_test_ ===>~nFile = ~s, Logs = ~p~n", [WCard, Logs]),
     {ok, Cwd} = file:get_cwd(),
-    ?debugFmt(atom_to_list(?MODULE) ++ ":eunit_test_ ===>~nCwd: ~p~n", [Cwd]),
+    ?debugFmt(?MODULE_STRING ++ ":eunit_test_ ===>~nCwd: ~p~n", [Cwd]),
     RootPath = lists:reverse(filename:split(Cwd)),
-    ?debugFmt(atom_to_list(?MODULE) ++ ":eunit_test_ ===>~nRootPath: ~p~n", [RootPath]),
+    ?debugFmt(?MODULE_STRING ++ ":eunit_test_ ===>~nRootPath: ~p~n", [RootPath]),
     TestDir = filename:join(lists:reverse(["test" | RootPath])),
-    ?debugFmt(atom_to_list(?MODULE) ++ ":eunit_test_ ===>~nTestDir: ~p~n", [TestDir]),
+    ?debugFmt(?MODULE_STRING ++ ":eunit_test_ ===>~nTestDir: ~p~n", [TestDir]),
     TestFiles = lists:sort([filename:join(TestDir, T)
         || T <- filelib:wildcard(WCard, TestDir)]),
-    ?debugFmt(atom_to_list(?MODULE) ++ ":eunit_test_ ===>~nTestFiles: ~p~n", [TestFiles]),
+    ?debugFmt(?MODULE_STRING ++ ":eunit_test_ ===>~nTestFiles: ~p~n", [TestFiles]),
     group_gen(TestFiles, Logs).
 
 %%------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ eunit_test_() ->
 -define(D5(__Fmt, __Args), ?D(5, __Fmt, __Args)).
 
 eunit_test_source(_TestGroup, Source, Logs) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":eunit_test_source ===>~nTestGroup = ~p~n, Source = ~p~n, Logs = ~p~n", [_TestGroup, Source, Logs]),
+    ?debugFmt(?MODULE_STRING ++ ":eunit_test_source ===>~nTestGroup = ~p~n, Source = ~p~n, Logs = ~p~n", [_TestGroup, Source, Logs]),
     ?D1("~n[TD] Source~n~s", [Source]),
     %% -------------------------------------------------------------------------
     %% 1. Source ==> ParseTree
@@ -265,11 +265,13 @@ eunit_test_source(_TestGroup, Source, Logs) ->
                       {ok, {NPT_TD, NT_TD}} = ?PARSER_MODULE:source_to_pt(NSource_TD),
                       {ok, {NPT_TD, NT_TD}}
                   catch
-                      _:_ ->
-                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : Source   ~n > ~p", [Source]),
-                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : TestGroup~n > ~p", [_TestGroup]),
-                          ?D_("~n[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : NewSource~n > ~p", [NSource_TD]),
-                          throw({error, "[TD] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt"})
+                      ExceptionTD:ReasonTD ->
+                          ?D_("~n[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt : Source   ~n > ~p", [Source]),
+                          ?D_("~n[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt : TestGroup~n > ~p", [_TestGroup]),
+                          ?D_("~n[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt : NewSource~n > ~p", [NSource_TD]),
+                          ?D_("~n[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt : Exception~n > ~p", [ExceptionTD]),
+                          ?D_("~n[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt : Reason   ~n > ~p", [ReasonTD]),
+                          throw({error, "[TD] Error " ++ ?MODULE_STRING ++ ":source_to_pt"})
                   end,
             if ParseTree /= NPTree_TD ->
                 ?D_("~n[TD] Error ParseTree = NPTree : Source      ~n > ~p", [Source]),
@@ -320,11 +322,13 @@ eunit_test_source(_TestGroup, Source, Logs) ->
                       {ok, {NPT_BU, NT_BU}} = ?PARSER_MODULE:source_to_pt(NSource_BU),
                       {ok, {NPT_BU, NT_BU}}
                   catch
-                      _:_ ->
-                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : Source   ~n > ~p", [Source]),
-                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : TestGroup~n > ~p", [_TestGroup]),
-                          ?D_("~n[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt : NewSource~n > ~p", [NSource_BU]),
-                          throw({error, "[BU] Error " ++ atom_to_list(?MODULE) ++ ":source_to_pt"})
+                      ExceptionBU:ReasonBU ->
+                          ?D_("~n[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt : Source   ~n > ~p", [Source]),
+                          ?D_("~n[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt : TestGroup~n > ~p", [_TestGroup]),
+                          ?D_("~n[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt : NewSource~n > ~p", [NSource_BU]),
+                          ?D_("~n[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt : Exception~n > ~p", [ExceptionBU]),
+                          ?D_("~n[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt : Reason   ~n > ~p", [ReasonBU]),
+                          throw({error, "[BU] Error " ++ ?MODULE_STRING ++ ":source_to_pt"})
                   end,
             if ParseTree /= NPTree_BU ->
                 ?D_("~n[BU] Error ParseTree = NPTree : Source      ~n > ~p", [Source]),
@@ -359,7 +363,7 @@ eunit_test_source(_TestGroup, Source, Logs) ->
 %%------------------------------------------------------------------------------
 
 group_gen(TestFiles, Logs) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":group_gen ===>~nTestFiles = ~s, Logs = ~p~n", [TestFiles, Logs]),
+    ?debugFmt(?MODULE_STRING ++ ":group_gen ===>~nTestFiles = ~s, Logs = ~p~n", [TestFiles, Logs]),
     {generator,
         fun() ->
             case TestFiles of
@@ -426,7 +430,7 @@ is_whitespace([Curr | Tail], Char) ->
 %%------------------------------------------------------------------------------
 
 tests_gen(TestGroup, Tests, Opts, Logs) ->
-    ?debugFmt(atom_to_list(?MODULE) ++ ":tests_gen ===>~nTestGroup = ~p~n, Tests = ~p~n, Opts = ~p~n, Logs = ~p~n", [TestGroup, Tests, Opts, Logs]),
+    ?debugFmt(?MODULE_STRING ++ ":tests_gen ===>~nTestGroup = ~p~n, Tests = ~p~n, Opts = ~p~n, Logs = ~p~n", [TestGroup, Tests, Opts, Logs]),
     SelTests = case proplists:get_value(tests, Opts) of
                    St when St =:= undefined; St =:= [] ->
                        {Indices, _} = lists:unzip(Tests),
