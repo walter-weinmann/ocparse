@@ -43,8 +43,10 @@
     unwind,
     with
 ]).
+
 -define(ALL_CLAUSE_EUNIT, [
 ]).
+
 -define(CODE_TEMPLATES, code_templates).
 -define(CREATE_CODE_END,
     [_CodeFirst | _] = Code,
@@ -2215,28 +2217,32 @@ create_code(with = Rule) ->
 
 create_code(addOrSubtractExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{multiplyDivideModuloExpression, MultiplyDivideModuloExpression}] = dets:lookup(?CODE_TEMPLATES, multiplyDivideModuloExpression),
+    MultiplyDivideModuloExpression_Length = length(MultiplyDivideModuloExpression),
 
     Code = [
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression) ++
             case rand:uniform(?PRIME) rem 5 of
                 1 ->
-                    ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression) ++
+                        ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression);
                 2 ->
-                    ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression) ++
+                        ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression);
                 3 ->
-                    ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "+" ++ ?SP_OPT ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression);
                 4 ->
-                    ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "-" ++ ?SP ++ lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression);
                 _ -> []
             end
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
+    store_code(andExpression, Code, Max, false),
+    store_code(notExpression, Code, Max, false),
+    store_code(comparisonExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2245,23 +2251,24 @@ create_code(addOrSubtractExpression = Rule, Max) ->
 
 create_code(andExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{notExpression, NotExpression}] = dets:lookup(?CODE_TEMPLATES, notExpression),
+    NotExpression_Length = length(NotExpression),
 
     Code = [
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            lists:nth(rand:uniform(NotExpression_Length), NotExpression) ++
             case rand:uniform(?PRIME) rem 3 of
                 1 ->
-                    ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(NotExpression_Length), NotExpression) ++
+                        ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(NotExpression_Length), NotExpression);
                 2 ->
-                    ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP ++ "And" ++ ?SP ++ lists:nth(rand:uniform(NotExpression_Length), NotExpression);
                 _ -> []
             end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2271,26 +2278,28 @@ create_code(andExpression = Rule, Max) ->
 create_code(comparisonExpression = Rule, Max) ->
     ?CREATE_CODE_START,
     [{addOrSubtractExpression, AddOrSubtractExpression}] = dets:lookup(?CODE_TEMPLATES, addOrSubtractExpression),
-    dets:delete(?CODE_TEMPLATES, addOrSubtractExpression),
     AddOrSubtractExpression_Length = length(AddOrSubtractExpression),
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{partialComparisonExpression, PartialComparisonExpression}] = dets:lookup(?CODE_TEMPLATES, partialComparisonExpression),
+    PartialComparisonExpression_Length = length(PartialComparisonExpression),
 
     Code = [
             lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression) ++
             case rand:uniform(?PRIME) rem 3 of
                 1 -> ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression) ++
                     ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression);
                 2 -> ?SP_OPT ++
-                lists:nth(rand:uniform(Expression_Length), Expression);
+                lists:nth(rand:uniform(PartialComparisonExpression_Length), PartialComparisonExpression);
                 _ -> []
             end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
+    store_code(andExpression, Code, Max, false),
+    store_code(notExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2299,33 +2308,38 @@ create_code(comparisonExpression = Rule, Max) ->
 
 create_code(multiplyDivideModuloExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{powerOfExpression, PowerOfExpression}] = dets:lookup(?CODE_TEMPLATES, powerOfExpression),
+    PowerOfExpression_Length = length(PowerOfExpression),
 
     Code = [
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
             case rand:uniform(?PRIME) rem 7 of
                 1 ->
-                    ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
+                        ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
                 2 ->
-                    ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
+                        ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
                 3 ->
-                    ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
+                        ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
                 4 ->
-                    ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "*" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
                 5 ->
-                    ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "/" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
                 6 ->
-                    ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "%" ++ ?SP_OPT ++ lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression);
                 _ -> []
             end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
+    store_code(andExpression, Code, Max, false),
+    store_code(notExpression, Code, Max, false),
+    store_code(comparisonExpression, Code, Max, false),
+    store_code(addOrSubtractExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2337,8 +2351,8 @@ create_code(multiplyDivideModuloExpression = Rule, Max) ->
 
 create_code(notExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{comparisonExpression, ComparisonExpression}] = dets:lookup(?CODE_TEMPLATES, comparisonExpression),
+    ComparisonExpression_Length = length(ComparisonExpression),
 
     Code = [
             case rand:uniform(?PRIME) rem 3 of
@@ -2346,11 +2360,13 @@ create_code(notExpression = Rule, Max) ->
                 2 -> "Not" ++ ?SP;
                 _ -> []
             end ++
-            lists:nth(rand:uniform(Expression_Length), Expression)
+            lists:nth(rand:uniform(ComparisonExpression_Length), ComparisonExpression)
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
+    store_code(andExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2359,22 +2375,21 @@ create_code(notExpression = Rule, Max) ->
 
 create_code(orExpression = _Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{xorExpression, XorExpression}] = dets:lookup(?CODE_TEMPLATES, xorExpression),
+    XorExpression_Length = length(XorExpression),
 
     Code = [
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            lists:nth(rand:uniform(XorExpression_Length), XorExpression) ++
             case rand:uniform(?PRIME) rem 3 of
                 1 ->
-                    ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(XorExpression_Length), XorExpression) ++
+                        ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(XorExpression_Length), XorExpression);
                 2 ->
-                    ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP ++ "Or" ++ ?SP ++ lists:nth(rand:uniform(XorExpression_Length), XorExpression);
                 _ -> []
             end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(expression, Code, 0, false),
     store_code(expression, Code, Max, false),
     ?CREATE_CODE_END_RULE;
 
@@ -2390,30 +2405,29 @@ create_code(orExpression = _Rule, Max) ->
 
 create_code(partialComparisonExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{addOrSubtractExpression, AddOrSubtractExpression}] = dets:lookup(?CODE_TEMPLATES, addOrSubtractExpression),
+    AddOrSubtractExpression_Length = length(AddOrSubtractExpression),
 
     Code = [
         case rand:uniform(?PRIME) rem 7 of
             1 ->
-                "=" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                "=" ++ ?SP_OPT ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
             2 ->
-                "<>" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                "<>" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
             3 ->
-                "!=" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                "!=" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
             4 ->
-                "<" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                "<" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
             5 ->
-                ">" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                ">" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
             6 ->
-                "<=" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                "<=" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression);
             _ ->
-                ">=" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression)
+                ">=" ++ ?SP ++ lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression)
         end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
-    store_code(expression, Code, Max, false),
+    store_code(Rule, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2422,23 +2436,29 @@ create_code(partialComparisonExpression = Rule, Max) ->
 
 create_code(powerOfExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{unaryAddOrSubtractExpression, UnaryAddOrSubtractExpression}] = dets:lookup(?CODE_TEMPLATES, unaryAddOrSubtractExpression),
+    UnaryAddOrSubtractExpression_Length = length(UnaryAddOrSubtractExpression),
 
     Code = [
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression) ++
             case rand:uniform(?PRIME) rem 3 of
                 1 ->
-                    ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression) ++
+                        ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression);
                 2 ->
-                    ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP_OPT ++ "^" ++ ?SP_OPT ++ lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression);
                 _ -> []
             end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
+    store_code(andExpression, Code, Max, false),
+    store_code(notExpression, Code, Max, false),
+    store_code(comparisonExpression, Code, Max, false),
+    store_code(addOrSubtractExpression, Code, Max, false),
+    store_code(multiplyDivideModuloExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2474,8 +2494,17 @@ create_code(propertyOrLabelsExpression = Rule, Max) ->
             end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
+    store_code(andExpression, Code, Max, false),
+    store_code(notExpression, Code, Max, false),
+    store_code(comparisonExpression, Code, Max, false),
+    store_code(addOrSubtractExpression, Code, Max, false),
+    store_code(multiplyDivideModuloExpression, Code, Max, false),
+    store_code(powerOfExpression, Code, Max, false),
+    store_code(unaryAddOrSubtractExpression, Code, Max, false),
+    store_code(stringListNullOperatorExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2492,8 +2521,8 @@ create_code(propertyOrLabelsExpression = Rule, Max) ->
 
 create_code(stringListNullOperatorExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{propertyOrLabelsExpression, PropertyOrLabelsExpression}] = dets:lookup(?CODE_TEMPLATES, propertyOrLabelsExpression),
+    PropertyOrLabelsExpression_Length = length(PropertyOrLabelsExpression),
 
 %%       currently not supported    
 %%       [
@@ -2502,92 +2531,100 @@ create_code(stringListNullOperatorExpression = Rule, Max) ->
 %%        ],
 
     Code = [
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
             case rand:uniform(?PRIME) rem 23 of
                 1 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]" ++
                     ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]";
                 2 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ".." ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]" ++
                     ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ".." ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]";
                 3 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ".." ++ "]" ++
                     ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ".." ++ "]";
                 4 -> ?SP_OPT ++ "[" ++ ".." ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]" ++
                     ?SP_OPT ++ "[" ++ ".." ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]";
                 5 -> ?SP ++ "=~" ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ?SP ++ "=~" ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 6 -> ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 7 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 8 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 9 -> ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 10 -> ?SP ++ "Is" ++ ?SP ++ "Null" ++
                     ?SP ++ "Is" ++ ?SP ++ "Null";
                 11 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null" ++
                     ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
                 12 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]";
                 13 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ".." ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]";
                 14 -> ?SP_OPT ++ "[" ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     ".." ++ "]";
                 15 -> ?SP_OPT ++ "[" ++
-                    ".." ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                    ".." ++ lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression) ++
                     "]";
                 16 -> ?SP ++ "=~" ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 17 -> ?SP ++ "In" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 18 -> ?SP ++ "Starts" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 19 -> ?SP ++ "Ends" ++ ?SP ++ "With" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 20 -> ?SP ++ "Contains" ++ ?SP ++ ?SP_OPT ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(PropertyOrLabelsExpression_Length), PropertyOrLabelsExpression);
                 21 -> ?SP ++ "Is" ++ ?SP ++ "Null";
                 22 -> ?SP ++ "Is" ++ ?SP ++ "Not" ++ ?SP ++ "Null";
                 _ -> []
             end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
+    store_code(andExpression, Code, Max, false),
+    store_code(notExpression, Code, Max, false),
+    store_code(comparisonExpression, Code, Max, false),
+    store_code(addOrSubtractExpression, Code, Max, false),
+    store_code(multiplyDivideModuloExpression, Code, Max, false),
+    store_code(powerOfExpression, Code, Max, false),
+    store_code(unaryAddOrSubtractExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2596,8 +2633,8 @@ create_code(stringListNullOperatorExpression = Rule, Max) ->
 
 create_code(unaryAddOrSubtractExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{stringListNullOperatorExpression, StringListNullOperatorExpression}] = dets:lookup(?CODE_TEMPLATES, stringListNullOperatorExpression),
+    StringListNullOperatorExpression_Length = length(StringListNullOperatorExpression),
 
     Code = [
             case rand:uniform(?PRIME) rem 5 of
@@ -2607,11 +2644,18 @@ create_code(unaryAddOrSubtractExpression = Rule, Max) ->
                 4 -> "-" ++ ?SP;
                 _ -> []
             end ++
-            lists:nth(rand:uniform(Expression_Length), Expression)
+            lists:nth(rand:uniform(StringListNullOperatorExpression_Length), StringListNullOperatorExpression)
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
+    store_code(xorExpression, Code, Max, false),
+    store_code(andExpression, Code, Max, false),
+    store_code(notExpression, Code, Max, false),
+    store_code(comparisonExpression, Code, Max, false),
+    store_code(addOrSubtractExpression, Code, Max, false),
+    store_code(multiplyDivideModuloExpression, Code, Max, false),
+    store_code(powerOfExpression, Code, Max, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2620,22 +2664,22 @@ create_code(unaryAddOrSubtractExpression = Rule, Max) ->
 
 create_code(xorExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{andExpression, AndExpression}] = dets:lookup(?CODE_TEMPLATES, andExpression),
+    AndExpression_Length = length(AndExpression),
 
     Code = [
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            lists:nth(rand:uniform(AndExpression_Length), AndExpression) ++
             case rand:uniform(?PRIME) rem 3 of
                 1 ->
-                    ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(AndExpression_Length), AndExpression) ++
+                        ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(AndExpression_Length), AndExpression);
                 2 ->
-                    ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                    ?SP ++ "Xor" ++ ?SP ++ lists:nth(rand:uniform(AndExpression_Length), AndExpression);
                 _ -> []
             end
         || _ <- lists:seq(1, Max)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, Max, false),
     store_code(expression, Code, Max, false),
     ?CREATE_CODE_END.
 
