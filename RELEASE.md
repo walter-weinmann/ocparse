@@ -219,11 +219,12 @@ New: XorExpression = AndExpression, { SP, (X,O,R), SP, AndExpression } ;
 Old: Expression11 = Expression10, { SP, (X,O,R), SP, Expression10 } ;
 ```
 
-### New features
+### Features modified
 
-- ???.
+- Refactoring of the test data generator (`ocparse_generator`) in order to modularize.
+- Refactoring of the test driver (`ocparse_test.erl`) to facilitate the error analysis.
 
-### Omitted features
+### Features omitted
 
 - Legacy version support is discontinued.
 
@@ -574,7 +575,7 @@ Release Date: 11.11.2016 - Grammar as of 10.11.2016
 
 There are no relevant grammar changes available.
 
-### New features
+### Features new
 
 - Support of rebar3.
 
@@ -859,7 +860,7 @@ New: RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | Deci
 Old: RegularDecimalReal = ['-'], { Digit }, '.', DigitString ;
 ```
 
-### New features
+### Features new
 
 1. Test data generator for generating generic tests.
 2. Script for generic stress tests.
@@ -917,7 +918,7 @@ Release Date: 08.07.2016
 2. Test case removed, since multiple statements are not supported (see [openParser #113](https://github.com/opencypher/openCypher/issues/113)).
 3. PropertyKeyNameExpression removed from parse tree.
 
-### New features
+### Features new
 
 1. Support of the legacy grammar.
 
