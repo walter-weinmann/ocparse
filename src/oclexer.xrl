@@ -54,7 +54,7 @@ Rules.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% punctuation
-(\.\.|\-\-|\+=|\<\-\-\>|\<\-\-|\-\-\>)                    : {token, {list_to_atom(TokenChars), TokenLine}}.
+(\.\.|\+=)                                                : {token, {list_to_atom(TokenChars), TokenLine}}.
 (=~|\<\>|!=|\<=|\>=)                                      : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([\^\.\|\*\+\(\)\[\]\{\}\-])                              : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([=\<\>/%:,;0\$])                                         : {token, {list_to_atom(TokenChars), TokenLine}}.
@@ -146,7 +146,6 @@ Erlang code.
     {"^(?i)(ORDER)$",            'ORDER'},
     {"^(?i)(PERIODIC)$",         'PERIODIC'},
     {"^(?i)(PROFILE)$",          'PROFILE'},
-    {"^(?i)(REDUCE)$",           'REDUCE'},
     {"^(?i)(REL)$",              'REL'},
     {"^(?i)(RELATIONSHIP)$",     'RELATIONSHIP'},
     {"^(?i)(REMOVE)$",           'REMOVE'},

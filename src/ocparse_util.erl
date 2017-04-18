@@ -31,6 +31,19 @@
 % and, contains, ends with, in, or, starts with, xor, +, -, *, /, %, ^, [, ..
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+pt_to_source(FType, Fun, Ctx, _Lvl, {"[", [], []} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {"[..]", NewCtx1},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {"[" = Type, {expression, _} = Value} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
@@ -923,24 +936,22 @@ pt_to_source(FType, Fun, Ctx, Lvl, {listComprehension, FilterExpression, Express
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % listLiteral
-% ------------------------------------------------------------------------------
-% !!! Currently not supported !!!
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%pt_to_source(FType, Fun, Ctx, Lvl, {listLiteral, ExpressionCommalist} = ST) ->
-%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-%%    NewCtx = case FType of
-%%                 top_down -> Fun(ST, Ctx);
-%%                 bottom_up -> Ctx
-%%             end,
-%%    {ExpressionCommalistNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {expressionCommalist, ExpressionCommalist}),
-%%    NewCtx2 = case FType of
-%%                  top_down -> NewCtx1;
-%%                  bottom_up -> Fun(ST, NewCtx1)
-%%              end,
-%%    RT = {"[" ++ ExpressionCommalistNew ++ "]", NewCtx2},
-%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
-%%    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {listLiteral, ExpressionCommalist} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ExpressionCommalistNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {expressionCommalist, ExpressionCommalist}),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {"[" ++ ExpressionCommalistNew ++ "]", NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % literal
@@ -1308,23 +1319,23 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {parameter, Value} = ST) ->
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% parenthesizedExpression - currently not supported
+% parenthesizedExpression
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%pt_to_source(FType, Fun, Ctx, Lvl, {parenthesizedExpression, Value} = ST) ->
-%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-%%    NewCtx = case FType of
-%%                 top_down -> Fun(ST, Ctx);
-%%                 bottom_up -> Ctx
-%%             end,
-%%    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-%%    NewCtx2 = case FType of
-%%                  top_down -> NewCtx1;
-%%                  bottom_up -> Fun(ST, NewCtx1)
-%%              end,
-%%    RT = {"(" ++ ValueNew ++ ")", NewCtx2},
-%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
-%%    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {parenthesizedExpression, Value} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {"(" ++ ValueNew ++ ")", NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % partialComparisonExpression
@@ -1750,33 +1761,6 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {rangeLiteral, [], [], []} = ST) ->
                   bottom_up -> Fun(ST, NewCtx)
               end,
     RT = {"*", NewCtx1},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, _Lvl, {rangeLiteral, [], ".." = Op, []} = ST) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    NewCtx1 = case FType of
-                  top_down -> NewCtx;
-                  bottom_up -> Fun(ST, NewCtx)
-              end,
-    RT = {"*" ++ Op, NewCtx1},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, [], ".." = Op, Value} = ST) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {"*" ++ Op ++ ValueNew, NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value, [], []} = ST) ->

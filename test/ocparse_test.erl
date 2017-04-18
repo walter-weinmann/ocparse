@@ -233,6 +233,7 @@ eunit_test_source(_TestGroup, Source, Logs) ->
     %% -------------------------------------------------------------------------
     case ?PARSER_MODULE:source_to_pt(Source) of
         {ok, {ParseTree, _Tokens}} ->
+            ?debugFmt(?MODULE_STRING ++ ":eunit_test_source ===>~nParseTree = ~p~n, Tokens = ~p~n", [ParseTree, _Tokens]),
             ?D2("~n[TD] ParseTree~n~p Tokens~n~p", [ParseTree, _Tokens]),
             %% -----------------------------------------------------------------
             %% Test TopDown

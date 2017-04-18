@@ -232,10 +232,6 @@ The documentation for **ocparse** is available here: [Wiki](https://github.com/w
 
 The number of block comments (`/* ... */`) is limted to one per line.
 
-### ListLiteral
-
-`ListLiteral` is not supported due to a conflict with the `Atom` definition.
-
 ### ParenthesizedExpression
 
 `ParenthesizedExpression` is not supported due to a conflict with `NodePattern`.
@@ -243,10 +239,6 @@ The number of block comments (`/* ... */`) is limted to one per line.
 ### RelationshipDetail
 
 The empty `RelationshipDetail` `[]` is not supported.
-
-### StringListNullOperatorExpression
-
-The variant `[..]` is not supported.
 
 ### SymbolicName
 
