@@ -40,7 +40,7 @@ Rules.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% symbolic names
 (`([^`]*)*`)                                              : {token, {'ESCAPED_SYMBOLIC_NAME', TokenLine, TokenChars}}.
-([A-Za-z_@#][A-Za-z0-9_@#]*)                              : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatterns).
+([A-Za-z_@#][A-Za-z0-9_@#]*)                              : match_any(TokenChars, TokenLen, TokenLine, ?TOKEN_PATTERNS).
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% string literals
@@ -90,8 +90,7 @@ Erlang code.
 
 -export([reserved_keywords/0]).
 
--define(TokenPatterns, [
-
+-define(TOKEN_PATTERNS, [
     {"^(?i)(ALL)$",              'ALL'},
     {"^(?i)(ALLSHORTESTPATHS)$", 'ALLSHORTESTPATHS'},
     {"^(?i)(AND)$",              'AND'},
@@ -176,7 +175,7 @@ Erlang code.
 -define(Dbg(F,A), ok).
 -endif.
 
-reserved_keywords() -> [T || {_, T} <- ?TokenPatterns].
+reserved_keywords() -> [T || {_, T} <- ?TOKEN_PATTERNS].
 
 match_any(TokenChars, TokenLen, _TokenLine, []) ->
     {token, {'UNESCAPED_SYMBOLIC_NAME', TokenLen, TokenChars}};
