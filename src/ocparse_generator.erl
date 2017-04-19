@@ -46,9 +46,6 @@
 ]).
 
 -define(ALL_CLAUSE_EUNIT, [
-    delete,
-    unwind,
-    with
 ]).
 
 -define(CODE_TEMPLATES, code_templates).
