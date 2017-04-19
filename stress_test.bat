@@ -38,9 +38,11 @@ MD ct\logs
 
 FOR /L %%G IN (1,1,%no_runs%) DO (
    ECHO ----------------------------------------------------------------------------
-   ECHO !TIME! %%G Step: ocparse_generator.bat
-   CALL ocparse_generator.bat
-   ECHO !TIME! %%G Step: rebar3 ct
+   ECHO !TIME! %%G. Step: gen_tests.bat
+   CALL gen_tests.bat
+   del test\reliability_*_SUITE.erl
+   ECHO !TIME! %%G. Step: rebar3 ct
+   rmdir /q /s _build\test
    CALL rebar3.cmd ct
 )
 
