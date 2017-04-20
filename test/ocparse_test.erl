@@ -243,6 +243,7 @@ eunit_test_source(_TestGroup, Source, Logs) ->
             NSource_TD = case ?PARSER_MODULE:pt_to_source_td(ParseTree) of
                              {error, Error_TD} ->
                                  ?D_("~n[TD] Error ParseTree -> NewSource : ParseTree~n > ~p", [ParseTree]),
+                                 ?D_("~n[TD] Error ParseTree -> NewSource : Error~n > ~p", [Error_TD]),
                                  throw({error, Error_TD});
                              NS_TD ->
                                  NS_TD

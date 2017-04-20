@@ -44,7 +44,7 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {"[", [], []} = ST) ->
     RT = {"[..]", NewCtx1},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {"[" = Type, {expression, _} = Value} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {"[" = Type, {orExpression, _, _} = Value} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -58,7 +58,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {"[" = Type, {expression, _} = Value} = ST) -
     RT = {Type ++ ValueNew ++ "]", NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {"[", [], {expression, _} = Value} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {"[", [], {orExpression, _, _} = Value} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -72,7 +72,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {"[", [], {expression, _} = Value} = ST) ->
     RT = {"[.." ++ ValueNew ++ "]", NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {"[", {expression, _} = Value, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {"[", {orExpression, _, _} = Value, []} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -86,7 +86,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {"[", {expression, _} = Value, []} = ST) ->
     RT = {"[" ++ ValueNew ++ "..]", NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {"[", {expression, _} = Value1, {expression, _} = Value2} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {"[", {orExpression, _, _} = Value1, {orExpression, _, _} = Value2} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -304,23 +304,17 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% anonymousPatternPart / expression / functionName / labelName / patternPart /
-% propertyKeyName / query / relTypeName / removeItem / sortItem / statement / variable
+% orExpression / patternElement / patternPart / regularQuery / removeItem / 
+% sortItem
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
-    when Type == anonymousPatternPart;
-    Type == expression;
-    Type == functionName;
-    Type == labelName;
+    when Type == orExpression;
+    Type == patternElement;
     Type == patternPart;
-    Type == propertyKeyName;
-    Type == query;
-    Type == relTypeName;
+    Type == regularQuery;
     Type == removeItem;
-    Type == sortItem;
-    Type == statement;
-    Type == variable ->
+    Type == sortItem ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -346,8 +340,8 @@ pt_to_source(FType, Fun, Ctx, Lvl, {atom, {Type, _} = Value} = ST)
     Type == parameter;
     Type == parenthesizedExpression;
     Type == patternComprehension;
-    Type == terminal;
-    Type == variable ->
+    Type == symbolicName;
+    Type == terminal ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -740,12 +734,11 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
         case F of
             {ListType, _}
-                when Type == expressionCommalist, ListType == expression;
-                Type == patternPartCommalist, ListType == patternPart;
+                when Type == patternPartCommalist, ListType == patternPart;
                 Type == removeItemCommalist, ListType == removeItem;
                 Type == returnItemCommalist, ListType == returnItem;
                 Type == sortItemCommalist, ListType == sortItem;
-                Type == variableCommalist, ListType == variable ->
+                Type == variableCommalist, ListType == symbolicName ->
                 ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
@@ -753,7 +746,9 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                             _ -> ","
                         end ++ SubAcc, CtxAcc1};
             {ListType, _, _}
-                when Type == patternPartCommalist, ListType == patternPart;
+                when Type == expressionCommalist, ListType == orExpression;
+                Type == patternPartCommalist, ListType == patternPart;
+                Type == propertyKeyNameExpressionCommalist, ListType == propertyKeyNameExpression;
                 Type == removeItemCommalist, ListType == removeItem;
                 Type == returnItemCommalist, ListType == returnItem;
                 Type == setItemCommalist, ListType == setItem;
@@ -766,14 +761,6 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                         end ++ SubAcc, CtxAcc1};
             {ListType, _, _, _}
                 when Type == setItemCommalist, ListType == setItem ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {Acc ++ case length(Acc) of
-                            0 -> [];
-                            _ -> ","
-                        end ++ SubAcc, CtxAcc1};
-            {{propertyKeyName, _}, {expression, _}}
-                when Type == propertyKeyNameExpressionCommalist ->
                 ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
@@ -1652,16 +1639,16 @@ pt_to_source(FType, Fun, Ctx, Lvl, {propertyExpression, Atom, PropertyLookUpList
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% propertyKeyNameExpression (Helper definition)
+% propertyKeyNameExpression
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pt_to_source(FType, Fun, Ctx, Lvl, {{propertyKeyName, _} = PropertyKeyName, {expression, _} = Expression} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {propertyKeyNameExpression, SymbolicName, Expression} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {PropertyKeyNameNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, PropertyKeyName),
+    {SymbolicNameNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, SymbolicName),
     NewCtx2 = case FType of
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
@@ -1671,7 +1658,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {{propertyKeyName, _} = PropertyKeyName, {exp
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {PropertyKeyNameNew ++ ":" ++ ExpressionNew, NewCtx4},
+    RT = {SymbolicNameNew ++ ":" ++ ExpressionNew, NewCtx4},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -2255,7 +2242,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relTypeVerticalbarlist, Values} = ST)
              end,
     {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
         case F of
-            {{relTypeName, _} = RTN, Colon} ->
+            {{symbolicName, _} = RTN, Colon} ->
                 ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, RTN),
                 {Acc ++ "|" ++ Colon ++ SubAcc, CtxAcc1}
