@@ -31,16 +31,13 @@
 ]).
 -define(ALL_CLAUSE_CT_RELIABILITY, [
     create,
-    cypher,
     delete,
     match,
     merge,
-    query,
     remove,
     return,
     set,
     special,
-    statement,
     unwind,
     with
 ]).
