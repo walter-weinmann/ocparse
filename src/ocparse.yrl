@@ -838,8 +838,8 @@ fold_bu(Fun, Ctx, PTree) when is_function(Fun, 2) ->
     try ocparse_util:pt_to_source(bottom_up, Fun, Ctx, 0, PTree) of
         {error, _} = Error ->
             Error;
-        {Cypher, null_fun = Ctx} ->
-            list_to_binary(string:strip(Cypher));
+        {Source, null_fun = Ctx} ->
+            list_to_binary(string:strip(Source));
         {_Output, NewCtx} ->
             NewCtx
     catch
@@ -854,8 +854,8 @@ fold_td(Fun, Ctx, PTree) when is_function(Fun, 2) ->
     try ocparse_util:pt_to_source(top_down, Fun, Ctx, 0, PTree) of
         {error, _} = Error ->
             Error;
-        {Cypher, null_fun = Ctx} ->
-            list_to_binary(string:strip(Cypher));
+        {Source, null_fun = Ctx} ->
+            list_to_binary(string:strip(Source));
         {_Output, NewCtx} ->
             NewCtx
     catch
@@ -875,16 +875,16 @@ source_to_pt([]) ->
     {parse_error, invalid_string};
 source_to_pt(<<>>) ->
     {parse_error, invalid_string};
-source_to_pt(Cypher0) ->
-    Cypher = re:replace(Cypher0, "(^[ \r\n]+)|([ \r\n]+$)", "",
+source_to_pt(Source0) ->
+    Source = re:replace(Source0, "(^[ \r\n]+)|([ \r\n]+$)", "",
         [global, {return, list}]),
-    [C | _] = lists:reverse(Cypher),
-    NCypher = if C =:= $; ->
-        Cypher;
+    [C | _] = lists:reverse(Source),
+    NSource = if C =:= $; ->
+        Source;
                   true ->
-                      string:strip(Cypher)
+                      string:strip(Source)
               end,
-    case oclexer:string(NCypher) of
+    case oclexer:string(NSource) of
         {ok, Toks, _} ->
             case ocparse:parse(Toks) of
                 {ok, PTree} ->
