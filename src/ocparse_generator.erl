@@ -2959,7 +2959,7 @@ file_write_ct(_Type, File, []) ->
 file_write_ct(Type, File, [H | T]) ->
     io:format(File, "~s~n", ["    " ++ case Type of
                                            performance ->
-                                               "ocparse:source_to_pt";
+                                               "{ok, _} = ocparse:source_to_pt";
                                            _ ->
                                                "ocparse_test:common_test_source"
                                        end ++ "(\"" ++ H ++ "\")" ++ case T of

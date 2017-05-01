@@ -59,16 +59,6 @@ common_test_source(Source) ->
                              NS_TD ->
                                  NS_TD
                          end,
-            SourceNet = lists:flatten(remove_whitespace(Source, ?WHITESPACE, [])),
-            case string:to_lower(SourceNet) == string:to_lower(lists:flatten(remove_whitespace(binary_to_list(NSource_TD), ?WHITESPACE, []))) of
-                true ->
-                    ok;
-                _ ->
-                    ct:pal("~n[TD] Error Source == NewSource : Source      ~n > ~p", [Source]),
-                    ct:pal("~n[TD] Error Source == NewSource : SourceNet   ~n > ~p", [SourceNet]),
-                    ct:pal("~n[TD] Error Source == NewSource : NewSourceNet~n > ~p", [lists:flatten(remove_whitespace(binary_to_list(NSource_TD), ?WHITESPACE, []))]),
-                    throw({error, "[TD] Error Source == NewSource"})
-            end,
             %% -----------------------------------------------------------------
             %% 3. Source (=NSource_TD) ==> ParseTree (=NPT_TD)
             %% -----------------------------------------------------------------
@@ -113,15 +103,6 @@ common_test_source(Source) ->
                              NS_BU ->
                                  NS_BU
                          end,
-            case string:to_lower(SourceNet) == string:to_lower(lists:flatten(remove_whitespace(binary_to_list(NSource_BU), ?WHITESPACE, []))) of
-                true ->
-                    ok;
-                _ ->
-                    ct:pal("~n[BU] Error Source == NewSource : Source      ~n > ~p", [Source]),
-                    ct:pal("~n[BU] Error Source == NewSource : SourceNet   ~n > ~p", [SourceNet]),
-                    ct:pal("~n[BU] Error Source == NewSource : NewSourceNet~n > ~p", [lists:flatten(remove_whitespace(binary_to_list(NSource_BU), ?WHITESPACE, []))]),
-                    throw({error, "[BU] Error Source == NewSource"})
-            end,
             %% -----------------------------------------------------------------
             %% 3. Source (=NSource_BU) ==> ParseTree (=NPT_BU)
             %% -----------------------------------------------------------------
@@ -155,11 +136,13 @@ common_test_source(Source) ->
             end;
         {lex_error, _Error} ->
             ct:pal("~nFailed lex_error : Source~n > ~p", [Source]),
-            throw({error, "Failed lex_error : " ++ _Error});
+            ct:pal("~nFailed lex_error : Error ~n > ~p", [_Error]),
+            throw({error, "Failed lex_error"});
         {parse_error, {_Error, _Tokens}} ->
             ct:pal("~nFailed parse_error : Source~n > ~p", [Source]),
             ct:pal("~nFailed parse_error : Tokens~n > ~p", [_Tokens]),
-            throw({error, "Failed parse_error : " ++ _Error})
+            ct:pal("~nFailed parse_error : Error ~n > ~p", [_Error]),
+            throw({error, "Failed parse_error"})
     end.
 
 %%------------------------------------------------------------------------------
@@ -226,14 +209,14 @@ eunit_test_() ->
 -define(D5(__Fmt, __Args), ?D(5, __Fmt, __Args)).
 
 eunit_test_source(_TestGroup, Source, Logs) ->
-    ?debugFmt(?MODULE_STRING ++ ":eunit_test_source ===>~nTestGroup = ~p~n, Source = ~p~n, Logs = ~p~n", [_TestGroup, Source, Logs]),
+    ?debugFmt(?MODULE_STRING ++ ":eunit_test_source ===>~nTestGroup = ~p~n Source = ~p~n Logs = ~p~n", [_TestGroup, Source, Logs]),
     ?D1("~n[TD] Source~n~s", [Source]),
     %% -------------------------------------------------------------------------
     %% 1. Source ==> ParseTree
     %% -------------------------------------------------------------------------
     case ?PARSER_MODULE:source_to_pt(Source) of
         {ok, {ParseTree, _Tokens}} ->
-            ?debugFmt(?MODULE_STRING ++ ":eunit_test_source ===>~nParseTree = ~p~n, Tokens = ~p~n", [ParseTree, _Tokens]),
+            ?debugFmt(?MODULE_STRING ++ ":eunit_test_source ===>~nParseTree = ~p~n   Tokens = ~p~n", [ParseTree, _Tokens]),
             ?D2("~n[TD] ParseTree~n~p Tokens~n~p", [ParseTree, _Tokens]),
             %% -----------------------------------------------------------------
             %% Test TopDown
@@ -249,16 +232,6 @@ eunit_test_source(_TestGroup, Source, Logs) ->
                                  NS_TD
                          end,
             ?D3("~n[TD] NewSource~n~s", [NSource_TD]),
-            SourceNet = lists:flatten(remove_whitespace(Source, ?WHITESPACE, [])),
-            case string:to_lower(SourceNet) == string:to_lower(lists:flatten(remove_whitespace(binary_to_list(NSource_TD), ?WHITESPACE, []))) of
-                true ->
-                    ok;
-                _ ->
-                    ?D_("~n[TD] Error Source == NewSource : Source      ~n > ~p", [Source]),
-                    ?D_("~n[TD] Error Source == NewSource : SourceNet   ~n > ~p", [SourceNet]),
-                    ?D_("~n[TD] Error Source == NewSource : NewSourceNet~n > ~p", [lists:flatten(remove_whitespace(binary_to_list(NSource_TD), ?WHITESPACE, []))]),
-                    throw({error, "[TD] Error Source == NewSource"})
-            end,
             %% -----------------------------------------------------------------
             %% 3. Source (=NSource_TD) ==> ParseTree (=NPT_TD)
             %% -----------------------------------------------------------------
@@ -307,15 +280,6 @@ eunit_test_source(_TestGroup, Source, Logs) ->
                                  NS_BU
                          end,
             ?D3("~n[BU] NewSource~n~s", [NSource_BU]),
-            case string:to_lower(SourceNet) == string:to_lower(lists:flatten(remove_whitespace(binary_to_list(NSource_BU), ?WHITESPACE, []))) of
-                true ->
-                    ok;
-                _ ->
-                    ?D_("~n[BU] Error Source == NewSource : Source      ~n > ~p", [Source]),
-                    ?D_("~n[BU] Error Source == NewSource : SourceNet   ~n > ~p", [SourceNet]),
-                    ?D_("~n[BU] Error Source == NewSource : NewSourceNet~n > ~p", [lists:flatten(remove_whitespace(binary_to_list(NSource_BU), ?WHITESPACE, []))]),
-                    throw({error, "[BU] Error Source == NewSource"})
-            end,
             %% -----------------------------------------------------------------
             %% 3. Source (=NSource_BU) ==> ParseTree (=NPT_BU)
             %% -----------------------------------------------------------------
@@ -353,11 +317,13 @@ eunit_test_source(_TestGroup, Source, Logs) ->
             ?D4("~n[BU] ParseTree~n~p", [ParseTree]);
         {lex_error, _Error} ->
             ?D_("~nFailed lex_error : Source~n > ~p", [Source]),
-            throw({error, "Failed lex_error : " ++ _Error});
+            ?D_("~nFailed lex_error : Error ~n > ~p", [_Error]),
+            throw({error, "Failed lex_error"});
         {parse_error, {_Error, _Tokens}} ->
             ?D_("~nFailed parse_error : Source~n > ~p", [Source]),
             ?D_("~nFailed parse_error : Tokens~n > ~p", [_Tokens]),
-            throw({error, "Failed parse_error : " ++ _Error})
+            ?D_("~nFailed parse_error : Error ~n > ~p", [_Error]),
+            throw({error, "Failed parse_error"})
     end.
 
 %%------------------------------------------------------------------------------
@@ -403,36 +369,11 @@ group_gen(TestFiles, Logs) ->
         end}.
 
 %%------------------------------------------------------------------------------
-%% Remove the whitespace characters from a string.
-%%------------------------------------------------------------------------------
-
-remove_whitespace([], _WhiteSpace, Acc) ->
-    lists:reverse(Acc);
-remove_whitespace([CharIn | Tail], WhiteSpace, Acc) ->
-    CharOut = case is_whitespace(WhiteSpace, CharIn) of
-                  true ->
-                      "";
-                  _ ->
-                      CharIn
-              end,
-    remove_whitespace(Tail, WhiteSpace, [CharOut | Acc]).
-
-is_whitespace([], _Char) ->
-    false;
-is_whitespace([Curr | Tail], Char) ->
-    case Curr == Char of
-        true ->
-            true;
-        _ ->
-            is_whitespace(Tail, Char)
-    end.
-
-%%------------------------------------------------------------------------------
 %% EUnit Test Driver - Processing Groups.
 %%------------------------------------------------------------------------------
 
 tests_gen(TestGroup, Tests, Opts, Logs) ->
-    ?debugFmt(?MODULE_STRING ++ ":tests_gen ===>~nTestGroup = ~p~n, Tests = ~p~n, Opts = ~p~n, Logs = ~p~n", [TestGroup, Tests, Opts, Logs]),
+    ?debugFmt(?MODULE_STRING ++ ":tests_gen ===>~nTestGroup = ~p~n Tests = ~p~n Opts = ~p~n Logs = ~p~n", [TestGroup, Tests, Opts, Logs]),
     SelTests = case proplists:get_value(tests, Opts) of
                    St when St =:= undefined; St =:= [] ->
                        {Indices, _} = lists:unzip(Tests),
