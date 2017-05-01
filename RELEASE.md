@@ -6,23 +6,9 @@
 
 ## Version 1.3.1
 
-Release Date: 30.04.2017 - Grammar as of dd.mm.yyyy
+Release Date: dd.mm.yyyy - Grammar as of 30.04.2017
 
 ### Grammar changes
-
-- **The following unit-productions have been removed:**
-
-    - anonymous_pattern_part
-    - expression
-    - function_name
-    - label_name
-    - property_key_name
-    - query
-    - rel_type_name
-    - startement
-    - variable
-
-
 
 - **Atom**
 
@@ -154,7 +140,7 @@ New: RelTypeName = SchemaName ;
 Old: RelTypeName = SymbolicName ;
 ```
 
-- **SchemaName**
+- **ReservedWord**
 
 ```
 New: ReservedWord = (A,L,L)
@@ -228,7 +214,7 @@ New: StandaloneCall = (C,A,L,L), SP, (ExplicitProcedureInvocation | ImplicitProc
 Old: n/a
 ```
 
-- **StandaloneCall**
+- **SymbolicName**
 
 ```
 New: SymbolicName = ...

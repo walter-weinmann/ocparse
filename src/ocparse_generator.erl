@@ -25,24 +25,29 @@
 -export([generate/0]).
 
 -define(ALL_CLAUSE_CT_PERFORMANCE, [
-    cypher,
-    query,
-    statement
+%%    cypher,
+%%    query,
+%%    statement
 ]).
 -define(ALL_CLAUSE_CT_RELIABILITY, [
-    create,
-    delete,
-    match,
-    merge,
-    remove,
-    return,
-    set,
-    special,
-    unwind,
-    with
+%%    create,
+%%    cypher,
+%%    delete,
+%%    match,
+%%    merge,
+%%    query,
+%%    remove,
+%%    return,
+%%    set,
+%%    special,
+%%    statement,
+%%    unwind,
+%%    with
 ]).
 
 -define(ALL_CLAUSE_EUNIT, [
+    parameter,
+    rangeLiteral
 ]).
 
 -define(CODE_TEMPLATES, code_templates).
@@ -66,7 +71,7 @@
 -define(MAX_QUERY, 2000).
 -define(MAX_RULE_ATOM, 100).                 % cumulative
 -define(MAX_RULE_EXPRESSION, 100).           % cumulative
--define(MAX_RULE_OTHERS, 2000).              % max of (MAX_CLAUSE, MAX_CYPHER, MAX_QUERY, MAX_STATEMENT)) 
+-define(MAX_RULE_OTHERS, 2000).              % max of (MAX_CLAUSE, MAX_CYPHER, MAX_QUERY, MAX_STATEMENT))
 -define(MAX_STATEMENT, 2000).
 
 -define(PATH_CT, "test").
@@ -121,10 +126,13 @@ create_code() ->
     create_code(escapedSymbolicName),
     create_code(exponentDecimalReal),
     create_code(hexInteger),
+    create_code(hexLetter),
     create_code(literalNull),
     create_code(octalInteger),
     create_code(regularDecimalReal),
+    create_code(reservedWord),
     create_code(stringLiteral),
+    create_code(symbolicName),
     create_code(unescapedSymbolicName),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -132,12 +140,21 @@ create_code() ->
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionName),
-    create_code(labelName),
     create_code(parameter),
-    create_code(propertyKeyName),
+    create_code(procedureName),
+    create_code(procedureResultField),
     create_code(rangeLiteral),
-    create_code(relTypeName),
+    create_code(schemaName),
     create_code(variable),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 2
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(implicitProcedureInvocation),
+    create_code(labelName),
+    create_code(propertyKeyName),
+    create_code(relTypeName),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 3
@@ -343,7 +360,7 @@ create_code(atomAll = Rule) ->
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -364,7 +381,7 @@ create_code(atomAny = Rule) ->
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -381,7 +398,7 @@ create_code(atomCount = Rule) ->
         "Count(*)",
         "Count ( * )"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -409,7 +426,7 @@ create_code(atomExtract = Rule) ->
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -430,7 +447,7 @@ create_code(atomFilter = Rule) ->
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -451,7 +468,7 @@ create_code(atomNone = Rule) ->
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -472,7 +489,7 @@ create_code(atomSingle = Rule) ->
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -488,7 +505,7 @@ create_code(booleanLiteral = Rule) ->
         "true",
         "false"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
     store_code(literal, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
@@ -613,24 +630,24 @@ create_code(escapedSymbolicName = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "`1esn_SN`",
-        "`2esn_SN`",
-        "`3esn_SN`",
-        "`4esn_SN`",
-        "`5esn_SN`",
-        "`6esn_SN`",
-        "`7esn_SN`",
-        "`8esn_SN`",
-        "`aesn_SN`",
-        "`Aesn_SN`",
-        "`besn_SN`",
-        "`Besn_SN`",
-        "`.esn_SN`",
-        "`,esn_SN`",
-        "`@esn_SN`",
+        "`1esn_SYMN_esn`",
+        "`2esn_SYMN_esn`",
+        "`3esn_SYMN_esn`",
+        "`4esn_SYMN_esn`",
+        "`5esn_SYMN_esn`",
+        "`6esn_SYMN_esn`",
+        "`7esn_SYMN_esn`",
+        "`8esn_SYMN_esn`",
+        "`aesn_SYMN_esn`",
+        "`Aesn_SYMN_esn`",
+        "`besn_SYMN_esn`",
+        "`Besn_SYMN_esn`",
+        "`.esn_SYMN_esn`",
+        "`,esn_SYMN_esn`",
+        "`@esn_SYMN_esn`",
         "``"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(symbolicName, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
@@ -676,7 +693,7 @@ create_code(exponentDecimalReal = Rule) ->
         "10.12e12",
         "11.12e-12"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
     store_code(doubleLiteral, Code, ?MAX_RULE_OTHERS, false),
     store_code(literal, Code, ?MAX_RULE_OTHERS, false),
@@ -740,7 +757,7 @@ create_code(functionInvocation = Rule) ->
             ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -752,7 +769,7 @@ create_code(functionName = Rule) ->
     ?CREATE_CODE_START,
     [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
 
-    Code = [re:replace(SN, "_SN", "_FN", [{return, list}]) || SN <- SymbolicName],
+    Code = ["exists"] ++ [re:replace(SN, "_SYMN_", "_FN_", [{return, list}]) || SN <- SymbolicName],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
@@ -774,11 +791,36 @@ create_code(hexInteger = Rule) ->
         "0x7890abcdef",
         "0x0123456789ABCDEF"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
     store_code(integerLiteral, Code, ?MAX_RULE_OTHERS, false),
     store_code(literal, Code, ?MAX_RULE_OTHERS, false),
     store_code(numberLiteral, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% HexLetter = (A)
+%%           | (B)
+%%           | (C)
+%%           | (D)
+%%           | (E)
+%%           | (F)
+%%           ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(hexLetter = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(symbolicName, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -802,14 +844,26 @@ create_code(idInColl = Rule) ->
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% LabelName = SymbolicName ;
+%% ImplicitProcedureInvovcation = ProcedureName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(implicitProcedureInvocation = Rule) ->
+    ?CREATE_CODE_START,
+    [{procedureName, ProcedureName}] = dets:lookup(?CODE_TEMPLATES, procedureName),
+
+    Code = [re:replace(PN, "_PN_", "_IPI_", [{return, list}]) || PN <- ProcedureName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LabelName = SchemaName ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(labelName = Rule) ->
     ?CREATE_CODE_START,
-    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+    [{schemaName, SchemaName}] = dets:lookup(?CODE_TEMPLATES, schemaName),
 
-    Code = [re:replace(SN, "_SN", "_LN", [{return, list}]) || SN <- SymbolicName],
+    Code = [re:replace(SN, "_SCHN_", "_LN_", [{return, list}]) || SN <- SchemaName],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
@@ -854,7 +908,7 @@ create_code(listComprehension = Rule) ->
             "]"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -881,7 +935,7 @@ create_code(listLiteral = Rule) ->
             "]"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
     store_code(literal, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
@@ -898,7 +952,7 @@ create_code(literalNull = Rule) ->
     Code = [
         "Null"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
     store_code(literal, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
@@ -1150,7 +1204,7 @@ create_code(octalInteger = Rule) ->
         "0123456"
         "01234567"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
     store_code(integerLiteral, Code, ?MAX_RULE_OTHERS, false),
     store_code(literal, Code, ?MAX_RULE_OTHERS, false),
@@ -1216,7 +1270,7 @@ create_code(parenthesizedExpression = Rule) ->
             ?SP_OPT ++ ")"
         || _ <- lists:seq(1, ?MAX_RULE_ATOM)
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
@@ -1387,6 +1441,30 @@ create_code(patternPart = Rule) ->
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ProcedureName = SymbolicName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(procedureName = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [re:replace(SN, "_SYMN_", "_PN_", [{return, list}]) || SN <- SymbolicName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ProcedureResultField = SymbolicName ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(procedureResultField = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [re:replace(SN, "_SYMN_", "_PRF_", [{return, list}]) || SN <- SymbolicName],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Properties = MapLiteral
 %%            | Parameter ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1440,10 +1518,10 @@ create_code(propertyExpression = Rule) ->
 
 create_code(propertyKeyName = Rule) ->
     ?CREATE_CODE_START,
-    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+    [{schemaName, SchemaName}] = dets:lookup(?CODE_TEMPLATES, schemaName),
 
     Code = [
-        re:replace(SN, "_SN", "_PKN", [{return, list}]) || SN <- SymbolicName
+        re:replace(SN, "_SCHN_", "_PKN_", [{return, list}]) || SN <- SchemaName
     ],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
@@ -1521,7 +1599,7 @@ create_code(regularDecimalReal = Rule) ->
         "12.0",
         "123.654"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
     store_code(doubleLiteral, Code, ?MAX_RULE_OTHERS, false),
     store_code(literal, Code, ?MAX_RULE_OTHERS, false),
@@ -1727,16 +1805,14 @@ create_code(relationshipTypes = Rule) ->
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% RelTypeName = SymbolicName ;
+%% RelTypeName = SchemaName ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(relTypeName = Rule) ->
     ?CREATE_CODE_START,
-    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+    [{schemaName, SchemaName}] = dets:lookup(?CODE_TEMPLATES, schemaName),
 
-    Code = [
-        re:replace(SN, "_SN", "_RTN", [{return, list}]) || SN <- SymbolicName
-    ],
+    Code = [re:replace(SN, "_SCHN_", "_RTN_", [{return, list}]) || SN <- SchemaName],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
@@ -1791,6 +1867,115 @@ create_code(removeItem = Rule) ->
         || _ <- lists:seq(1, ?MAX_CLAUSE)
     ],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ReservedWord = (A,L,L)
+%%              | (A,S,C)
+%%              | (A,S,C,E,N,D,I,N,G)
+%%              | (B,Y)
+%%              | (C,R,E,A,T,E)
+%%              | (D,E,L,E,T,E)
+%%              | (D,E,S,C)
+%%              | (D,E,S,C,E,N,D,I,N,G)
+%%              | (D,E,T,A,C,H)
+%%              | (E,X,I,S,T,S)
+%%              | (L,I,M,I,T)
+%%              | (M,A,T,C,H)
+%%              | (M,E,R,G,E)
+%%              | (O,N)
+%%              | (O,P,T,I,O,N,A,L)
+%%              | (O,R,D,E,R)
+%%              | (R,E,M,O,V,E)
+%%              | (R,E,T,U,R,N)
+%%              | (S,E,T)
+%%              | (S,K,I,P)
+%%              | (W,H,E,R,E)
+%%              | (W,I,T,H)
+%%              | (U,N,I,O,N)
+%%              | (U,N,W,I,N,D)
+%%              | (A,N,D)
+%%              | (A,S)
+%%              | (C,O,N,T,A,I,N,S)
+%%              | (D,I,S,T,I,N,C,T)
+%%              | (E,N,D,S)
+%%              | (I,N)
+%%              | (I,S)
+%%              | (N,O,T)
+%%              | (O,R)
+%%              | (S,T,A,R,T,S)
+%%              | (X,O,R)
+%%              | (F,A,L,S,E)
+%%              | (T,R,U,E)
+%%              | (N,U,L,L)
+%%              | (C,O,N,S,T,R,A,I,N,T)
+%%              | (D,O)
+%%              | (F,O,R)
+%%              | (R,E,Q,U,I,R,E)
+%%              | (U,N,I,Q,U,E)
+%%              | (C,A,S,E)
+%%              | (W,H,E,N)
+%%              | (T,H,E,N)
+%%              | (E,L,S,E)
+%%              | (E,N,D)
+%%              ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(reservedWord = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "all",
+        "asc",
+        "ascending",
+        "by",
+        "create",
+        "delete",
+        "desc",
+        "descending",
+        "detach",
+        "exists",
+        "limit",
+        "match",
+        "merge",
+        "on",
+        "optional",
+        "order",
+        "remove",
+        "return",
+        "set",
+        "skip",
+        "where",
+        "with",
+        "union",
+        "unwind",
+        "and",
+        "as",
+        "contains",
+        "distinct",
+        "ends",
+        "in",
+        "is",
+        "not",
+        "or",
+        "starts",
+        "xor",
+        "false",
+        "true",
+        "null",
+        "constraint",
+        "do",
+        "for",
+        "require",
+        "unique",
+        "case",
+        "when",
+        "then",
+        "else",
+        "end"
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(schemaName, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1907,6 +2092,22 @@ create_code(returnItems = Rule) ->
             || _ <- lists:seq(1, ?MAX_CLAUSE)
         ]
     ),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SchemaName = SymbolicName
+%%            | ReservedWord
+%%            ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(schemaName = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [
+        re:replace(SN, "_SYMN_", "_SCHN_", [{return, list}]) || SN <- SymbolicName
+    ],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
@@ -2214,9 +2415,38 @@ create_code(stringLiteral = Rule) ->
         "'s_str_1'",
         "'s_str_2'"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
     store_code(literal, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SymbolicName = UnescapedSymbolicName
+%%              | EscapedSymbolicName
+%%              | HexLetter
+%%              | (C,O,U,N,T)
+%%              | (F,I,L,T,E,R)
+%%              | (E,X,T,R,A,C,T)
+%%              | (A,N,Y)
+%%              | (A,L,L)
+%%              | (N,O,N,E)
+%%              | (S,I,N,G,L,E)
+%%              ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(symbolicName = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [
+        "all",
+        "any",
+        "count",
+        "extract",
+        "filter",
+        "none",
+        "single"
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2227,23 +2457,23 @@ create_code(unescapedSymbolicName = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "usn1_SN",
-        "usn2_SN",
-        "_usn3_SN",
-        "_usn4_SN",
-        "@usn5_SN",
-        "@usn6_SN",
-        "#usn7_SN",
-        "#usn8_SN",
-        "usna_SN",
-        "usnb_SN",
-        "_usnc_SN",
-        "_usnd_SN",
-        "@usne_SN",
-        "@usnf_SN",
-        "#usng_SN"
+        "usn1_SYMN_usn",
+        "usn2_SYMN_usn",
+        "_usn3_SYMN_usn",
+        "_usn4_SYMN_usn",
+        "@usn5_SYMN_usn",
+        "@usn6_SYMN_usn",
+        "#usn7_SYMN_usn",
+        "#usn8_SYMN_usn",
+        "usna_SYMN_usn",
+        "usnb_SYMN_usn",
+        "_usnc_SYMN_usn",
+        "_usnd_SYMN_usn",
+        "@usne_SYMN_usn",
+        "@usnf_SYMN_usn",
+        "#usng_SYMN_usn"
     ],
-    store_code(Rule, Code, 0, false),
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(symbolicName, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
 
@@ -2305,7 +2535,7 @@ create_code(variable = Rule) ->
     ?CREATE_CODE_START,
     [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
 
-    Code = [re:replace(SN, "_SN", "_V", [{return, list}]) || SN <- SymbolicName],
+    Code = [re:replace(SN, "_SYMN_", "_V_", [{return, list}]) || SN <- SymbolicName],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
@@ -2976,17 +3206,19 @@ file_write_ct(Type, File, [H | T]) ->
 
 store_code(Rule, Code, Max, Sort) ->
     FRandom = fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end,
-    FSmallest = fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end,
 
     case Max == 0 of
         true ->
             ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [length(Code), atom_to_list(Rule)]);
         _ ->
-            CodeNew = case length(Code) > Max of
+            CodeSet = sets:to_list(sets:from_list(Code)),
+            % erlang:display(io:format("store CodeSet      ===> ~12.. B rule: ~s ~n", [length(CodeSet), atom_to_list(Rule)])),
+
+            CodeNew = case length(CodeSet) > Max of
                           true ->
-                              lists:sublist(lists:sort(FSmallest, Code), 1, Max);
+                              lists:sublist(CodeSet, 1, Max);
                           _ ->
-                              Code
+                              CodeSet
                       end,
 
             CodeTotal = sets:to_list(sets:from_list(case dets:lookup(?CODE_TEMPLATES, Rule) of
@@ -3002,8 +3234,8 @@ store_code(Rule, Code, Max, Sort) ->
                              _ ->
                                  CodeTotal
                          end,
+            % erlang:display(io:format("store CodeSorted   ===> ~12.. B rule: ~s ~n", [length(CodeSorted), atom_to_list(Rule)])),
 
             dets:insert(?CODE_TEMPLATES, {Rule, CodeSorted}),
             ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [length(CodeSorted), atom_to_list(Rule)])
     end.
-

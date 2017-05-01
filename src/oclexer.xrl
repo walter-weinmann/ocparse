@@ -34,6 +34,7 @@ Rules.
 (([0-9]+\.[0-9]+)(e|E)[-]?[0-9]+)                         : {token, {'EXPONENT_DECIMAL_REAL', TokenLine, TokenChars}}.
 ([0-9]*\.[0-9]+)                                          : {token, {'REGULAR_DECIMAL_REAL', TokenLine, TokenChars}}.
 (0x([0-9]|[A-Fa-f])+)                                     : {token, {'HEX_INTEGER', TokenLine, TokenChars}}.
+([A-F])                                                   : {token, {'HEX_LETTER', TokenLine, TokenChars}}.
 (0[0-7]+)                                                 : {token, {'OCTAL_INTEGER', TokenLine, TokenChars}}.
 (0|([1-9][0-9]*))                                         : {token, {'DECIMAL_INTEGER', TokenLine, TokenChars}}.
 
@@ -55,7 +56,7 @@ Rules.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% punctuation
 (\.\.|\+=)                                                : {token, {list_to_atom(TokenChars), TokenLine}}.
-(=~|\<\>|!=|\<=|\>=)                                      : {token, {list_to_atom(TokenChars), TokenLine}}.
+(=~|\<\>|\<=|\>=)                                         : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([\^\.\|\*\+\(\)\[\]\{\}\-])                              : {token, {list_to_atom(TokenChars), TokenLine}}.
 ([=\<\>/%:,;0\$])                                         : {token, {list_to_atom(TokenChars), TokenLine}}.
 
@@ -100,6 +101,7 @@ Erlang code.
     {"^(?i)(ASCENDING)$",        'ASCENDING'},
     {"^(?i)(ASSERT)$",           'ASSERT'},
     {"^(?i)(BY)$",               'BY'},
+    {"^(?i)(CALL)$",             'CALL'},
     {"^(?i)(CASE)$",             'CASE'},
     {"^(?i)(COMMIT)$",           'COMMIT'},
     {"^(?i)(CONSTRAINT)$",       'CONSTRAINT'},
@@ -113,16 +115,18 @@ Erlang code.
     {"^(?i)(DESCENDING)$",       'DESCENDING'},
     {"^(?i)(DETACH)$",           'DETACH'},
     {"^(?i)(DISTINCT)$",         'DISTINCT'},
+    {"^(?i)(DO)$",               'DO'},
     {"^(?i)(DROP)$",             'DROP'},
     {"^(?i)(ELSE)$",             'ELSE'},
     {"^(?i)(END)$",              'END'},
     {"^(?i)(ENDS)$",             'ENDS'},
+    {"^(?i)(EXISTS)$",           'EXISTS'},
     {"^(?i)(EXPLAIN)$",          'EXPLAIN'},
     {"^(?i)(EXTRACT)$",          'EXTRACT'},
     {"^(?i)(FALSE)$",            'FALSE'},
     {"^(?i)(FIELDTERMINATOR)$",  'FIELDTERMINATOR'},
     {"^(?i)(FILTER)$",           'FILTER'},
-    {"^(?i)(FOREACH)$",          'FOREACH'},
+    {"^(?i)(FOR)$",              'FOR'},
     {"^(?i)(FROM)$",             'FROM'},
     {"^(?i)(HEADERS)$",          'HEADERS'},
     {"^(?i)(IN)$",               'IN'},
@@ -148,6 +152,7 @@ Erlang code.
     {"^(?i)(REL)$",              'REL'},
     {"^(?i)(RELATIONSHIP)$",     'RELATIONSHIP'},
     {"^(?i)(REMOVE)$",           'REMOVE'},
+    {"^(?i)(REQUIRE)$",          'REQUIRE'},
     {"^(?i)(RETURN)$",           'RETURN'},
     {"^(?i)(SCAN)$",             'SCAN'},
     {"^(?i)(SET)$",              'SET'},
@@ -165,7 +170,8 @@ Erlang code.
     {"^(?i)(WHEN)$",             'WHEN'},
     {"^(?i)(WHERE)$",            'WHERE'},
     {"^(?i)(WITH)$",             'WITH'},
-    {"^(?i)(XOR)$",              'XOR'}
+    {"^(?i)(XOR)$",              'XOR'},
+    {"^(?i)(YIELD)$",            'YIELD'}
 ]).
 
 %-define(DEBUG, true).
