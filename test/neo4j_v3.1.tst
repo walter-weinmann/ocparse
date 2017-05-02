@@ -206,7 +206,7 @@ RETURN person.name, appearances, movies
 %% 4.5.1. Using constraints
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
+% not supported
 % "
 % CREATE CONSTRAINT ON (movie:Movie) ASSERT movie.title IS UNIQUE
 % ".
@@ -215,7 +215,7 @@ RETURN person.name, appearances, movies
 %% 4.5.2. Using indexes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
+% not supported
 % "
 % CREATE INDEX ON :Actor(name)
 % ".
@@ -233,18 +233,18 @@ RETURN actor;
 %% 4.6. Importing CSV files with Cypher
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
+% not supported
 % "
 % LOAD CSV WITH HEADERS FROM \"{csv-dir}/import/persons.csv\" AS csvLine
 % CREATE (p:Person { id: toInt(csvLine.id), name: csvLine.name })
 % ".
 
-% not supported 
+% not supported
 % "
 % CREATE INDEX ON :Country(name)
 % ".
 
-% not supported 
+% not supported
 % "
 % LOAD CSV WITH HEADERS FROM \"{csv-dir}/import/movies.csv\" AS csvLine
 % MERGE (country:Country { name: csvLine.country })
@@ -252,17 +252,17 @@ RETURN actor;
 % CREATE (movie)-[:MADE_IN]->(country)
 % ".
 
-% not supported 
+% not supported
 % "
 % CREATE CONSTRAINT ON (person:Person) ASSERT person.id IS UNIQUE
 % ".
 
-% not supported 
+% not supported
 % "
 % CREATE CONSTRAINT ON (movie:Movie) ASSERT movie.id IS UNIQUE
 % ".
 
-% not supported 
+% not supported
 % "
 % USING PERIODIC COMMIT 500
 % LOAD CSV WITH HEADERS FROM \"{csv-dir}/import/roles.csv\" AS csvLine
@@ -270,12 +270,12 @@ RETURN actor;
 % CREATE (person)-[:PLAYED { role: csvLine.role }]->(movie)
 % ".
 
-% not supported 
+% not supported
 % "
 % DROP CONSTRAINT ON (person:Person) ASSERT person.id IS UNIQUE
 % ".
 
-% not supported 
+% not supported
 % "
 % DROP CONSTRAINT ON (movie:Movie) ASSERT movie.id IS UNIQUE
 % ".
@@ -345,7 +345,7 @@ RETURN friend_of_a_friend.name AS fofName
 %% 5.5 Compatibility
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
+% not supported
 % "
 % CYPHER 2.3
 % START n=node:nodes(name = \"A\")
@@ -356,7 +356,7 @@ RETURN friend_of_a_friend.name AS fofName
 %% 5.5.1. Accessing entities by id via START
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
+% not supported
 % "
 % CYPHER 1.9
 % START n=node(42)
@@ -369,29 +369,27 @@ RETURN friend_of_a_friend.name AS fofName
 %% 6.2.3. Case Expressions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
-% "
-% MATCH (n)
-% RETURN
-% CASE n.eyes
-% WHEN 'blue'
-% THEN 1
-% WHEN 'brown'
-% THEN 2
-% ELSE 3 END AS result
-% ".
+"
+MATCH (n)
+RETURN
+CASE n.eyes
+WHEN 'blue'
+THEN 1
+WHEN 'brown'
+THEN 2
+ELSE 3 END AS result
+".
 
-% not supported 
-% "
-% MATCH (n)
-% RETURN
-% CASE
-% WHEN n.eyes = 'blue'
-% THEN 1
-% WHEN n.age < 40
-% THEN 2
-% ELSE 3 END AS result
-% ".
+"
+MATCH (n)
+RETURN
+CASE
+WHEN n.eyes = 'blue'
+THEN 1
+WHEN n.age < 40
+THEN 2
+ELSE 3 END AS result
+".
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 6.3 Variables
@@ -502,7 +500,7 @@ RETURN n.name
 %% 6.4.10. Calling procedures
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
+% not supported
 % "
 % CALL db.resampleIndex($indexname)
 % ".
@@ -511,7 +509,7 @@ RETURN n.name
 %% 6.4.11. Index query (legacy indexes)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
+% not supported
 % "
 % START n=node:people(name = $value)
 % RETURN n
@@ -521,7 +519,7 @@ RETURN n.name
 %% 6.4.12. Index query (legacy indexes)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% not supported 
+% not supported
 % "
 % START n=node:people($query)
 % RETURN n

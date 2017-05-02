@@ -261,10 +261,6 @@ Endsymbol
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Operator precedences.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Nonassoc    010 clause.
-Nonassoc    010 properties.
-Nonassoc    010 symbolic_name.
-
 Left        100 'OR'.
 Left        110 'XOR'.
 Left        120 'AND'.
@@ -279,6 +275,12 @@ Left        310 '*' '/' '%'.
 Left        400 '^'.
 Left        410 unary_add_or_subtract.                                                          % Unary operator
 
+Nonassoc    500 clause.                                                                         % clause vs. stand_alone_call
+
+Nonassoc    500 properties.                                                                     % atom vs. properties / literal vs. properties
+
+Nonassoc    500 reserved_word.                                                                  % reserved_word vs. symbolic_name
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -288,9 +290,16 @@ cypher -> statement                                                             
 %% =============================================================================
 %% Helper definitions - test purposes.
 %% -----------------------------------------------------------------------------
-cypher -> parameter                                                                             : '$1'.
-cypher -> range_literal                                                                         : '$1'.
-% cypher -> parenthesized_expression                                                              : '$1'.
+cypher -> expression                                                                            : '$1'.
+% cypher -> case_alternatives                                                                     : '$1'.
+% cypher -> delete                                                                                : '$1'.
+% cypher -> limit                                                                                 : '$1'.
+% cypher -> pattern                                                                               : '$1'.
+% cypher -> property_expression                                                                   : '$1'.
+% cypher -> return_item                                                                           : '$1'.
+% cypher -> skip                                                                                  : '$1'.
+% cypher -> sort_item                                                                             : '$1'.
+% cypher -> unwind                                                                                : '$1'.
 %% =============================================================================
 
 statement -> query                                                                              : {statement, '$1'}.
@@ -532,10 +541,10 @@ relationship_types -> ':' rel_type_name                                         
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-rel_type_verticalbarlist -> rel_type_verticalbarlist '|' ':' symbolic_name                      : '$1' ++ [{'$4', ":"}].
-rel_type_verticalbarlist -> rel_type_verticalbarlist '|'     symbolic_name                      : '$1' ++ [{'$3', []}].
-rel_type_verticalbarlist ->                          '|' ':' symbolic_name                      : [{'$3', ":"}].
-rel_type_verticalbarlist ->                          '|'     symbolic_name                      : [{'$2', []}].
+rel_type_verticalbarlist -> rel_type_verticalbarlist '|' ':' rel_type_name                      : '$1' ++ [{'$4', ":"}].
+rel_type_verticalbarlist -> rel_type_verticalbarlist '|'     rel_type_name                      : '$1' ++ [{'$3', []}].
+rel_type_verticalbarlist ->                          '|' ':' rel_type_name                      : [{'$3', ":"}].
+rel_type_verticalbarlist ->                          '|'     rel_type_name                      : [{'$2', []}].
 %% =============================================================================
 
 node_labels -> node_label_list                                                                  : {nodeLabels, '$1'}.
@@ -709,7 +718,7 @@ node_labels_property_lookup_list ->                                  node_labels
 node_labels_property_lookup_list ->                                  property_lookup            :         ['$1'].
 %% =============================================================================
 
-atom -> COUNT   '(' '*'               ')'                                                       : {atom, {terminal, "count(*)"}}.
+atom -> COUNT   '(' '*'               ')'                                                       : {atom, {'count',   []}}.
 atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
 atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
 atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
@@ -764,18 +773,18 @@ function_invocation -> function_name '('                               ')'      
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-function_invocation -> COUNT         '(' DISTINCT expression_commalist ')'                      : {functionInvocation, {symbolicName, "count"}, "distinct", '$4'}.
-function_invocation -> COUNT         '(' DISTINCT                      ')'                      : {functionInvocation, {symbolicName, "count"}, "distinct", []}.
-function_invocation -> COUNT         '('          expression_commalist ')'                      : {functionInvocation, {symbolicName, "count"}, [],         '$3'}.
-function_invocation -> COUNT         '('                               ')'                      : {functionInvocation, {symbolicName, "count"}, [],         []}.
+function_invocation -> COUNT         '(' DISTINCT expression_commalist ')'                      : {functionInvocation, {functionName, {symbolicName, "count"}}, "distinct", '$4'}.
+function_invocation -> COUNT         '(' DISTINCT                      ')'                      : {functionInvocation, {functionName, {symbolicName, "count"}}, "distinct", []}.
+function_invocation -> COUNT         '('          expression_commalist ')'                      : {functionInvocation, {functionName, {symbolicName, "count"}}, [],         '$3'}.
+function_invocation -> COUNT         '('                               ')'                      : {functionInvocation, {functionName, {symbolicName, "count"}}, [],         []}.
 % =============================================================================
 
 function_name -> symbolic_name                                                                  : {functionName, '$1'}.
 function_name -> EXISTS                                                                         : {functionName, "exists"}.
 
-explicit_procedure_invocation -> procedure_name '(' expression_commalist ')'                    : {expliocitProcedureInvocation, '$1', '$3'}.
+explicit_procedure_invocation -> procedure_name '(' expression_commalist ')'                    : {explicitProcedureInvocation, '$1', '$3'}.
 
-implicit_procedure_invocation -> procedure_name                                                 : {expliocitProcedureInvocation, '$1'}.
+implicit_procedure_invocation -> procedure_name                                                 : {explicitProcedureInvocation, '$1', []}.
 
 procedure_result_field -> symbolic_name                                                         : {procedureResultField, '$1'}.
 
@@ -795,7 +804,9 @@ pattern_comprehension -> '['              relationships_pattern                 
 
 property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2'}.
 
-case_expression -> CASE            case_alternatives_list ELSE expression END                   : {caseExpression, [],   '$3', '$5'}.
+case_expression -> CASE            case_alternatives_list                 END                   : {caseExpression, [],   '$2', []}.
+case_expression -> CASE            case_alternatives_list ELSE expression END                   : {caseExpression, [],   '$2', '$4'}.
+case_expression -> CASE expression case_alternatives_list                 END                   : {caseExpression, '$2', '$3', []}.
 case_expression -> CASE expression case_alternatives_list ELSE expression END                   : {caseExpression, '$2', '$3', '$5'}.
 
 %% =============================================================================
@@ -822,7 +833,7 @@ property_key_name_expression_commalist -> property_key_name_expression ',' prope
                                                                                                 : ['$1' | '$3'].
 property_key_name_expression_commalist -> property_key_name_expression                          : ['$1'].
 
-property_key_name_expression -> property_key_name ':' expression                                : {propertyKeyNameExpression, '$1', '$3'}.
+property_key_name_expression -> property_key_name ':' expression                                : {'$1', '$3'}.
 %% =============================================================================
 
 parameter -> '$' symbolic_name                                                                  : {parameter, '$2'}.
@@ -850,62 +861,62 @@ schema_name -> symbolic_name                                                    
 schema_name -> reserved_word                                                                    : {schemaName, '$1'}.
 
 reserved_word -> ALL                                                                            : {reservedWord, "all"}.
+reserved_word -> AND                                                                            : {reservedWord, "and"}.
+reserved_word -> AS                                                                             : {reservedWord, "as"}.
 reserved_word -> ASC                                                                            : {reservedWord, "asc"}.
 reserved_word -> ASCENDING                                                                      : {reservedWord, "ascending"}.
 reserved_word -> BY                                                                             : {reservedWord, "by"}.
+reserved_word -> CASE                                                                           : {reservedWord, "case"}.
+reserved_word -> CONSTRAINT                                                                     : {reservedWord, "constraint"}.
+reserved_word -> CONTAINS                                                                       : {reservedWord, "contains"}.
 reserved_word -> CREATE                                                                         : {reservedWord, "create"}.
 reserved_word -> DELETE                                                                         : {reservedWord, "delete"}.
 reserved_word -> DESC                                                                           : {reservedWord, "desc"}.
 reserved_word -> DESCENDING                                                                     : {reservedWord, "descending"}.
 reserved_word -> DETACH                                                                         : {reservedWord, "detach"}.
+reserved_word -> DISTINCT                                                                       : {reservedWord, "distinct"}.
+reserved_word -> DO                                                                             : {reservedWord, "do"}.
+reserved_word -> ELSE                                                                           : {reservedWord, "else"}.
+reserved_word -> END                                                                            : {reservedWord, "end"}.
+reserved_word -> ENDS                                                                           : {reservedWord, "ends"}.
 reserved_word -> EXISTS                                                                         : {reservedWord, "exists"}.
+reserved_word -> FALSE                                                                          : {reservedWord, "false"}.
+reserved_word -> FOR                                                                            : {reservedWord, "for"}.
+reserved_word -> IN                                                                             : {reservedWord, "in"}.
+reserved_word -> IS                                                                             : {reservedWord, "is"}.
 reserved_word -> LIMIT                                                                          : {reservedWord, "limit"}.
 reserved_word -> MATCH                                                                          : {reservedWord, "all"}.
 reserved_word -> MERGE                                                                          : {reservedWord, "all"}.
+reserved_word -> NOT                                                                            : {reservedWord, "not"}.
+reserved_word -> NULL                                                                           : {reservedWord, "null"}.
 reserved_word -> ON                                                                             : {reservedWord, "on"}.
 reserved_word -> OPTIONAL                                                                       : {reservedWord, "optional"}.
+reserved_word -> OR                                                                             : {reservedWord, "or"}.
 reserved_word -> ORDER                                                                          : {reservedWord, "order"}.
 reserved_word -> REMOVE                                                                         : {reservedWord, "remove"}.
+reserved_word -> REQUIRE                                                                        : {reservedWord, "require"}.
 reserved_word -> RETURN                                                                         : {reservedWord, "return"}.
 reserved_word -> SET                                                                            : {reservedWord, "set"}.
 reserved_word -> SKIP                                                                           : {reservedWord, "skip"}.
+reserved_word -> STARTS                                                                         : {reservedWord, "starts"}.
+reserved_word -> THEN                                                                           : {reservedWord, "then"}.
+reserved_word -> TRUE                                                                           : {reservedWord, "true"}.
 reserved_word -> WHERE                                                                          : {reservedWord, "where"}.
 reserved_word -> WITH                                                                           : {reservedWord, "with"}.
 reserved_word -> UNION                                                                          : {reservedWord, "union"}.
-reserved_word -> UNWIND                                                                         : {reservedWord, "unwind"}.
-reserved_word -> AND                                                                            : {reservedWord, "and"}.
-reserved_word -> AS                                                                             : {reservedWord, "as"}.
-reserved_word -> CONTAINS                                                                       : {reservedWord, "contains"}.
-reserved_word -> DISTINCT                                                                       : {reservedWord, "distinct"}.
-reserved_word -> ENDS                                                                           : {reservedWord, "ends"}.
-reserved_word -> IN                                                                             : {reservedWord, "in"}.
-reserved_word -> IS                                                                             : {reservedWord, "is"}.
-reserved_word -> NOT                                                                            : {reservedWord, "not"}.
-reserved_word -> OR                                                                             : {reservedWord, "or"}.
-reserved_word -> STARTS                                                                         : {reservedWord, "starts"}.
-reserved_word -> XOR                                                                            : {reservedWord, "xor"}.
-reserved_word -> FALSE                                                                          : {reservedWord, "false"}.
-reserved_word -> TRUE                                                                           : {reservedWord, "true"}.
-reserved_word -> NULL                                                                           : {reservedWord, "null"}.
-reserved_word -> CONSTRAINT                                                                     : {reservedWord, "constraint"}.
-reserved_word -> DO                                                                             : {reservedWord, "do"}.
-reserved_word -> FOR                                                                            : {reservedWord, "for"}.
-reserved_word -> REQUIRE                                                                        : {reservedWord, "require"}.
 reserved_word -> UNIQUE                                                                         : {reservedWord, "unique"}.
-reserved_word -> CASE                                                                           : {reservedWord, "case"}.
+reserved_word -> UNWIND                                                                         : {reservedWord, "unwind"}.
 reserved_word -> WHEN                                                                           : {reservedWord, "when"}.
-reserved_word -> THEN                                                                           : {reservedWord, "then"}.
-reserved_word -> ELSE                                                                           : {reservedWord, "else"}.
-reserved_word -> END                                                                            : {reservedWord, "end"}.
+reserved_word -> XOR                                                                            : {reservedWord, "xor"}.
 
 symbolic_name -> ESCAPED_SYMBOLIC_NAME                                                          : {symbolicName, unwrap('$1')}.
 symbolic_name -> UNESCAPED_SYMBOLIC_NAME                                                        : {symbolicName, unwrap('$1')}.
 symbolic_name -> HEX_LETTER                                                                     : {symbolicName, unwrap('$1')}.
-symbolic_name -> COUNT                                                                          : {symbolicName, "count"}.
-symbolic_name -> FILTER                                                                         : {symbolicName, "filter"}.
-symbolic_name -> EXTRACT                                                                        : {symbolicName, "extract"}.
-symbolic_name -> ANY                                                                            : {symbolicName, "any"}.
 symbolic_name -> ALL                                                                            : {symbolicName, "all"}.
+symbolic_name -> ANY                                                                            : {symbolicName, "any"}.
+symbolic_name -> COUNT                                                                          : {symbolicName, "count"}.
+symbolic_name -> EXTRACT                                                                        : {symbolicName, "extract"}.
+symbolic_name -> FILTER                                                                         : {symbolicName, "filter"}.
 symbolic_name -> NONE                                                                           : {symbolicName, "none"}.
 symbolic_name -> SINGLE                                                                         : {symbolicName, "single"}.
 

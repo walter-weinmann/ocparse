@@ -346,6 +346,7 @@ group_gen(TestFiles, Logs) ->
                                      case binary:match(TestFileBin, TRe) of
                                          {I1, _} ->
                                              <<Head:I1/binary, _/binary>> = TestFileBin,
+                                             % !!! test case "*" fails here !!!
                                              {match, Matches} = re:run(Head, ".*[\r\n]", [global]),
                                              length(Matches) + 1;
                                          nomatch ->
