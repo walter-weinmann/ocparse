@@ -4,6 +4,257 @@
 
 # Release Notes
 
+## Version 1.3.1
+
+Release Date: 03.05.2017 - Grammar as of 30.04.2017
+
+### Grammar changes
+
+- **Atom**
+
+```
+New: Atom = ...
+          | CaseExpression
+          | ...
+
+Old: n/a
+```
+
+- **CaseAlternatives**
+
+```
+New: CaseAlternatives = (W,H,E,N), [SP], Expression, [SP], (T,H,E,N), [SP], Expression ;
+
+Old: n/a
+```
+
+- **CaseExpression**
+
+```
+New: CaseExpression = (((C,A,S,E), { [SP], CaseAlternatives }-) | ((C,A,S,E), [SP], Expression, { [SP], CaseAlternatives }-)), [[SP], (E,L,S,E), [SP], Expression], [SP], (E,N,D) ;
+
+Old: n/a
+```
+
+- **Clause**
+
+```
+New: Clause = ...
+            | InQueryCall
+            | ...
+
+Old: n/a
+```
+
+- **ExplicitProcedureInvocation**
+
+```
+New: ExplicitProcedureInvocation = ProcedureName, [SP], '(', [SP], [Expression, [SP], { ',', [SP], Expression, [SP] }], ')' ;
+
+Old: n/a
+```
+
+- **FunctionName**
+
+```
+New: FunctionName = ...
+                  | (E,X,I,S,T,S)
+                  ;
+
+Old: n/a
+```
+
+- **ImplicitProcedureInvocation**
+
+```
+New: ImplicitProcedureInvocation = ProcedureName ;
+
+Old: n/a
+```
+
+- **InQueryCall**
+
+```
+New: InQueryCall = (C,A,L,L), SP, ExplicitProcedureInvocation, [[SP], (Y,I,E,L,D), SP, YieldItems] ;
+
+Old: n/a
+```
+
+- **LabelName**
+
+```
+New: LabelName = SchemaName ;
+
+Old: LabelName = SymbolicName ;
+```
+
+- **PartialComparisonExpression**
+
+```
+New: n/a
+
+Old: PartialComparisonExpression = ...
+                                 | ('!=', [SP], AddOrSubtractExpression)
+                                 | ...
+```
+
+- **ProcedureName**
+
+```
+New: ProcedureName = SymbolicName ;
+
+Old: n/a
+```
+
+- **ProcedureResultField**
+
+```
+New: ProcedureResultField = SymbolicName ;
+
+Old: n/a
+```
+
+- **PropertyKeyName**
+
+```
+New: PropertyKeyName = SchemaName ;
+
+Old: PropertyKeyName = SymbolicName ;
+```
+
+- **Query**
+
+```
+New: Query = RegularQuery
+           | StandaloneCall
+           ;
+
+Old: Query = RegularQuery ;
+```
+
+- **RelTypeName**
+
+```
+New: RelTypeName = SchemaName ;
+
+Old: RelTypeName = SymbolicName ;
+```
+
+- **ReservedWord**
+
+```
+New: ReservedWord = (A,L,L)
+                  | (A,S,C)
+                  | (A,S,C,E,N,D,I,N,G)
+                  | (B,Y)
+                  | (C,R,E,A,T,E)
+                  | (D,E,L,E,T,E)
+                  | (D,E,S,C)
+                  | (D,E,S,C,E,N,D,I,N,G)
+                  | (D,E,T,A,C,H)
+                  | (E,X,I,S,T,S)
+                  | (L,I,M,I,T)
+                  | (M,A,T,C,H)
+                  | (M,E,R,G,E)
+                  | (O,N)
+                  | (O,P,T,I,O,N,A,L)
+                  | (O,R,D,E,R)
+                  | (R,E,M,O,V,E)
+                  | (R,E,T,U,R,N)
+                  | (S,E,T)
+                  | (S,K,I,P)
+                  | (W,H,E,R,E)
+                  | (W,I,T,H)
+                  | (U,N,I,O,N)
+                  | (U,N,W,I,N,D)
+                  | (A,N,D)
+                  | (A,S)
+                  | (C,O,N,T,A,I,N,S)
+                  | (D,I,S,T,I,N,C,T)
+                  | (E,N,D,S)
+                  | (I,N)
+                  | (I,S)
+                  | (N,O,T)
+                  | (O,R)
+                  | (S,T,A,R,T,S)
+                  | (X,O,R)
+                  | (F,A,L,S,E)
+                  | (T,R,U,E)
+                  | (N,U,L,L)
+                  | (C,O,N,S,T,R,A,I,N,T)
+                  | (D,O)
+                  | (F,O,R)
+                  | (R,E,Q,U,I,R,E)
+                  | (U,N,I,Q,U,E)
+                  | (C,A,S,E)
+                  | (W,H,E,N)
+                  | (T,H,E,N)
+                  | (E,L,S,E)
+                  | (E,N,D)
+                  ;
+             
+Old: n/a
+```
+
+- **SchemaName**
+
+```
+New: SchemaName = SymbolicName
+                | ReservedWord
+                ;
+
+Old: n/a
+```
+
+- **StandaloneCall**
+
+```
+New: StandaloneCall = (C,A,L,L), SP, (ExplicitProcedureInvocation | ImplicitProcedureInvocation), [SP, (Y,I,E,L,D), SP, YieldItems] ;
+
+Old: n/a
+```
+
+- **SymbolicName**
+
+```
+New: SymbolicName = ...
+                  | HexLetter
+                  | (C,O,U,N,T)
+                  | (F,I,L,T,E,R)
+                  | (E,X,T,R,A,C,T)
+                  | (A,N,Y)
+                  | (A,L,L)
+                  | (N,O,N,E)
+                  | (S,I,N,G,L,E)
+                  ;
+
+Old: n/a
+```
+
+- **YieldItem**
+
+```
+New: YieldItem = [ProcedureResultField, SP, (A,S), SP], Variable ;
+
+Old: n/a
+```
+
+- **YieldItems**
+
+```
+New: YieldItems = (YieldItem, { [SP], ',', [SP], YieldItem })
+                | '-'
+                ;
+
+Old: n/a
+```
+
+### Features modified
+
+- **ocparse_generator**: checking the result of performance common tests
+- **ocparse_test**: comparison of source code removed
+- **ocparse_test**: messages improved
+
 ## Version 1.3.0
 
 Release Date: 19.04.2017 - Grammar as of 17.04.2017
