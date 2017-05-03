@@ -6,7 +6,7 @@
 
 ## Version 1.3.1
 
-Release Date: dd.mm.yyyy - Grammar as of 30.04.2017
+Release Date: 03.05.2017 - Grammar as of 30.04.2017
 
 ### Grammar changes
 
