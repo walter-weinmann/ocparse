@@ -275,11 +275,9 @@ Left        310 '*' '/' '%'.
 Left        400 '^'.
 Left        410 unary_add_or_subtract.                                                          % Unary operator
 
-Nonassoc    500 clause.                                                                         % clause vs. stand_alone_call
-
 Nonassoc    500 properties.                                                                     % atom vs. properties / literal vs. properties
-
 Nonassoc    500 reserved_word.                                                                  % reserved_word vs. symbolic_name
+Nonassoc    500 stand_alone_call.                                                               % in_query_call vs. stand_alone_call
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
@@ -290,9 +288,8 @@ cypher -> statement                                                             
 %% =============================================================================
 %% Helper definitions - test purposes.
 %% -----------------------------------------------------------------------------
-cypher -> expression                                                                            : '$1'.
+% cypher -> function_invocation                                          : '$1'.
 % cypher -> case_alternatives                                                                     : '$1'.
-% cypher -> delete                                                                                : '$1'.
 % cypher -> limit                                                                                 : '$1'.
 % cypher -> pattern                                                                               : '$1'.
 % cypher -> property_expression                                                                   : '$1'.
@@ -401,12 +398,14 @@ remove_item -> property_expression                                              
 in_query_call -> CALL explicit_procedure_invocation                                             : {inQueryCall, '$2', []}.
 in_query_call -> CALL explicit_procedure_invocation YIELD yield_items                           : {inQueryCall, '$2', '$4'}.
 
-stand_alone_call -> in_query_call                                                               : {standAloneQueryCall, '$1', []}.
-stand_alone_call -> CALL implicit_procedure_invocation                                          : {standAloneQueryCall, '$2', []}.
-stand_alone_call -> CALL implicit_procedure_invocation YIELD yield_items                        : {standAloneCall, '$2', '$4'}.
+stand_alone_call -> in_query_call                                                               : {standaloneCall, '$1', []}.
+stand_alone_call -> CALL explicit_procedure_invocation                                          : {standaloneCall, '$2', []}.
+stand_alone_call -> CALL implicit_procedure_invocation                                          : {standaloneCall, '$2', []}.
+stand_alone_call -> CALL explicit_procedure_invocation YIELD yield_items                        : {standaloneCall, '$2', '$4'}.
+stand_alone_call -> CALL implicit_procedure_invocation YIELD yield_items                        : {standaloneCall, '$2', '$4'}.
 
-yield_items -> yield_item_commalist                                                             : {yieldItem, '$1'}.
-yield_items -> '-'                                                                              : {yieldItem, "-"}.
+yield_items -> yield_item_commalist                                                             : {yieldItems, '$1'}.
+yield_items -> '-'                                                                              : {yieldItems, "-"}.
 
 %% =============================================================================
 %% Helper definitions.
@@ -782,6 +781,7 @@ function_invocation -> COUNT         '('                               ')'      
 function_name -> symbolic_name                                                                  : {functionName, '$1'}.
 function_name -> EXISTS                                                                         : {functionName, "exists"}.
 
+explicit_procedure_invocation -> procedure_name '('                      ')'                    : {explicitProcedureInvocation, '$1', []}.
 explicit_procedure_invocation -> procedure_name '(' expression_commalist ')'                    : {explicitProcedureInvocation, '$1', '$3'}.
 
 implicit_procedure_invocation -> procedure_name                                                 : {explicitProcedureInvocation, '$1', []}.

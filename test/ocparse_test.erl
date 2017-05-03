@@ -341,14 +341,25 @@ group_gen(TestFiles, Logs) ->
                     {ok, [Opts | Tests]} = file:consult(TestFile),
                     {ok, TestFileBin} = file:read_file(TestFile),
                     TestLines = [begin
-                                     TRe = re:replace(T, "(.*)(\")(.*)", "\\1\\\\\"\\3"
-                                         , [{return, binary}, ungreedy, global, dotall]),
+                                     TRe0 = re:replace(T, "(.*)(\")(.*)", "\\1\\\\\"\\3"
+                                         , [{return, list}, ungreedy, global, dotall]),
+                                     TRe = list_to_binary(io_lib:format("~p", [TRe0])),
                                      case binary:match(TestFileBin, TRe) of
                                          {I1, _} ->
                                              <<Head:I1/binary, _/binary>> = TestFileBin,
-                                             % !!! test case "*" fails here !!!
-                                             {match, Matches} = re:run(Head, ".*[\r\n]", [global]),
-                                             length(Matches) + 1;
+                                             case re:run(Head, ".*[\r\n]", [global]) of
+                                                 {match, Matches} -> length(Matches) + 1;
+                                                 nomatch ->
+                                                     io:format(user,
+                                                         "~p~n"
+                                                         ">>>>>>>>>>> HEAD ~p <<<<<<<<<<<~n"
+                                                         "Opts ~p~n"
+                                                         "Tests ~p~n"
+                                                         "T ~p~n"
+                                                         "TRe ~p~n"
+                                                         , [TestFile, Head, Opts, Tests, T, TRe]),
+                                                     error(nomatch)
+                                             end;
                                          nomatch ->
                                              %io:format(user, "~n~nNOMATCH -------------------------~n"
                                              %                "File : ~s~n~n"

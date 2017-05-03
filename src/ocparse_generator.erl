@@ -42,7 +42,7 @@
     return,
     set,
     special,
-    standAloneCall,
+    standaloneCall,
     statement,
     unwind,
     with
@@ -70,8 +70,8 @@
 -define(MAX_CLAUSE, 2000).
 -define(MAX_CYPHER, 2000).
 -define(MAX_QUERY, 2000).
--define(MAX_RULE_ATOM, 100).                 % cumulative
--define(MAX_RULE_EXPRESSION, 100).           % cumulative
+-define(MAX_RULE_ATOM, 250).                 % cumulative
+-define(MAX_RULE_EXPRESSION, 250).           % cumulative
 -define(MAX_RULE_OTHERS, 2000).              % max of (MAX_CLAUSE, MAX_CYPHER, MAX_QUERY, MAX_STATEMENT))
 -define(MAX_STATEMENT, 2000).
 
@@ -181,12 +181,14 @@ create_code() ->
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code_expression(?MAX_RULE_EXPRESSION),
+    create_code(expressionCommalist),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 7
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(caseAlternatives),
+    create_code(caseAlternativesList),
     create_code(functionInvocation),
     create_code(idInColl),
     create_code(listLiteral),
@@ -249,6 +251,7 @@ create_code() ->
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code_expression(?MAX_RULE_EXPRESSION),
+    create_code(expressionCommalist),
     create_code(patternPart),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -321,7 +324,7 @@ create_code() ->
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(regularQuery),
-    create_code(standAloneCall),
+    create_code(standaloneCall),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 94
@@ -529,6 +532,9 @@ create_code(booleanLiteral = Rule) ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CaseAlternatives = (W,H,E,N), [SP], Expression, [SP], (T,H,E,N), [SP], Expression ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% CaseAlternatives = SP, (W,H,E,N), SP, Expression, SP, (T,H,E,N), SP, Expression ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(caseAlternatives = Rule) ->
@@ -537,7 +543,7 @@ create_code(caseAlternatives = Rule) ->
     Expression_Length = length(Expression),
 
     Code = [
-            "When" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP ++
+            ?SP ++ "When" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP ++
             "Then" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression)
         || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
     ],
@@ -545,74 +551,61 @@ create_code(caseAlternatives = Rule) ->
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% CaseAlternativesList = { [SP], CaseAlternatives } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(caseAlternativesList = Rule) ->
+    ?CREATE_CODE_START,
+    [{caseAlternatives, CaseAlternatives}] = dets:lookup(?CODE_TEMPLATES, caseAlternatives),
+    CaseAlternatives_Length = length(CaseAlternatives),
+
+    Code = [
+        case rand:uniform(3) rem 3 of
+            1 -> ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives);
+            2 -> ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives);
+            _ -> ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives)
+        end
+        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CaseExpression = (((C,A,S,E), { [SP], CaseAlternatives }-) | ((C,A,S,E), [SP], Expression, { [SP], CaseAlternatives }-)), [[SP], (E,L,S,E), [SP], Expression], [SP], (E,N,D) ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% CaseExpression = (((C,A,S,E), SP, { [SP], CaseAlternatives }-) | ((C,A,S,E), SP, Expression, { [SP], CaseAlternatives }-)), [SP, (E,L,S,E), SP, Expression], SP, (E,N,D) ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(caseExpression = Rule) ->
     ?CREATE_CODE_START,
-    [{caseAlternatives, CaseAlternatives}] = dets:lookup(?CODE_TEMPLATES, caseAlternatives),
-    CaseAlternatives_Length = length(CaseAlternatives),
+    [{caseAlternativesList, CaseAlternativesList}] = dets:lookup(?CODE_TEMPLATES, caseAlternativesList),
+    CaseAlternativesList_Length = length(CaseAlternativesList),
     [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
-        case rand:uniform(12) rem 12 of
-            1 -> "Case" ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
+        case rand:uniform(5) rem 5 of
+            1 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(CaseAlternativesList_Length), CaseAlternativesList) ++
                 ?SP ++ "End";
-            2 -> "Case" ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "End";
-            3 -> "Case" ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "End";
-            4 -> "Case" ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
+            2 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(CaseAlternativesList_Length), CaseAlternativesList) ++
                 ?SP ++ "Else" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
                 ?SP ++ "End";
-            5 -> "Case" ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "Else" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+            3 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternativesList_Length), CaseAlternativesList) ++
                 ?SP ++ "End";
-            6 -> "Case" ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "Else" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP ++ "End";
-            7 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "End";
-            8 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "End";
-            9 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "End";
-            10 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "Else" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP ++ "End";
-            11 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ "Else" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+            4 -> "Case" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternativesList_Length), CaseAlternativesList) ++
                 ?SP ++ "End";
             _ -> "Case" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
-                ?SP ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives) ++
+                ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternativesList_Length), CaseAlternativesList) ++
                 ?SP ++ "Else" ++ ?SP ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
                 ?SP ++ "End"
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
     ],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
@@ -697,32 +690,16 @@ create_code(decimalInteger = Rule) ->
 
 create_code(delete = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{expressionCommalist, ExpressionCommalist}] = dets:lookup(?CODE_TEMPLATES, expressionCommalist),
+    ExpressionCommalist_Length = length(ExpressionCommalist),
 
     Code = [
-        case rand:uniform(6) rem 6 of
+        case rand:uniform(2) rem 2 of
             1 -> "Detach" ++ ?SP ++
                 "Delete" ++ ?SP ++
-                lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
-            2 -> "Detach" ++ ?SP ++
-                "Delete" ++ ?SP ++
-                lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
-            3 -> "Detach" ++ ?SP ++
-                "Delete" ++ ?SP ++
-                lists:nth(rand:uniform(Expression_Length), Expression);
-            4 -> "Delete" ++ ?SP ++
-                lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
-            5 -> "Delete" ++ ?SP ++
-                lists:nth(rand:uniform(Expression_Length), Expression) ++
-                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                lists:nth(rand:uniform(ExpressionCommalist_Length), ExpressionCommalist);
             _ -> "Delete" ++ ?SP ++
-                lists:nth(rand:uniform(Expression_Length), Expression)
+                lists:nth(rand:uniform(ExpressionCommalist_Length), ExpressionCommalist)
         end
         || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
     ],
@@ -765,27 +742,19 @@ create_code(escapedSymbolicName = Rule) ->
 
 create_code(explicitProcedureInvocation = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{expressionCommalist, ExpressionCommalist}] = dets:lookup(?CODE_TEMPLATES, expressionCommalist),
+    ExpressionCommalist_Length = length(ExpressionCommalist),
     [{procedureName, ProcedureName}] = dets:lookup(?CODE_TEMPLATES, procedureName),
     ProcedureName_Length = length(ProcedureName),
 
     Code = [
-            lists:nth(rand:uniform(ProcedureName_Length), ProcedureName) ++ "(" ++
-            case rand:uniform(4) rem 4 of
-                1 ->
-                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
-                2 ->
-                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
-                        ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
-                3 ->
-                    ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
-                _ -> []
+            lists:nth(rand:uniform(ProcedureName_Length), ProcedureName) ++ ?SP_OPT ++ "(" ++ ?SP_OPT ++
+            case rand:uniform(10) rem 10 of
+                1 -> [];
+                _ -> lists:nth(rand:uniform(ExpressionCommalist_Length), ExpressionCommalist)
             end ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+            ?SP_OPT ++ ")"
+        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
     ],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
@@ -840,6 +809,33 @@ create_code(exponentDecimalReal = Rule) ->
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ExpressionCommalist = Expression, [SP], { ',', [SP], Expression, [SP] } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(expressionCommalist = Rule) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+        case rand:uniform(4) rem 4 of
+            1 -> lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            2 -> lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            3 -> lists:nth(rand:uniform(Expression_Length), Expression) ++
+                ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            _ -> lists:nth(rand:uniform(Expression_Length), Expression)
+        end
+        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
+    ],
+    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FilterExpression = IdInColl, [[SP], Where] ;
 %% -----------------------------------------------------------------------------
 %% wwe ???
@@ -871,31 +867,30 @@ create_code(filterExpression = Rule) ->
 
 create_code(functionInvocation = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{expressionCommalist, ExpressionCommalist}] = dets:lookup(?CODE_TEMPLATES, expressionCommalist),
+    ExpressionCommalist_Length = length(ExpressionCommalist),
     [{functionName, FunctionName}] = dets:lookup(?CODE_TEMPLATES, functionName),
     FunctionName_Length = length(FunctionName),
 
-    Code = [
-            lists:nth(rand:uniform(FunctionName_Length), FunctionName) ++ ?SP_OPT ++
-            "(" ++ ?SP_OPT ++
-            case rand:uniform(6) rem 6 of
-                1 -> "Distinct" ++ ?SP ++
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
-                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
-                2 -> "Distinct" ++ ?SP ++
-                    lists:nth(rand:uniform(Expression_Length), Expression);
-                3 -> "Distinct";
-                4 ->
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
-                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
-                5 ->
-                    lists:nth(rand:uniform(Expression_Length), Expression);
-                _ -> []
-            end ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
-    ],
+    Code =
+        [
+            "exists()",
+            "exists(distinct)"
+        ] ++
+        [
+                lists:nth(rand:uniform(FunctionName_Length), FunctionName) ++ ?SP_OPT ++
+                "(" ++ ?SP_OPT ++
+                case rand:uniform(4) rem 4 of
+                    1 -> "Distinct";
+                    2 -> "Distinct" ++ ?SP ++
+                        lists:nth(rand:uniform(ExpressionCommalist_Length), ExpressionCommalist);
+                    3 ->
+                        lists:nth(rand:uniform(ExpressionCommalist_Length), ExpressionCommalist);
+                    _ -> []
+                end ++
+                ?SP_OPT ++ ")"
+            || _ <- lists:seq(1, ?MAX_RULE_ATOM * 2)
+        ],
     store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     store_code(atom, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
@@ -909,7 +904,7 @@ create_code(functionName = Rule) ->
     [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
 
     Code = ["exists"] ++ [re:replace(SN, "_SYMN_", "_FN_", [{return, list}]) || SN <- SymbolicName],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_RULE_ATOM, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -996,6 +991,9 @@ create_code(implicitProcedureInvocation = Rule) ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% InQueryCall = (C,A,L,L), SP, ExplicitProcedureInvocation, [[SP], (Y,I,E,L,D), SP, YieldItems] ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% InQueryCall = (C,A,L,L), SP, ExplicitProcedureInvocation, [SP, (Y,I,E,L,D), SP, YieldItems] ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(inQueryCall = Rule) ->
@@ -1010,7 +1008,7 @@ create_code(inQueryCall = Rule) ->
             case rand:uniform(2) rem 2 of
                 1 -> lists:nth(rand:uniform(ExplicitProcedureInvocation_Length), ExplicitProcedureInvocation);
                 _ -> lists:nth(rand:uniform(ExplicitProcedureInvocation_Length), ExplicitProcedureInvocation) ++
-                    " Yield" ++ ?SP ++ lists:nth(rand:uniform(YieldItems_Length), YieldItems)
+                    ?SP ++ "Yield" ++ ?SP ++ lists:nth(rand:uniform(YieldItems_Length), YieldItems)
             end
         || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
     ],
@@ -1081,22 +1079,12 @@ create_code(listComprehension = Rule) ->
 
 create_code(listLiteral = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
-    Expression_Length = length(Expression),
+    [{expressionCommalist, ExpressionCommalist}] = dets:lookup(?CODE_TEMPLATES, expressionCommalist),
+    ExpressionCommalist_Length = length(ExpressionCommalist),
 
     Code = [
-            "[" ++ ?SP_OPT ++
-            lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
-            case rand:uniform(3) rem 3 of
-                1 ->
-                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT ++
-                        "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
-                2 ->
-                    "," ++ ?SP_OPT ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ ?SP_OPT;
-                _ -> []
-            end ++
-            "]"
-        || _ <- lists:seq(1, ?MAX_RULE_ATOM)
+            "[" ++ ?SP_OPT ++ lists:nth(rand:uniform(ExpressionCommalist_Length), ExpressionCommalist) ++ ?SP_OPT ++ "]"
+        || _ <- lists:seq(1, ?MAX_RULE_ATOM * 2)
     ],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     store_code(atom, Code, ?MAX_RULE_OTHERS, false),
@@ -1460,7 +1448,7 @@ create_code(pattern = Rule) ->
                     ?SP_OPT ++ "," ++ ?SP_OPT ++ lists:nth(rand:uniform(PatternPart_Length), PatternPart);
                 _ -> []
             end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
     ],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
@@ -1598,7 +1586,7 @@ create_code(patternPart = Rule) ->
             _ ->
                 lists:nth(rand:uniform(AnonymousPatternPart_Length), AnonymousPatternPart)
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
     ],
     store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
     ?CREATE_CODE_END;
@@ -1731,6 +1719,7 @@ create_code(rangeLiteral = Rule) ->
 
     Code = lists:append(
         [
+            "*",
             " * "
         ],
         [
@@ -2550,7 +2539,7 @@ create_code(special = Rule) ->
 %% StandaloneCall = (C,A,L,L), SP, (ExplicitProcedureInvocation | ImplicitProcedureInvocation), [SP, (Y,I,E,L,D), SP, YieldItems] ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-create_code(standAloneCall = Rule) ->
+create_code(standaloneCall = Rule) ->
     ?CREATE_CODE_START,
     [{explicitProcedureInvocation, ExplicitProcedureInvocation}] = dets:lookup(?CODE_TEMPLATES, explicitProcedureInvocation),
     ExplicitProcedureInvocation_Length = length(ExplicitProcedureInvocation),
@@ -2564,10 +2553,10 @@ create_code(standAloneCall = Rule) ->
             case rand:uniform(4) rem 4 of
                 1 -> lists:nth(rand:uniform(ExplicitProcedureInvocation_Length), ExplicitProcedureInvocation);
                 2 -> lists:nth(rand:uniform(ExplicitProcedureInvocation_Length), ExplicitProcedureInvocation) ++
-                    " Yield" ++ ?SP ++ lists:nth(rand:uniform(YieldItems_Length), YieldItems);
+                    ?SP ++ "Yield" ++ ?SP ++ lists:nth(rand:uniform(YieldItems_Length), YieldItems);
                 3 -> lists:nth(rand:uniform(ImplicitProcedureInvocation_Length), ImplicitProcedureInvocation);
                 _ -> lists:nth(rand:uniform(ImplicitProcedureInvocation_Length), ImplicitProcedureInvocation) ++
-                    " Yield" ++ ?SP ++ lists:nth(rand:uniform(YieldItems_Length), YieldItems)
+                    ?SP ++ "Yield" ++ ?SP ++ lists:nth(rand:uniform(YieldItems_Length), YieldItems)
             end
         || _ <- lists:seq(1, ?MAX_QUERY * 2)
     ],
@@ -2790,8 +2779,8 @@ create_code(yieldItem = Rule) ->
     Code = [
         case rand:uniform(2) rem 2 of
             1 -> lists:nth(rand:uniform(ProcedureResultField_Length), ProcedureResultField) ++
-                " As " ++ lists:nth(rand:uniform(Variable_Length), Variable);
-            _ -> ?SP ++ lists:nth(rand:uniform(Variable_Length), Variable)
+                ?SP ++ "As" ++ ?SP ++ lists:nth(rand:uniform(Variable_Length), Variable);
+            _ -> lists:nth(rand:uniform(Variable_Length), Variable)
         end
         || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
     ],

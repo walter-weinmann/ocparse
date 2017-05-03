@@ -304,7 +304,8 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% anonymousPatternPart / expression / functionName / labelName / patternPart /
+% anonymousPatternPart / expression / functionName /
+% implicitProcedureInvocation / labelName / patternPart / procedureName /
 % propertyKeyName / query / relTypeName / removeItem / schemaName / sortItem /
 % statement / variable
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -322,8 +323,11 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
     when Type == anonymousPatternPart;
     Type == expression;
     Type == functionName;
+    Type == implicitProcedureInvocation;
     Type == labelName;
     Type == patternPart;
+    Type == procedureName;
+    Type == procedureResultField;
     Type == propertyKeyName;
     Type == query;
     Type == relTypeName;
@@ -864,7 +868,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {explicitProcedureInvocation, Value1, []} = S
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {Value1New(), NewCtx2},
+    RT = {Value1New ++ "()", NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {explicitProcedureInvocation, Value1, Value2} = ST) ->
@@ -878,7 +882,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {explicitProcedureInvocation, Value1, Value2}
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    {Value2New, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, Value2),
+    {Value2New, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, {expressionCommalist, Value2}),
     NewCtx4 = case FType of
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
@@ -2883,10 +2887,24 @@ pt_to_source(FType, Fun, Ctx, Lvl, {sortItem, Value, Type} = ST) ->
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% standAloneCall
+% standaloneCall
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pt_to_source(FType, Fun, Ctx, Lvl, {standAloneCall, Value1, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {standaloneCall, {inQueryCall, _, _} = Value1, []} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {Value1New, NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {standaloneCall, Value1, []} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2900,7 +2918,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {standAloneCall, Value1, []} = ST) ->
     RT = {"Call " ++ Value1New, NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {standAloneCall, Value1, Value2} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {standaloneCall, Value1, Value2} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
