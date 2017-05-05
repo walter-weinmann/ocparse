@@ -3425,6 +3425,14 @@ file_write_ct(Type, File, [H | T]) ->
                                                                      end]),
     file_write_ct(Type, File, T).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Randomising unique lists.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sort_list_random(L) ->
+    F = fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end,
+    lists:sort(F, sets:to_list(sets:from_list(L))).
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Store generated code in helper table.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3441,7 +3449,7 @@ store_code(Rule, Code, Max, Sort) ->
 
             CodeNew = case length(CodeSet) > Max of
                           true ->
-                              lists:sublist(CodeSet, 1, Max);
+                              lists:sublist(sort_list_random(CodeSet), 1, Max);
                           _ ->
                               CodeSet
                       end,
