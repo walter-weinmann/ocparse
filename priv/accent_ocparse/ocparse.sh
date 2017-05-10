@@ -35,4 +35,3 @@ $ACCENT ocparse.acc
 cc -o amber -O3 yygrammar.c $AMBER
 
 ./amber each ellipsis examples 100000
-
