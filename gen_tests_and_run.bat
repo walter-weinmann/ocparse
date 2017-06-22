@@ -1,7 +1,7 @@
-@echo off
+@ECHO off
 rem ----------------------------------------------------------------------------
 rem
-rem gen_tests.bat: opencypher - generating test data.
+rem gen_tests_and_run.bat: opencypher - generate and run test data.
 rem
 rem Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
 rem
@@ -21,12 +21,23 @@ rem under the License.
 rem
 rem ----------------------------------------------------------------------------
 
-> gen_tests.log (
+> gen_tests_and_run.log (
 
     SETLOCAL enableDelayedExpansion
     ECHO !DATE!_!TIME!
     CALL rebar3 compile
     erl -noshell -pa _build\default\lib\ocparse\ebin -s ocparse_generator generate -s init stop
+    ECHO !DATE!_!TIME!
+    SET SOURCEFILES_OLD=SOURCEFILES
+    SET SOURCEFILES=
+    CALL rebar3 eunit
+    SET SOURCEFILES=SOURCEFILES_OLD
+    ECHO !DATE!_!TIME!
+    CALL rebar3 ct
+    ECHO !DATE!_!TIME!
+    CALL rebar3 cover
+    ECHO !DATE!_!TIME!
+    CALL rebar3 dialyzer
     ECHO !DATE!_!TIME!
 
 )

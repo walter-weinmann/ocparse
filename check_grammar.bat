@@ -1,9 +1,9 @@
-@echo off
+@ECHO OFF
 rem ----------------------------------------------------------------------------
 rem
-rem gen_tests.bat: opencypher - generating test data.
+rem check_grammar.bat: opencypher - checking grammar definition with BNFC.
 rem
-rem Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
+rem Copyright (c) 2012-17 K2 Informatics GmbH.  All Rights Reserved.
 rem
 rem This file is provided to you under the Apache License,
 rem Version 2.0 (the "License"); you may not use this file
@@ -21,12 +21,24 @@ rem under the License.
 rem
 rem ----------------------------------------------------------------------------
 
-> gen_tests.log (
+> check_grammar.log (
 
-    SETLOCAL enableDelayedExpansion
-    ECHO !DATE!_!TIME!
-    CALL rebar3 compile
-    erl -noshell -pa _build\default\lib\ocparse\ebin -s ocparse_generator generate -s init stop
-    ECHO !DATE!_!TIME!
+    ECHO ============================================================================
+    ECHO !TIME! Start run
+    ECHO ----------------------------------------------------------------------------
+
+    DEL /Q tmp\*
+
+    bnfc -o tmp --haskell priv\bnfc\ocparse.cf
+
+    happy -i tmp\ParOcparse.y
+
+    bnfc -o tmp --haskell priv\bnfc\cypher.cf
+
+    happy -i tmp\ParCypher.y
+
+    ECHO ----------------------------------------------------------------------------
+    ECHO !TIME! End   run
+    ECHO ============================================================================
 
 )

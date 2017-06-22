@@ -32,6 +32,6 @@
         {modules, [
             ocparse
         ]},
-        {vsn, "1.3.0"}
+        {vsn, "1.4.0"}
     ]
 }.

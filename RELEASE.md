@@ -4,6 +4,171 @@
 
 # Release Notes
 
+## Version 1.4.0
+
+Release Date: dd.mm.2017 - Grammar as of 20.06.2017
+
+### Grammar changes
+
+- **Clause**
+
+```
+New: n/a
+
+Old: Clause = Match
+            | Unwind
+            | Merge
+            | Create
+            | Set
+            | Delete
+            | Remove
+            | InQueryCall
+            | With
+            | Return
+            ;
+```
+
+- **Cypher**
+
+```
+New: Cypher = [SP], Statement, [[SP], ';'], [SP], EOI ;
+
+Old: Cypher = [SP], Statement, [[SP], ';'], [SP] ;
+```
+
+- **MultiPartQuery**
+
+```
+New: MultiPartQuery = (ReadPart | (UpdatingStartClause, [SP], UpdatingPart)), With, [SP], { ReadPart, UpdatingPart, With, [SP] }, SinglePartQuery ;
+
+Old: n/a
+```
+
+- **Namespace**
+
+```
+New: Namespace = { SymbolicName, '.' } ;
+
+Old: n/a
+```
+
+- **ProcedureName**
+
+```
+New: ProcedureName = Namespace, SymbolicName ;
+
+Old: ProcedureName = SymbolicName ;
+```
+
+- **ReadingClause**
+
+```
+New: ReadingClause = Match
+                   | Unwind
+                   | InQueryCall
+                   ;
+
+Old: n/a
+```
+
+- **ReadOnlyEnd**
+
+```
+New: ReadOnlyEnd = ReadPart, Return ;
+
+Old: n/a
+```
+
+- **ReadPart**
+
+```
+New: ReadPart = { ReadingClause, [SP] } ;
+
+Old: n/a
+```
+
+- **ReadUpdateEnd**
+
+```
+New: ReadUpdateEnd = ReadingClause, { [SP], ReadingClause }, { [SP], UpdatingClause }-, [[SP], Return] ;
+
+Old: n/a
+```
+
+- **SingleQuery**
+
+```
+New: SingleQuery = SinglePartQuery
+                 | MultiPartQuery
+                 ;
+
+Old: SingleQuery = Clause, { [SP], Clause } ;
+```
+
+- **SinglePartQuery**
+
+```
+New: SinglePartQuery = ReadOnlyEnd
+                     | ReadUpdateEnd
+                     | UpdatingEnd
+                     ;
+
+Old: n/a
+```
+
+- **UpdatingEnd**
+
+```
+New: UpdatingEnd = UpdatingStartClause, { [SP], UpdatingClause }, [[SP], Return] ;
+
+Old: n/a
+```
+
+- **UpdatingClause**
+
+```
+New: UpdatingClause = Create
+                    | Merge
+                    | Delete
+                    | Set
+                    | Remove
+                    ;
+
+Old: n/a
+```
+
+- **UpdatingPart**
+
+```
+New: UpdatingPart = { UpdatingClause, [SP] } ;
+
+Old: n/a
+```
+
+- **UpdatingStartClause**
+
+```
+New: UpdatingStartClause = Create
+                         | Merge
+                         ;
+
+Old: n/a
+```
+
+### Feature new
+
+- Support of [BNFC](https://github.com/bnfc/bnfc).
+
+### Features modified
+
+- Improving list performance.
+- Running a script files creates a logging file.
+- Support of dialyzer.
+
+### Feature removed
+
+- Support of [Amber](http://accent.compilertools.net).
+
 ## Version 1.3.1
 
 Release Date: 03.05.2017 - Grammar as of 30.04.2017
