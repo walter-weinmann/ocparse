@@ -29,13 +29,9 @@ rem ----------------------------------------------------------------------------
 
     DEL /Q tmp\*
 
-    bnfc -o tmp --haskell priv\bnfc\ocparse.cf
+    bnfc -o tmp --haskell priv\BNF_Converter\ocparse.cf
 
     happy -i tmp\ParOcparse.y
-
-    bnfc -o tmp --haskell priv\bnfc\cypher.cf
-
-    happy -i tmp\ParCypher.y
 
     ECHO ----------------------------------------------------------------------------
     ECHO !TIME! End   run

@@ -24,7 +24,7 @@
 
 -export([pt_to_source/5]).
 
--define(NODEBUG, true).
+% -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -135,99 +135,91 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {Expression, _, _} = Value} = ST)
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% addOrSubtractExpression .. xorExpression
+% addOrSubtractExpressionAddonList / andExpressionAddonList /
+% caseAlternativesList / comparisonExpressionAddonList / expressionCommalist /
+% mergeActionList / multiplyDivideModuloExpressionAddonList / nodeLabels /
+% notExpressionAddonList / orExpressionAddonList / patternPartCommalist /
+% patternElementChainList / powerOfExpressionAddonList /
+% propertyKeyNameExpressionCommalist / propertyLookupList / readingClauseList /
+% readPartUpdatingPartWithList / relTypeVerticalbarlist / removeItemCommalist /
+% returnItemCommalist / setItemCommalist / sortItemCommalist /
+% stringListNullOperatorExpressionAddonList /
+% unaryAddOrSubtractExpressionAddonList / unionList / updatingClauseList /
+% variableCommalist / xorExpressionAddonList / yieldItemCommalist
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value, []} = ST)
-    when Type == addOrSubtractExpression;
-    Type == andExpression;
-    Type == comparisonExpression;
-    Type == multiplyDivideModuloExpression;
-    Type == notExpression;
-    Type == orExpression;
-    Type == powerOfExpression;
-    Type == stringListNullOperatorExpression;
-    Type == unaryAddOrSubtractExpression;
-    Type == xorExpression ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+pt_to_source(FType, Fun, Ctx, _Lvl, {Type, []} = ST)
+    when (Type == addOrSubtractExpressionAddonList orelse
+    Type == andExpressionAddonList orelse
+    Type == caseAlternativesList orelse
+    Type == comparisonExpressionAddonList orelse
+    Type == expressionCommalist orelse
+    Type == mergeActionList orelse
+    Type == multiplyDivideModuloExpressionAddonList orelse
+    Type == nodeLabels orelse
+    Type == notExpressionAddonList orelse
+    Type == orExpressionAddonList orelse
+    Type == patternElementChainList orelse
+    Type == patternPartCommalist orelse
+    Type == powerOfExpressionAddonList orelse
+    Type == propertyKeyNameExpressionCommalist orelse
+    Type == propertyLookupList orelse
+    Type == readingClauseList orelse
+    Type == readPartUpdatingPartWithList orelse
+    Type == relTypeVerticalbarlist orelse
+    Type == removeItemCommalist orelse
+    Type == returnItemCommalist orelse
+    Type == setItemCommalist orelse
+    Type == sortItemCommalist orelse
+    Type == stringListNullOperatorExpressionAddonList orelse
+    Type == unaryAddOrSubtractExpressionAddonList orelse
+    Type == unionList orelse
+    Type == updatingClauseList orelse
+    Type == variableCommalist orelse
+    Type == xorExpressionAddonList orelse
+    Type == yieldItemCommalist) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
               end,
-    RT = {ValueNew, NewCtx2},
+    RT = {[], NewCtx1},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
-    when Type == notExpression;
-    Type == unaryAddOrSubtractExpression ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ExpressionNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Expression),
-    {ExpressionAddonListNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {list_to_atom(atom_to_list(Type) ++ "AddonList"), ExpressionAddonList}),
-    NewCtx3 = case FType of
-                  top_down -> NewCtx2;
-                  bottom_up -> Fun(ST, NewCtx2)
-              end,
-    RT = {lists:append(
-        [
-            ExpressionAddonListNew,
-            case lists:suffix(" ", ExpressionAddonListNew) of
-                true ->
-                    [];
-                false ->
-                    " "
-            end,
-            ExpressionNew
-        ]), NewCtx3},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
-    when Type == addOrSubtractExpression;
-    Type == andExpression;
-    Type == comparisonExpression;
-    Type == multiplyDivideModuloExpression;
-    Type == orExpression;
-    Type == powerOfExpression;
-    Type == stringListNullOperatorExpression;
-    Type == xorExpression ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ExpressionNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Expression),
-    {ExpressionAddonListNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {list_to_atom(atom_to_list(Type) ++ "AddonList"), ExpressionAddonList}),
-    NewCtx3 = case FType of
-                  top_down -> NewCtx2;
-                  bottom_up -> Fun(ST, NewCtx2)
-              end,
-    RT = {lists:append([ExpressionNew, " ", ExpressionAddonListNew]), NewCtx3},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% addOrSubtractExpressionAddonList .. xorExpressionAddonList
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     when (Type == addOrSubtractExpressionAddonList orelse
     Type == andExpressionAddonList orelse
+    Type == caseAlternativesList orelse
     Type == comparisonExpressionAddonList orelse
+    Type == expressionCommalist orelse
+    Type == mergeActionList orelse
     Type == multiplyDivideModuloExpressionAddonList orelse
+    Type == nodeLabels orelse
     Type == notExpressionAddonList orelse
     Type == orExpressionAddonList orelse
+    Type == patternElementChainList orelse
+    Type == patternPartCommalist orelse
     Type == powerOfExpressionAddonList orelse
+    Type == propertyKeyNameExpressionCommalist orelse
+    Type == propertyLookupList orelse
+    Type == readingClauseList orelse
+    Type == readPartUpdatingPartWithList orelse
+    Type == relTypeVerticalbarlist orelse
+    Type == removeItemCommalist orelse
+    Type == returnItemCommalist orelse
+    Type == setItemCommalist orelse
+    Type == sortItemCommalist orelse
     Type == stringListNullOperatorExpressionAddonList orelse
     Type == unaryAddOrSubtractExpressionAddonList orelse
-    Type == xorExpressionAddonList)
+    Type == unionList orelse
+    Type == updatingClauseList orelse
+    Type == variableCommalist orelse
+    Type == xorExpressionAddonList orelse
+    Type == yieldItemCommalist)
     andalso is_list(Values) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
@@ -236,6 +228,138 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
              end,
     {ValuesNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
         case F of
+            {Operator}
+                when Type == notExpressionAddonList andalso Operator == "not" orelse
+                Type == stringListNullOperatorExpressionAddonList andalso (
+                    Operator == "is null" orelse Operator == "is not null") ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {lists:append(
+                    [
+                        Acc,
+                        case length(Acc) of
+                            0 -> [];
+                            _ -> " "
+                        end,
+                        Operator
+                    ]), CtxAcc};
+            {Operator}
+                when Type == unaryAddOrSubtractExpressionAddonList andalso (
+                Operator == "+" orelse Operator == "-") ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {lists:append([Acc, Operator, " "]), CtxAcc};
+            {ListType, _}
+                when Type == expressionCommalist, ListType == expression;
+                Type == patternPartCommalist, ListType == patternPart;
+                Type == removeItemCommalist, ListType == removeItem;
+                Type == returnItemCommalist, ListType == returnItem;
+                Type == sortItemCommalist, ListType == sortItem;
+                Type == variableCommalist, ListType == variable;
+                Type == yieldItemCommalist, ListType == yieldItem ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {lists:append(
+                    [
+                        Acc,
+                        case length(Acc) of
+                            0 -> [];
+                            _ -> ","
+                        end,
+                        SubAcc
+                    ]), CtxAcc1};
+            {ListType, _}
+                when Type == nodeLabels, ListType == nodeLabel;
+                Type == readingClauseList, ListType == readingClause;
+                Type == updatingClauseList, ListType == updatingClause;
+                Type == updatingClauseList, ListType == updatingStartClause ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {lists:append(
+                    [
+                        Acc,
+                        case length(Acc) of
+                            0 -> [];
+                            _ -> " "
+                        end,
+                        SubAcc
+                    ]), CtxAcc1};
+            {Operator, _}
+                when Type == addOrSubtractExpressionAddonList andalso (
+                Operator == "+" orelse Operator == "-") orelse
+                Type == andExpressionAddonList andalso Operator == "and" orelse
+                Type == multiplyDivideModuloExpressionAddonList andalso (
+                    Operator == "*" orelse Operator == "/" orelse Operator == "%") orelse
+                Type == orExpressionAddonList andalso Operator == "or" orelse
+                Type == powerOfExpressionAddonList andalso Operator == "^" orelse
+                Type == stringListNullOperatorExpressionAddonList andalso (
+                    Operator == "[" orelse Operator == "=~" orelse Operator == "in" orelse
+                        Operator == "starts with" orelse Operator == "ends with" orelse
+                        Operator == "contains") orelse
+                Type == xorExpressionAddonList andalso Operator == "xor" ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {lists:append(
+                    [
+                        Acc,
+                        case length(Acc) of
+                            0 -> [];
+                            _ -> " "
+                        end,
+                        SubAcc
+                    ]), CtxAcc1};
+            {{propertyKeyName, _}, {expression, _}}
+                when Type == propertyKeyNameExpressionCommalist ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {lists:append(
+                    [
+                        Acc,
+                        case length(Acc) of
+                            0 -> [];
+                            _ -> ","
+                        end,
+                        SubAcc
+                    ]), CtxAcc1};
+            {propertyLookup, _}
+                when Type == propertyLookupList ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {Acc ++ SubAcc, CtxAcc1};
+            {{relTypeName, _} = RTN, Colon} ->
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, RTN),
+                {lists:append([Acc, "|", Colon, SubAcc]), CtxAcc1};
+            {ListType, _, _}
+                when Type == caseAlternativesList, ListType == caseAlternatives;
+                Type == mergeActionList, ListType == mergeAction;
+                Type == unionList, ListType == union ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {lists:append(
+                    [
+                        Acc,
+                        case length(Acc) of
+                            0 -> [];
+                            _ -> " "
+                        end,
+                        SubAcc
+                    ]), CtxAcc1};
+            {ListType, _, _}
+                when Type == patternPartCommalist, ListType == patternPart;
+                Type == removeItemCommalist, ListType == removeItem;
+                Type == returnItemCommalist, ListType == returnItem;
+                Type == setItemCommalist, ListType == setItem;
+                Type == sortItemCommalist, ListType == sortItem;
+                Type == yieldItemCommalist, ListType == yieldItem ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {lists:append(
+                    [
+                        Acc,
+                        case length(Acc) of
+                            0 -> [];
+                            _ -> ","
+                        end,
+                        SubAcc
+                    ]), CtxAcc1};
             {Operator, _, _}
                 when Type == comparisonExpressionAddonList andalso Operator == partialComparisonExpression orelse
                 Type == stringListNullOperatorExpressionAddonList andalso Operator == "[" ->
@@ -250,25 +374,12 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                         end,
                         SubAcc
                     ]), CtxAcc1};
-            {Operator, _}
-                when Type == addOrSubtractExpressionAddonList andalso (
-                Operator == "+" orelse
-                    Operator == "-") orelse
-                Type == andExpressionAddonList andalso Operator == "and" orelse
-                Type == multiplyDivideModuloExpressionAddonList andalso (
-                    Operator == "*" orelse
-                        Operator == "/" orelse
-                        Operator == "%") orelse
-                Type == orExpressionAddonList andalso Operator == "or" orelse
-                Type == powerOfExpressionAddonList andalso Operator == "^" orelse
-                Type == stringListNullOperatorExpressionAddonList andalso (
-                    Operator == "[" orelse
-                        Operator == "=~" orelse
-                        Operator == "in" orelse
-                        Operator == "starts with" orelse
-                        Operator == "ends with" orelse
-                        Operator == "contains") orelse
-                Type == xorExpressionAddonList andalso Operator == "xor" ->
+            {patternElementChain, _, _}
+                when Type == patternElementChainList ->
+                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
+                {Acc ++ SubAcc, CtxAcc1};
+            {{readPart, _}, {updatingPart, _}, {with, _, _, _}} ->
                 ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {lists:append(
@@ -280,25 +391,19 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                         end,
                         SubAcc
                     ]), CtxAcc1};
-            {Operator}
-                when Type == notExpressionAddonList andalso Operator == "not" orelse
-                Type == stringListNullOperatorExpressionAddonList andalso Operator == "is null" orelse
-                Type == stringListNullOperatorExpressionAddonList andalso Operator == "is not null" ->
+            {ListType, _, _, _}
+                when Type == setItemCommalist, ListType == setItem ->
                 ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
+                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {lists:append(
                     [
                         Acc,
                         case length(Acc) of
                             0 -> [];
-                            _ -> " "
+                            _ -> ","
                         end,
-                        Operator
-                    ]), CtxAcc};
-            {Operator}
-                when Type == unaryAddOrSubtractExpressionAddonList andalso Operator == "+" orelse
-                Type == unaryAddOrSubtractExpressionAddonList andalso Operator == "-" ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {lists:append([Acc, Operator, " "]), CtxAcc}
+                        SubAcc
+                    ]), CtxAcc1}
         end
                                        end,
         {[], NewCtx},
@@ -312,10 +417,14 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% anonymousPatternPart / expression / functionName /
-% implicitProcedureInvocation / labelName / patternPart / procedureName /
-% propertyKeyName / query / relTypeName / removeItem / schemaName / sortItem /
-% statement / variable
+% addOrSubtractExpression / andExpression / anonymousPatternPart /
+% comparisonExpression / expression / functionName /
+% implicitProcedureInvocation / labelName / multiplyDivideModuloExpression /
+% notExpression / orExpression / patternPart / powerOfExpression /
+% procedureName / propertyKeyName / query / readingClause / relTypeName /
+% removeItem / schemaName / singlePartQuery / singleQuery / sortItem /
+% statement / stringListNullOperatorExpression / unaryAddOrSubtractExpression /
+% updatingClause / updatingStartClause / variable / xorExpression
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, _Lvl, {functionName, "exists" = Value} = ST) ->
@@ -324,26 +433,45 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {functionName, "exists" = Value} = ST) ->
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    RT = {Value, NewCtx},
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {Value, NewCtx1},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
-    when Type == anonymousPatternPart;
+    when Type == addOrSubtractExpression;
+    Type == andExpression;
+    Type == anonymousPatternPart;
+    Type == comparisonExpression;
     Type == expression;
     Type == functionName;
     Type == implicitProcedureInvocation;
     Type == labelName;
+    Type == multiplyDivideModuloExpression;
+    Type == notExpression;
+    Type == orExpression;
     Type == patternPart;
+    Type == powerOfExpression;
     Type == procedureName;
     Type == procedureResultField;
     Type == propertyKeyName;
     Type == query;
+    Type == readingClause;
     Type == relTypeName;
     Type == removeItem;
     Type == schemaName;
+    Type == singlePartQuery;
+    Type == singleQuery;
     Type == sortItem;
     Type == statement;
-    Type == variable ->
+    Type == stringListNullOperatorExpression;
+    Type == unaryAddOrSubtractExpression;
+    Type == updatingClause;
+    Type == updatingStartClause;
+    Type == variable;
+    Type == xorExpression ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -355,6 +483,67 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {ValueNew, NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% addOrSubtractExpression / andExpression / comparisonExpression /
+% multiplyDivideModuloExpression / orExpression / powerOfExpression /
+% stringListNullOperatorExpression / xorExpression
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, []} = ST)
+    when Type == addOrSubtractExpression;
+    Type == andExpression;
+    Type == comparisonExpression;
+    Type == multiplyDivideModuloExpression;
+    Type == orExpression;
+    Type == powerOfExpression;
+    Type == stringListNullOperatorExpression;
+    Type == xorExpression ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ExpressionNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Expression),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {ExpressionNew, NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
+    when Type == addOrSubtractExpression;
+    Type == andExpression;
+    Type == comparisonExpression;
+    Type == multiplyDivideModuloExpression;
+    Type == orExpression;
+    Type == powerOfExpression;
+    Type == stringListNullOperatorExpression;
+    Type == xorExpression ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ExpressionNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Expression),
+    {ExpressionAddonListNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {list_to_atom(atom_to_list(Type) ++ "AddonList"), ExpressionAddonList}),
+    NewCtx3 = case FType of
+                  top_down -> NewCtx2;
+                  bottom_up -> Fun(ST, NewCtx2)
+              end,
+    RT = {lists:append([
+        ExpressionNew,
+        case lists:suffix(" ", ExpressionNew) of
+            true ->
+                [];
+            false ->
+                " "
+        end,
+        ExpressionAddonListNew
+    ]), NewCtx3},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -595,152 +784,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {caseExpression, Value1, Value2, Value3} = ST
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% clause / numberLiteral
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
-    when Type == clause andalso (
-    SubType == remove orelse
-        SubType == set) orelse
-    Type == numberLiteral andalso (
-        SubType == doubleLiteral orelse
-            SubType == integerLiteral) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {clause, {create, _} = Value} = ST) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {clause, {Type, _, _} = Value} = ST)
-    when Type == delete;
-    Type == inQueryCall;
-    Type == merge;
-    Type == return;
-    Type == unwind ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {clause, {with, _, _, _} = Value} = ST) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {clause, {match, _, _, _} = Value} = ST) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% caseAlternativesList / clauseList / mergeActionList / nodeLabels / unionList
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
-    when Type == caseAlternativesList;
-    Type == clauseList;
-    Type == mergeActionList;
-    Type == nodeLabels;
-    Type == unionList,
-    is_list(Values) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
-        case F of
-            {ListType, _}
-                when Type == clauseList, ListType == clause;
-                Type == nodeLabels, ListType == nodeLabel ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {lists:append(
-                    [
-                        Acc,
-                        case length(Acc) of
-                            0 -> [];
-                            _ -> " "
-                        end,
-                        SubAcc
-                    ]), CtxAcc1};
-            {ListType, _, _}
-                when Type == caseAlternativesList, ListType == caseAlternatives;
-                Type == mergeActionList, ListType == mergeAction;
-                Type == unionList, ListType == union ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {lists:append(
-                    [
-                        Acc,
-                        case length(Acc) of
-                            0 -> [];
-                            _ -> " "
-                        end,
-                        SubAcc
-                    ]), CtxAcc1}
-        end
-                                      end,
-        {[], NewCtx},
-        Values),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create / limit / skip
+% create
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {create, Pattern} = ST) ->
@@ -755,22 +799,6 @@ pt_to_source(FType, Fun, Ctx, Lvl, {create, Pattern} = ST) ->
                   bottom_up -> Fun(ST, NewCtx1)
               end,
     RT = {"create " ++ PatternNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
-    when Type == limit;
-    Type == skip ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {lists:append([atom_to_list(Type), " ", ValueNew]), NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -856,132 +884,34 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {Type, Value} = ST)
 % explicitProcedureInvocation
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pt_to_source(FType, Fun, Ctx, Lvl, {explicitProcedureInvocation, Value1, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {explicitProcedureInvocation, ProcedureName, []} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {Value1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value1),
+    {ProcedureNameNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ProcedureName),
     NewCtx2 = case FType of
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {Value1New ++ "()", NewCtx2},
+    RT = {ProcedureNameNew ++ "()", NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {explicitProcedureInvocation, Value1, Value2} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {explicitProcedureInvocation, ProcedureName, ExpressionCommalist} = ST)
+    when is_list(ExpressionCommalist) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {Value1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value1),
-    {Value2New, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {expressionCommalist, Value2}),
+    {ProcedureNameNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ProcedureName),
+    {ExpressionCommalistNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {expressionCommalist, ExpressionCommalist}),
     NewCtx3 = case FType of
                   top_down -> NewCtx2;
                   bottom_up -> Fun(ST, NewCtx2)
               end,
-    RT = {lists:append([Value1New, "(", Value2New, ")"]), NewCtx3},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% expressionCommalist / patternPartCommalist / propertyKeyNameExpressionCommalist /
-% removeItemCommalist / returnItemCommalist / setItemCommalist / sortItemCommalist /
-% variableCommalist / yieldItemCommalist
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
-    when Type == expressionCommalist;
-    Type == patternPartCommalist;
-    Type == propertyKeyNameExpressionCommalist;
-    Type == removeItemCommalist;
-    Type == returnItemCommalist;
-    Type == setItemCommalist;
-    Type == sortItemCommalist;
-    Type == variableCommalist;
-    Type == yieldItemCommalist,
-    is_list(Values) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
-        case F of
-            {ListType, _}
-                when Type == expressionCommalist, ListType == expression;
-                Type == patternPartCommalist, ListType == patternPart;
-                Type == removeItemCommalist, ListType == removeItem;
-                Type == returnItemCommalist, ListType == returnItem;
-                Type == sortItemCommalist, ListType == sortItem;
-                Type == variableCommalist, ListType == variable;
-                Type == yieldItemCommalist, ListType == yieldItem ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {lists:append(
-                    [
-                        Acc,
-                        case length(Acc) of
-                            0 -> [];
-                            _ -> ","
-                        end,
-                        SubAcc
-                    ]), CtxAcc1};
-            {ListType, _, _}
-                when Type == patternPartCommalist, ListType == patternPart;
-                Type == removeItemCommalist, ListType == removeItem;
-                Type == returnItemCommalist, ListType == returnItem;
-                Type == setItemCommalist, ListType == setItem;
-                Type == sortItemCommalist, ListType == sortItem;
-                Type == yieldItemCommalist, ListType == yieldItem ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {lists:append(
-                    [
-                        Acc,
-                        case length(Acc) of
-                            0 -> [];
-                            _ -> ","
-                        end,
-                        SubAcc
-                    ]), CtxAcc1};
-            {ListType, _, _, _}
-                when Type == setItemCommalist, ListType == setItem ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {lists:append(
-                    [
-                        Acc,
-                        case length(Acc) of
-                            0 -> [];
-                            _ -> ","
-                        end,
-                        SubAcc
-                    ]), CtxAcc1};
-            {{propertyKeyName, _}, {expression, _}}
-                when Type == propertyKeyNameExpressionCommalist ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {lists:append(
-                    [
-                        Acc,
-                        case length(Acc) of
-                            0 -> [];
-                            _ -> ","
-                        end,
-                        SubAcc
-                    ]), CtxAcc1}
-        end
-                                      end,
-        {[], NewCtx},
-        Values),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
+    RT = {lists:append([ProcedureNameNew, "(", ExpressionCommalistNew, ")"]), NewCtx3},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1065,6 +995,20 @@ pt_to_source(FType, Fun, Ctx, Lvl, {functionInvocation, FunctionName, Distinct, 
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% functionName
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, _Lvl, {functionName, "exists" = Value} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    RT = {Value, NewCtx},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % idInColl
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1115,6 +1059,27 @@ pt_to_source(FType, Fun, Ctx, Lvl, {inQueryCall, Value1, Value2} = ST) ->
                   bottom_up -> Fun(ST, NewCtx2)
               end,
     RT = {lists:append(["Call ", Value1New, " Yield ", Value2New]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% limit / skip
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
+    when Type == limit;
+    Type == skip ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {lists:append([atom_to_list(Type), " ", ValueNew]), NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1322,6 +1287,188 @@ pt_to_source(FType, Fun, Ctx, Lvl, {mergeAction, Type, Value} = ST) ->
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% multiPartQuery
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {multiPartQuery, {readPart, ReadPartList} = ReadPart, [], With, [], {singlePartQuery, _} = SinglePartQuery} = ST)
+    when is_list(ReadPartList) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReadPartNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ReadPart),
+    {WithNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, With),
+    {SinglePartQueryNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, SinglePartQuery),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {lists:append([
+        ReadPartNew,
+        " ",
+        WithNew,
+        " ",
+        SinglePartQueryNew
+    ]), NewCtx4},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {multiPartQuery, {readPart, ReadPartList} = ReadPart, [], With, ReadPartUpdatingPartWithList,
+    {singlePartQuery, _} = SinglePartQuery} = ST)
+    when is_list(ReadPartList), is_list(ReadPartUpdatingPartWithList) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReadPartNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ReadPart),
+    {WithNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, With),
+    {ReadPartUpdatingPartWithListNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, {readPartUpdatingPartWithList, ReadPartUpdatingPartWithList}),
+    {SinglePartQueryNew, NewCtx4} = pt_to_source(FType, Fun, NewCtx3, Lvl + 1, SinglePartQuery),
+    NewCtx5 = case FType of
+                  top_down -> NewCtx4;
+                  bottom_up -> Fun(ST, NewCtx4)
+              end,
+    RT = {lists:append([
+        ReadPartNew,
+        " ",
+        WithNew,
+        " ",
+        ReadPartUpdatingPartWithListNew,
+        " ",
+        SinglePartQueryNew
+    ]), NewCtx5},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {multiPartQuery, {updatingStartClause, _} = UpdatingStartClause,
+    {updatingPart, []}, With, [], {singlePartQuery, _} = SinglePartQuery} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingStartClauseNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, UpdatingStartClause),
+    {WithNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, With),
+    {SinglePartQueryNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, SinglePartQuery),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {lists:append([
+        UpdatingStartClauseNew,
+        " ",
+        WithNew,
+        " ",
+        SinglePartQueryNew
+    ]), NewCtx4},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {multiPartQuery, {updatingStartClause, _} = UpdatingStartClause,
+    {updatingPart, UpdatingPartList} = UpdatingPart, With, [], {singlePartQuery, _} = SinglePartQuery} = ST)
+    when is_list(UpdatingPartList) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingStartClauseNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, UpdatingStartClause),
+    {UpdatingPartNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, UpdatingPart),
+    {WithNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, With),
+    {SinglePartQueryNew, NewCtx4} = pt_to_source(FType, Fun, NewCtx3, Lvl + 1, SinglePartQuery),
+    NewCtx5 = case FType of
+                  top_down -> NewCtx4;
+                  bottom_up -> Fun(ST, NewCtx4)
+              end,
+    RT = {lists:append([
+        UpdatingStartClauseNew,
+        " ",
+        UpdatingPartNew,
+        " ",
+        WithNew,
+        " ",
+        SinglePartQueryNew
+    ]), NewCtx5},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {multiPartQuery, {updatingStartClause, _} = UpdatingStartClause,
+    {updatingPart, []}, With, ReadPartUpdatingPartWithList, {singlePartQuery, _} = SinglePartQuery} = ST)
+    when is_list(ReadPartUpdatingPartWithList) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingStartClauseNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, UpdatingStartClause),
+    {WithNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, With),
+    {ReadPartUpdatingPartWithListNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, {readPartUpdatingPartWithList, ReadPartUpdatingPartWithList}),
+    {SinglePartQueryNew, NewCtx4} = pt_to_source(FType, Fun, NewCtx3, Lvl + 1, SinglePartQuery),
+    NewCtx5 = case FType of
+                  top_down -> NewCtx4;
+                  bottom_up -> Fun(ST, NewCtx4)
+              end,
+    RT = {lists:append([
+        UpdatingStartClauseNew,
+        " ",
+        WithNew,
+        " ",
+        ReadPartUpdatingPartWithListNew,
+        " ",
+        SinglePartQueryNew
+    ]), NewCtx5},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {multiPartQuery, {updatingStartClause, _} = UpdatingStartClause,
+    {updatingPart, UpdatingPartList} = UpdatingPart, With, ReadPartUpdatingPartWithList,
+    {singlePartQuery, _} = SinglePartQuery} = ST)
+    when is_list(UpdatingPartList), is_list(ReadPartUpdatingPartWithList) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingStartClauseNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, UpdatingStartClause),
+    {UpdatingPartNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, UpdatingPart),
+    {WithNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, With),
+    {ReadPartUpdatingPartWithListNew, NewCtx4} = pt_to_source(FType, Fun, NewCtx3, Lvl + 1, {readPartUpdatingPartWithList, ReadPartUpdatingPartWithList}),
+    {SinglePartQueryNew, NewCtx5} = pt_to_source(FType, Fun, NewCtx4, Lvl + 1, SinglePartQuery),
+    NewCtx6 = case FType of
+                  top_down -> NewCtx5;
+                  bottom_up -> Fun(ST, NewCtx5)
+              end,
+    RT = {lists:append([
+        UpdatingStartClauseNew,
+        " ",
+        UpdatingPartNew,
+        " ",
+        WithNew,
+        " ",
+        ReadPartUpdatingPartWithListNew,
+        " ",
+        SinglePartQueryNew
+    ]), NewCtx6},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% namespace
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {namespace, {symbolicName, _} = Value} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {ValueNew ++ ".", NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % nodeLabel, properties, relType, where
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1466,6 +1613,75 @@ pt_to_source(FType, Fun, Ctx, Lvl, {nodePattern, Variable, NodeLabels, Propertie
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {lists:append(["(", VariableNew, " ", NodeLabelsNew, PropertiesNew, ")"]), NewCtx4},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% notExpression / unaryAddOrSubtractExpression
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, []} = ST)
+    when Type == notExpression;
+    Type == unaryAddOrSubtractExpression ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ExpressionNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Expression),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {ExpressionNew, NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {Type, Expression, ExpressionAddonList} = ST)
+    when Type == notExpression;
+    Type == unaryAddOrSubtractExpression ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ExpressionNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Expression),
+    {ExpressionAddonListNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {list_to_atom(atom_to_list(Type) ++ "AddonList"), ExpressionAddonList}),
+    NewCtx3 = case FType of
+                  top_down -> NewCtx2;
+                  bottom_up -> Fun(ST, NewCtx2)
+              end,
+    RT = {lists:append(
+        [
+            ExpressionAddonListNew,
+            case lists:suffix(" ", ExpressionAddonListNew) of
+                true ->
+                    [];
+                false ->
+                    " "
+            end,
+            ExpressionNew
+        ]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% numberLiteral
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {numberLiteral, {SubType, _} = Value} = ST)
+    when SubType == doubleLiteral;
+    SubType == integerLiteral ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {ValueNew, NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1716,42 +1932,6 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternElementChain, Value_1, Value_2} = ST)
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% patternElementChainList / propertyLookupList
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
-    when Type == patternElementChainList;
-    Type == propertyLookupList, is_list(Values) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
-        case F of
-            {patternElementChain, _, _}
-                when Type == patternElementChainList ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {Acc ++ SubAcc, CtxAcc1};
-            {propertyLookup, _}
-                when Type == propertyLookupList ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {Acc ++ SubAcc, CtxAcc1}
-        end
-                                      end,
-        {[], NewCtx},
-        Values),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % patternPart
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1782,6 +1962,26 @@ pt_to_source(FType, Fun, Ctx, Lvl, {patternPart, Value_1, Value_2} = ST) ->
                   bottom_up -> Fun(ST, NewCtx2)
               end,
     RT = {lists:append([Value_1New, "=", Value_2New]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% procedureName
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {procedureName, Namespace, {symbolicName, _} = SymbolicName} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {NamespaceNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Namespace),
+    {SymbolicNameNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, SymbolicName),
+    NewCtx3 = case FType of
+                  top_down -> NewCtx2;
+                  bottom_up -> Fun(ST, NewCtx2)
+              end,
+    RT = {NamespaceNew ++ SymbolicNameNew, NewCtx3},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1909,47 +2109,214 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {rangeLiteral, [], [], []} = ST) ->
     RT = {"*", NewCtx1},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value, [], []} = ST) ->
+pt_to_source(FType, Fun, Ctx, _Lvl, {rangeLiteral, [], "..", []} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {"*..", NewCtx1},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, [], ".." = Op, IntegerLiteral} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
+    {IntegerLiteralNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, IntegerLiteral),
     NewCtx2 = case FType of
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"*" ++ ValueNew, NewCtx2},
+    RT = {lists:append(["*", IntegerLiteralNew, Op]), NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value, ".." = Op, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, IntegerLiteral, [], []} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value),
+    {IntegerLiteralNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, IntegerLiteral),
     NewCtx2 = case FType of
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {lists:append(["*", ValueNew, Op]), NewCtx2},
+    RT = {"*" ++ IntegerLiteralNew, NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, Value_1, ".." = Op, Value_2} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, IntegerLiteral, ".." = Op, []} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {Value_1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value_1),
-    {Value_2New, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, Value_2),
+    {IntegerLiteralNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, IntegerLiteral),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {lists:append(["*", IntegerLiteralNew, Op]), NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {rangeLiteral, IntegerLiteral1, ".." = Op, IntegerLiteral2} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {IntegerLiteral1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, IntegerLiteral1),
+    {IntegerLiteral2New, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, IntegerLiteral2),
     NewCtx3 = case FType of
                   top_down -> NewCtx2;
                   bottom_up -> Fun(ST, NewCtx2)
               end,
-    RT = {lists:append(["*", Value_1New, Op, Value_2New]), NewCtx3},
+    RT = {lists:append(["*", IntegerLiteral1New, Op, IntegerLiteral2New]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% readOnlyEnd
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {readOnlyEnd, {readPart, []}, Return} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReturnNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Return),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {lists:append([ReturnNew]), NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {readOnlyEnd, ReadPart, Return} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReadPartNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ReadPart),
+    {ReturnNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, Return),
+    NewCtx3 = case FType of
+                  top_down -> NewCtx2;
+                  bottom_up -> Fun(ST, NewCtx2)
+              end,
+    RT = {lists:append([ReadPartNew, " ", ReturnNew]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% readPart
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, _Lvl, {readPart, []} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {[], NewCtx1},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {readPart, ReadingClauseList} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReadingClauseListNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {readingClauseList, ReadingClauseList}),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {ReadingClauseListNew, NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% readPart updatingPart with
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {{readPart, _} = ReadPart, {updatingPart, []}, {with, _, _, _} = With} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReadPartNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ReadPart),
+    {WithNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, With),
+    NewCtx3 = case FType of
+                  top_down -> NewCtx2;
+                  bottom_up -> Fun(ST, NewCtx2)
+              end,
+    RT = {lists:append([ReadPartNew, " ", WithNew]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {{readPart, _} = ReadPart, {updatingPart, _} = UpdatingPart, {with, _, _, _} = With} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReadPartNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ReadPart),
+    {UpdatingPartNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, UpdatingPart),
+    {WithNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, With),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {lists:append([ReadPartNew, " ", UpdatingPartNew, " ", WithNew]), NewCtx4},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% readUpdateEnd
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {readUpdateEnd, ReadingClauseCommalist, UpdatingClauseCommalist, []} = ST)
+    when is_list(ReadingClauseCommalist), is_list(UpdatingClauseCommalist) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReadingClauseCommalistNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {readingClauseList, ReadingClauseCommalist}),
+    {UpdatingClauseCommalistNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {updatingClauseList, UpdatingClauseCommalist}),
+    NewCtx3 = case FType of
+                  top_down -> NewCtx2;
+                  bottom_up -> Fun(ST, NewCtx2)
+              end,
+    RT = {lists:append([ReadingClauseCommalistNew, " ", UpdatingClauseCommalistNew]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {readUpdateEnd, ReadingClauseCommalist, UpdatingClauseCommalist, Return} = ST)
+    when is_list(ReadingClauseCommalist), is_list(UpdatingClauseCommalist) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ReadingClauseCommalistNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {readingClauseList, ReadingClauseCommalist}),
+    {UpdatingClauseCommalistNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {updatingClauseList, UpdatingClauseCommalist}),
+    {ReturnNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, Return),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {lists:append([ReadingClauseCommalistNew, " ", UpdatingClauseCommalistNew, " ", ReturnNew]), NewCtx4},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -2305,35 +2672,6 @@ pt_to_source(FType, Fun, Ctx, Lvl, {relationshipTypes, RelType, RelTypeVerticalb
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% relTypeVerticalbarlist
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-pt_to_source(FType, Fun, Ctx, Lvl, {relTypeVerticalbarlist, Values} = ST)
-    when is_list(Values) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
-        case F of
-            {{relTypeName, _} = RTN, Colon} ->
-                ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
-                {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, RTN),
-                {lists:append([Acc, "|", Colon, SubAcc]), CtxAcc1}
-        end
-                                      end,
-        {[], NewCtx},
-        Values),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % remove
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2641,25 +2979,6 @@ pt_to_source(FType, Fun, Ctx, Lvl, {setItem, Value_1, Operation, Value_2} = ST) 
     RT;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% singleQuery
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-pt_to_source(FType, Fun, Ctx, Lvl, {singleQuery, Value} = ST) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {ValueNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {clauseList, Value}),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {ValueNew, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % sortItem
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2690,47 +3009,34 @@ pt_to_source(FType, Fun, Ctx, Lvl, {sortItem, Value, Type} = ST) ->
 % standaloneCall
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pt_to_source(FType, Fun, Ctx, Lvl, {standaloneCall, {inQueryCall, _, _} = Value1, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {standaloneCall, ExplicitProcedureInvocation, []} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {Value1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value1),
+    {ExplicitProcedureInvocationNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ExplicitProcedureInvocation),
     NewCtx2 = case FType of
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {Value1New, NewCtx2},
+    RT = {"Call " ++ ExplicitProcedureInvocationNew, NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {standaloneCall, Value1, []} = ST) ->
+pt_to_source(FType, Fun, Ctx, Lvl, {standaloneCall, ExplicitProcedureInvocation, {yieldItems, YieldItemsList} = YieldItems} = ST)
+    when is_list(YieldItemsList) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {Value1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value1),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
-              end,
-    RT = {"Call " ++ Value1New, NewCtx2},
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-    RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {standaloneCall, Value1, Value2} = ST) ->
-    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
-    NewCtx = case FType of
-                 top_down -> Fun(ST, Ctx);
-                 bottom_up -> Ctx
-             end,
-    {Value1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value1),
-    {Value2New, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, Value2),
+    {ExplicitProcedureInvocationNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, ExplicitProcedureInvocation),
+    {YieldItemsNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, YieldItems),
     NewCtx3 = case FType of
                   top_down -> NewCtx2;
                   bottom_up -> Fun(ST, NewCtx2)
               end,
-    RT = {lists:append(["Call ", Value1New, " Yield ", Value2New]), NewCtx3},
+    RT = {lists:append(["Call ", ExplicitProcedureInvocationNew, " Yield ", YieldItemsNew]), NewCtx3},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -2778,6 +3084,105 @@ pt_to_source(FType, Fun, Ctx, Lvl, {unwind, Expression, Variable} = ST) ->
                   bottom_up -> Fun(ST, NewCtx2)
               end,
     RT = {lists:append(["unwind ", ExpressionNew, " as ", VariableNew]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% updatingEnd
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, Lvl, {updatingEnd, UpdatingStartClause, [], []} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingStartClauseNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, UpdatingStartClause),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {UpdatingStartClauseNew, NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {updatingEnd, UpdatingStartClause, [], Return} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingStartClauseNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, UpdatingStartClause),
+    {ReturnNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, Return),
+    NewCtx3 = case FType of
+                  top_down -> NewCtx2;
+                  bottom_up -> Fun(ST, NewCtx2)
+              end,
+    RT = {lists:append([UpdatingStartClauseNew, " ", ReturnNew]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {updatingEnd, UpdatingStartClause, UpdatingClauseCommalist, []} = ST)
+    when is_list(UpdatingClauseCommalist) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingStartClauseNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, UpdatingStartClause),
+    {UpdatingClauseCommalistNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {updatingClauseList, UpdatingClauseCommalist}),
+    NewCtx3 = case FType of
+                  top_down -> NewCtx2;
+                  bottom_up -> Fun(ST, NewCtx2)
+              end,
+    RT = {lists:append([UpdatingStartClauseNew, " ", UpdatingClauseCommalistNew]), NewCtx3},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {updatingEnd, UpdatingStartClause, UpdatingClauseCommalist, Return} = ST)
+    when is_list(UpdatingClauseCommalist) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingStartClauseNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, UpdatingStartClause),
+    {UpdatingClauseCommalistNew, NewCtx2} = pt_to_source(FType, Fun, NewCtx1, Lvl + 1, {updatingClauseList, UpdatingClauseCommalist}),
+    {ReturnNew, NewCtx3} = pt_to_source(FType, Fun, NewCtx2, Lvl + 1, Return),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {lists:append([UpdatingStartClauseNew, " ", UpdatingClauseCommalistNew, " ", ReturnNew]), NewCtx4},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% updatingPart
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pt_to_source(FType, Fun, Ctx, _Lvl, {updatingPart, []} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {[], NewCtx1},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
+pt_to_source(FType, Fun, Ctx, Lvl, {updatingPart, UpdatingClauseList} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {UpdatingClauseListNew, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, {updatingClauseList, UpdatingClauseList}),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {UpdatingClauseListNew, NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 

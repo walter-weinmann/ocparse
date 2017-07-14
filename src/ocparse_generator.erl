@@ -25,27 +25,54 @@
 -export([generate/0]).
 
 -define(ALL_CLAUSE_CT_PERFORMANCE, [
-    cypher,
-    query,
-    statement
+%%    cypher
 ]).
 -define(ALL_CLAUSE_CT_RELIABILITY, [
-    create,
-    cypher,
-    delete,
-    inQueryCall,
-    match,
-    merge,
-    query,
-    regularQuery,
-    remove,
-    return,
-    set,
-    special,
-    standaloneCall,
-    statement,
-    unwind,
-    with
+%%    create,
+%%    cypher,
+%%    merge,
+%%    multiPartQuery,
+%%    query,
+%%    readOnlyEnd,
+%%    readUpdateEnd,
+%%    regularQuery,
+%%    return,
+%%    singlePartQuery,
+%%    singleQuery,
+%%    standaloneCall,
+%%    statement,
+%%    updatingEnd,
+%%    updatingStartClause
+
+%%    create,
+%%    delete,
+%%    inQueryCall,
+%%    match,
+%%    merge,
+%%    remove,
+%%    set,
+%%    unwind
+]).
+-define(ALL_CLAUSE_CT_RELIABILITY_DETAILED, [
+%%    create,
+%%    cypher,
+%%    merge,
+%%    multiPartQuery,
+%%    query,
+%%    readOnlyEnd,
+%%    readUpdateEnd,
+%%    regularQuery,
+%%    return,
+%%    singlePartQuery,
+%%    singleQuery,
+%%    standaloneCall,
+%%    statement,
+%%    updatingEnd,
+%%    updatingStartClause,
+
+    readPartUpdatingPartWithList,
+
+    special
 ]).
 
 -define(ALL_CLAUSE_EUNIT, [
@@ -66,14 +93,14 @@
     _Start = erlang:monotonic_time(1000)
 ).
 -define(DASH, "-").
+
+-define(F_RANDOM, fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end).
+
 -define(LEFT_ARROW_HEAD, "<").
 
--define(MAX_BASIC_RULE, 250).                      % cumulative
--define(MAX_CLAUSE, ?MAX_BASIC_RULE * 8).
+-define(MAX_BASIC_RULE, 10).
+% wwe -define(MAX_BASIC_RULE, 250).
 -define(MAX_CYPHER, ?MAX_BASIC_RULE * 8).
--define(MAX_QUERY, ?MAX_BASIC_RULE * 8).
--define(MAX_RULE_OTHERS, ?MAX_BASIC_RULE * 8).     % max of (MAX_CLAUSE, MAX_CYPHER, MAX_QUERY, MAX_STATEMENT))
--define(MAX_STATEMENT, ?MAX_BASIC_RULE * 8).
 
 -define(PATH_CT, "test").
 -define(PATH_EUNIT, "test").
@@ -100,14 +127,17 @@ generate() ->
 
     create_code(),
 
-    % performance common tests
-    ok = file_create_ct_all(performance, ?ALL_CLAUSE_CT_PERFORMANCE),
+    % performance common tests with compacted test cases
+    ok = file_create_ct_all("performance", "compacted", ?ALL_CLAUSE_CT_PERFORMANCE),
 
-    % reliability common tests
-    ok = file_create_ct_all(reliability, ?ALL_CLAUSE_CT_RELIABILITY),
+    % reliability common tests with compacted test cases
+    ok = file_create_ct_all("reliability", "compacted", ?ALL_CLAUSE_CT_RELIABILITY),
 
-    % reliability eunit tests
-    ok = file_create_eunit_all(reliability, ?ALL_CLAUSE_EUNIT),
+    % reliability common tests with detailed test cases
+    ok = file_create_ct_all("reliability", "detailed_", ?ALL_CLAUSE_CT_RELIABILITY_DETAILED),
+
+    % reliability eunit tests with compacted test cases
+    ok = file_create_eunit_all("reliability", ?ALL_CLAUSE_EUNIT),
 
     dets:close(?CODE_TEMPLATES).
 
@@ -121,43 +151,40 @@ create_code() ->
 %% Level 1
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(atomCount),
     create_code(booleanLiteral),
     create_code(decimalInteger),
     create_code(escapedSymbolicName),
     create_code(exponentDecimalReal),
     create_code(hexInteger),
     create_code(hexLetter),
-    create_code(literalNull),
     create_code(octalInteger),
     create_code(regularDecimalReal),
-    % wwe ???
-    % currently not supported
-    % create_code(reservedWord),
+    create_code(reservedWord),
     create_code(stringLiteral),
-    % wwe ???
-    % currently not supported
-    % create_code(symbolicName),
     create_code(unescapedSymbolicName),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 2
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    create_code(doubleLiteral),
     create_code(functionName),
+    create_code(integerLiteral),
+    create_code(namespace),
     create_code(parameter),
-    create_code(procedureName),
     create_code(procedureResultField),
     create_code(rangeLiteral),
     create_code(schemaName),
+    create_code(symbolicName),
     create_code(variable),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 3
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(implicitProcedureInvocation),
     create_code(labelName),
+    create_code(numberLiteral),
+    create_code(procedureName),
     create_code(propertyKeyName),
     create_code(relTypeName),
     create_code(yieldItem),
@@ -166,6 +193,8 @@ create_code() ->
 %% Level 4
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    create_code(implicitProcedureInvocation),
+    create_code(literal_1),
     create_code(nodeLabel),
     create_code(propertyLookup),
     create_code(relationshipTypes),
@@ -175,13 +204,14 @@ create_code() ->
 %% Level 5
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    create_code(atom_1),
     create_code(nodeLabels),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 6
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code_expression(?MAX_BASIC_RULE),
+    create_code_expression(?MAX_CYPHER),
     create_code(expressionCommalist),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -194,71 +224,75 @@ create_code() ->
     create_code(idInColl),
     create_code(listLiteral),
     create_code(mapLiteral),
-    % wwe ???
-    % currently not supported
-    % create_code(parenthesizedExpression),
+    create_code(parenthesizedExpression),
     create_code(where),
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 7
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    create_code(caseExpression),
-    create_code(filterExpression),
-    create_code(properties),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 8
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(atomFilter),
-    create_code(atomExtract),
-    create_code(atomAll),
-    create_code(atomAny),
-    create_code(atomNone),
-    create_code(atomSingle),
-    create_code(listComprehension),
-    create_code(nodePattern),
-    create_code(relationshipDetail),
+    create_code(caseExpression),
+    create_code(filterExpression),
+    create_code(literal),
+    create_code(properties),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 9
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(relationshipPattern),
+    create_code(listComprehension),
+    create_code(nodePattern),
+    create_code(relationshipDetail),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 10
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(patternElementChain),
+    create_code(relationshipPattern),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 11
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(patternElementChain),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 12
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(patternElement),
     create_code(relationshipsPattern),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 12
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    create_code(anonymousPatternPart),
-    create_code(patternComprehension),
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 13
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code_expression(?MAX_BASIC_RULE),
-    create_code(expressionCommalist),
-    create_code(patternPart),
+    create_code(patternComprehension),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 14
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    create_code(atom_2),
+    create_code(patternPart),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 15
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code_expression(?MAX_CYPHER),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 16
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(expressionCommalist),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 17
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(atom),
     create_code(explicitProcedureInvocation),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -309,35 +343,65 @@ create_code() ->
     create_code(merge),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 90
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(readingClause),
+    create_code(updatingClause),
+    create_code(updatingStartClause),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 91
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(singleQuery),
+    create_code(readingClauseList),
+    create_code(updatingClauseList),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 92
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(union),
+    create_code(readOnlyEnd),
+    create_code(readPartUpdatingPartWithList),
+    create_code(readUpdateEnd),
+    create_code(updatingEnd),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 93
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(regularQuery),
-    create_code(standaloneCall),
+    create_code(singlePartQuery),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 94
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(query),
+    create_code(multiPartQuery),
+    create_code(standaloneCall),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 95
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(statement),
+    create_code(singleQuery),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 96
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(union),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 97
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(regularQuery),
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 98
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    create_code(query),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 100
@@ -354,200 +418,226 @@ create_code() ->
     ok.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% AnonymousPatternPart = PatternElement ;
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_code(anonymousPatternPart = Rule) ->
-    ?CREATE_CODE_START,
-
-    [{patternElement, Code}] = dets:lookup(?CODE_TEMPLATES, patternElement),
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    ?CREATE_CODE_END;
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Atom = ...
-%%      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
-%%      | ...
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_code(atomAll = Rule) ->
-    ?CREATE_CODE_START,
-    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
-    FilterExpression_Length = length(FilterExpression),
-
-    Code = [
-        lists:append([
-            "All",
-            ?SP_OPT,
-            "(",
-            ?SP_OPT,
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
-            ?SP_OPT,
-            ")"
-        ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
-    ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
-    ?CREATE_CODE_END;
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Atom = ...
-%%      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
-%%      | ...
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_code(atomAny = Rule) ->
-    ?CREATE_CODE_START,
-    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
-    FilterExpression_Length = length(FilterExpression),
-
-    Code = [
-        lists:append([
-            "Any",
-            ?SP_OPT,
-            "(",
-            ?SP_OPT,
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
-            ?SP_OPT,
-            ")"
-        ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
-    ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
-    ?CREATE_CODE_END;
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Atom = ...
+%% Atom = Literal
+%%      | Parameter
+%%      | CaseExpression
 %%      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
-%%      | ... ;
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_code(atomCount = Rule) ->
-    ?CREATE_CODE_START,
-
-    Code = [
-        "Count(*)",
-        "Count ( * )"
-    ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
-    ?CREATE_CODE_END;
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Atom = ...
+%%      | ListComprehension
+%%      | PatternComprehension
+%%      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
 %%      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
-%%      | ...
+%%      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | RelationshipsPattern
+%%      | ParenthesizedExpression
+%%      | FunctionInvocation
+%%      | Variable
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-create_code(atomExtract = Rule) ->
+create_code(atom = Rule) ->
     ?CREATE_CODE_START,
+    [{caseExpression, CaseExpression}] = dets:lookup(?CODE_TEMPLATES, caseExpression),
+    CaseExpression_Length = length(CaseExpression),
     [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
     [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
     FilterExpression_Length = length(FilterExpression),
+    [{functionInvocation, FunctionInvocation}] = dets:lookup(?CODE_TEMPLATES, functionInvocation),
+    FunctionInvocation_Length = length(FunctionInvocation),
+    [{listComprehension, ListComprehension}] = dets:lookup(?CODE_TEMPLATES, listComprehension),
+    ListComprehension_Length = length(ListComprehension),
+    [{literal, Literal}] = dets:lookup(?CODE_TEMPLATES, literal),
+    [{parameter, Parameter}] = dets:lookup(?CODE_TEMPLATES, parameter),
+%% wwe
+%%    [{parenthesizedExpression, ParenthesizedExpression}] = dets:lookup(?CODE_TEMPLATES, parenthesizedExpression),
+%%    ParenthesizedExpression_Length = length(ParenthesizedExpression),
+    [{patternComprehension, PatternComprehension}] = dets:lookup(?CODE_TEMPLATES, patternComprehension),
+    PatternComprehension_Length = length(PatternComprehension),
+    [{relationshipsPattern, RelationshipsPattern}] = dets:lookup(?CODE_TEMPLATES, relationshipsPattern),
+    RelationshipsPattern_Length = length(RelationshipsPattern),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
 
-    Code = [
-        lists:append([
-            "Extract",
-            ?SP_OPT,
-            "(",
-            ?SP_OPT,
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
-            ?SP_OPT,
-            case rand:uniform(2) rem 2 of
+    Code = lists:append([
+        Literal,
+        Parameter,
+        [
+            "Count(*)",
+            "Count ( * )"
+        ],
+        Variable,
+        [
+            case rand:uniform(8) rem 8 of
                 1 ->
-                    lists:append([?SP_OPT, "|", lists:nth(rand:uniform(Expression_Length), Expression)]);
-                _ -> []
-            end,
-            ")"
-        ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
-    ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+                    lists:nth(rand:uniform(CaseExpression_Length), CaseExpression);
+                2 ->
+                    lists:nth(rand:uniform(ListComprehension_Length), ListComprehension);
+                3 ->
+                    lists:nth(rand:uniform(PatternComprehension_Length), PatternComprehension);
+                4 -> lists:append([
+                    case rand:uniform(5) rem 5 of
+                        1 -> "Filter";
+                        2 -> "All";
+                        3 -> "Any";
+                        4 -> "None";
+                        _ -> "Single"
+                    end,
+                    ?SP_OPT,
+                    "(",
+                    ?SP_OPT,
+                    lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
+                    ?SP_OPT,
+                    ")"
+                ]);
+                5 -> lists:append([
+                    "Extract",
+                    ?SP_OPT,
+                    "(",
+                    ?SP_OPT,
+                    lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
+                    ?SP_OPT,
+                    case rand:uniform(2) rem 2 of
+                        1 ->
+                            lists:append([?SP_OPT, "|", lists:nth(rand:uniform(Expression_Length), Expression)]);
+                        _ -> []
+                    end,
+                    ")"
+                ]);
+                6 ->
+                    lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern);
+%% wwe
+%%                7 ->
+%%                    lists:nth(rand:uniform(ParenthesizedExpression_Length), ParenthesizedExpression);
+                _ ->
+                    lists:nth(rand:uniform(FunctionInvocation_Length), FunctionInvocation)
+            end
+            || _ <- lists:seq(1, ?MAX_CYPHER)
+        ]
+    ]),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Atom = ...
+%% Atom = Literal
+%%      | Parameter
+%%      | CaseExpression
+%%      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+%%      | ListComprehension
+%%      | PatternComprehension
 %%      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
-%%      | ...
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_code(atomFilter = Rule) ->
-    ?CREATE_CODE_START,
-    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
-    FilterExpression_Length = length(FilterExpression),
-
-    Code = [
-        lists:append([
-            "Filter",
-            ?SP_OPT,
-            "(",
-            ?SP_OPT,
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
-            ?SP_OPT,
-            ")"
-        ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
-    ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
-    ?CREATE_CODE_END;
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Atom = ...
+%%      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
+%%      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
 %%      | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
-%%      | ...
+%%      | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | RelationshipsPattern
+%%      | ParenthesizedExpression
+%%      | FunctionInvocation
+%%      | Variable
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-create_code(atomNone = Rule) ->
+create_code(atom_1 = _Rule) ->
     ?CREATE_CODE_START,
-    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
-    FilterExpression_Length = length(FilterExpression),
+    [{literal, Literal}] = dets:lookup(?CODE_TEMPLATES, literal),
+    [{parameter, Parameter}] = dets:lookup(?CODE_TEMPLATES, parameter),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
 
-    Code = [
-        lists:append([
-            "None",
-            ?SP_OPT,
-            "(",
-            ?SP_OPT,
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
-            ?SP_OPT,
-            ")"
-        ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
-    ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    Code = lists:append([
+        Literal,
+        Parameter,
+        [
+            "Count(*)",
+            "Count ( * )"
+        ],
+        Variable
+    ]),
+    store_code(atom, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Atom = ...
+%% Atom = Literal
+%%      | Parameter
+%%      | CaseExpression
+%%      | ((C,O,U,N,T), [SP], '(', [SP], '*', [SP], ')')
+%%      | ListComprehension
+%%      | PatternComprehension
+%%      | ((F,I,L,T,E,R), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ((E,X,T,R,A,C,T), [SP], '(', [SP], FilterExpression, [SP], [[SP], '|', Expression], ')')
+%%      | ((A,L,L), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ((A,N,Y), [SP], '(', [SP], FilterExpression, [SP], ')')
+%%      | ((N,O,N,E), [SP], '(', [SP], FilterExpression, [SP], ')')
 %%      | ((S,I,N,G,L,E), [SP], '(', [SP], FilterExpression, [SP], ')')
-%%      | ...
+%%      | RelationshipsPattern
+%%      | ParenthesizedExpression
+%%      | FunctionInvocation
+%%      | Variable
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-create_code(atomSingle = Rule) ->
+create_code(atom_2 = _Rule) ->
     ?CREATE_CODE_START,
+    [{caseExpression, CaseExpression}] = dets:lookup(?CODE_TEMPLATES, caseExpression),
+    CaseExpression_Length = length(CaseExpression),
     [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
     FilterExpression_Length = length(FilterExpression),
+    [{functionInvocation, FunctionInvocation}] = dets:lookup(?CODE_TEMPLATES, functionInvocation),
+    FunctionInvocation_Length = length(FunctionInvocation),
+    [{listComprehension, ListComprehension}] = dets:lookup(?CODE_TEMPLATES, listComprehension),
+    ListComprehension_Length = length(ListComprehension),
+    [{literal, Literal}] = dets:lookup(?CODE_TEMPLATES, literal),
+    [{parameter, Parameter}] = dets:lookup(?CODE_TEMPLATES, parameter),
+%% wwe
+%%    [{parenthesizedExpression, ParenthesizedExpression}] = dets:lookup(?CODE_TEMPLATES, parenthesizedExpression),
+%%    ParenthesizedExpression_Length = length(ParenthesizedExpression),
+    [{patternComprehension, PatternComprehension}] = dets:lookup(?CODE_TEMPLATES, patternComprehension),
+    PatternComprehension_Length = length(PatternComprehension),
+    [{relationshipsPattern, RelationshipsPattern}] = dets:lookup(?CODE_TEMPLATES, relationshipsPattern),
+    RelationshipsPattern_Length = length(RelationshipsPattern),
+    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
 
-    Code = [
-        lists:append([
-            "Single",
-            ?SP_OPT,
-            "(",
-            ?SP_OPT,
-            lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
-            ?SP_OPT,
-            ")"
-        ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
-    ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    Code = lists:append([
+        Literal,
+        Parameter,
+        [
+            "Count(*)",
+            "Count ( * )"
+        ],
+        Variable,
+        [
+            case rand:uniform(7) rem 7 of
+                1 ->
+                    lists:nth(rand:uniform(CaseExpression_Length), CaseExpression);
+                2 ->
+                    lists:nth(rand:uniform(ListComprehension_Length), ListComprehension);
+                3 ->
+                    lists:nth(rand:uniform(PatternComprehension_Length), PatternComprehension);
+                4 -> lists:append([
+                    case rand:uniform(5) rem 5 of
+                        1 -> "Filter";
+                        2 -> "All";
+                        3 -> "Any";
+                        4 -> "None";
+                        _ -> "Single"
+                    end,
+                    ?SP_OPT,
+                    "(",
+                    ?SP_OPT,
+                    lists:nth(rand:uniform(FilterExpression_Length), FilterExpression),
+                    ?SP_OPT,
+                    ")"
+                ]);
+                5 ->
+                    lists:nth(rand:uniform(RelationshipsPattern_Length), RelationshipsPattern);
+%% wwe
+%%                6 ->
+%%                    lists:nth(rand:uniform(ParenthesizedExpression_Length), ParenthesizedExpression);
+                _ ->
+                    lists:nth(rand:uniform(FunctionInvocation_Length), FunctionInvocation)
+            end
+            || _ <- lists:seq(1, ?MAX_CYPHER)
+        ]
+    ]),
+    store_code(atom, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -562,9 +652,7 @@ create_code(booleanLiteral = Rule) ->
         "true",
         "false"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -590,9 +678,9 @@ create_code(caseAlternatives = Rule) ->
             ?SP,
             lists:nth(rand:uniform(Expression_Length), Expression)
         ])
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -625,9 +713,9 @@ create_code(caseAlternativesList = Rule) ->
             _ ->
                 ?SP_OPT ++ lists:nth(rand:uniform(CaseAlternatives_Length), CaseAlternatives)
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -701,10 +789,9 @@ create_code(caseExpression = Rule) ->
                     "End"
                 ])
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -725,36 +812,32 @@ create_code(create = Rule) ->
             ?SP,
             lists:nth(rand:uniform(Pattern_Length), Pattern)
         ])
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Cypher = [SP], QueryOptions, Statement, [[SP], ';'], [SP] ;
+%% Cypher = [SP], Statement, [[SP], ';'], [SP], EOI ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(cypher = Rule) ->
     ?CREATE_CODE_START,
     [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
+    Statement_Length = length(Statement),
 
-    CodeCurr = [
+    Code = [
         lists:append([
             ?SP_OPT,
-            S,
+            lists:nth(rand:uniform(Statement_Length), Statement),
             case rand:uniform(2) rem 2 of
                 1 -> ?SP_OPT ++ ";";
                 _ -> []
             end,
             ?SP_OPT
         ])
-        || S <- Statement
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    Code = case length(CodeCurr) > ?MAX_CYPHER of
-               true -> lists:sublist(CodeCurr, 1, ?MAX_CYPHER);
-               _ -> CodeCurr
-           end,
     store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
@@ -778,11 +861,7 @@ create_code(decimalInteger = Rule) ->
         "87654321",
         "123456789"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(integerLiteral, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
-    store_code(numberLiteral, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -811,10 +890,23 @@ create_code(delete = Rule) ->
                     lists:nth(rand:uniform(ExpressionCommalist_Length), ExpressionCommalist)
                 ])
         end
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DoubleLiteral = ExponentDecimalReal
+%%               | RegularDecimalReal
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(doubleLiteral = Rule) ->
+    ?CREATE_CODE_START,
+    [{exponentDecimalReal, ExponentDecimalReal}] = dets:lookup(?CODE_TEMPLATES, exponentDecimalReal),
+    [{regularDecimalReal, RegularDecimalReal}] = dets:lookup(?CODE_TEMPLATES, regularDecimalReal),
+
+    Code = ExponentDecimalReal ++ RegularDecimalReal,
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -842,8 +934,8 @@ create_code(escapedSymbolicName = Rule) ->
         "`@esn_SYMN_esn`",
         "``"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(symbolicName, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
+    store_code(symbolicName, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -871,9 +963,9 @@ create_code(explicitProcedureInvocation = Rule) ->
             ?SP_OPT,
             ")"
         ])
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -918,11 +1010,7 @@ create_code(exponentDecimalReal = Rule) ->
         "10.12e12",
         "11.12e-12"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(doubleLiteral, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
-    store_code(numberLiteral, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -935,13 +1023,9 @@ create_code(expressionCommalist = Rule) ->
     Expression_Length = length(Expression),
 
     Code = [
-        case rand:uniform(4) rem 4 of
+        case rand:uniform(3) rem 3 of
             1 -> lists:append(
                 [
-                    lists:nth(rand:uniform(Expression_Length), Expression),
-                    ?SP_OPT,
-                    ",",
-                    ?SP_OPT,
                     lists:nth(rand:uniform(Expression_Length), Expression),
                     ?SP_OPT,
                     ",",
@@ -958,25 +1042,13 @@ create_code(expressionCommalist = Rule) ->
                     ?SP_OPT,
                     ",",
                     ?SP_OPT,
-                    lists:nth(rand:uniform(Expression_Length), Expression),
-                    ?SP_OPT,
-                    ",",
-                    ?SP_OPT,
-                    lists:nth(rand:uniform(Expression_Length), Expression)
-                ]);
-            3 -> lists:append(
-                [
-                    lists:nth(rand:uniform(Expression_Length), Expression),
-                    ?SP_OPT,
-                    ",",
-                    ?SP_OPT,
                     lists:nth(rand:uniform(Expression_Length), Expression)
                 ]);
             _ -> lists:nth(rand:uniform(Expression_Length), Expression)
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -990,7 +1062,6 @@ create_code(filterExpression = Rule) ->
     ?CREATE_CODE_START,
     [{idInColl, IdInColl}] = dets:lookup(?CODE_TEMPLATES, idInColl),
     IdInColl_Length = length(IdInColl),
-
     [{where, Where}] = dets:lookup(?CODE_TEMPLATES, where),
     Where_Length = length(Where),
 
@@ -1000,9 +1071,9 @@ create_code(filterExpression = Rule) ->
                 1 -> ?SP ++ lists:nth(rand:uniform(Where_Length), Where);
                 _ -> []
             end
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1042,10 +1113,9 @@ create_code(functionInvocation = Rule) ->
                 ?SP_OPT,
                 ")"
             ])
-            || _ <- lists:seq(1, ?MAX_BASIC_RULE * 2)
+            || _ <- lists:seq(1, ?MAX_CYPHER * 2)
         ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1078,11 +1148,7 @@ create_code(hexInteger = Rule) ->
         "0x7890abcdef",
         "0x0123456789ABCDEF"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(integerLiteral, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
-    store_code(numberLiteral, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1106,8 +1172,8 @@ create_code(hexLetter = Rule) ->
         "E",
         "F"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(symbolicName, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
+    store_code(symbolicName, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1129,9 +1195,9 @@ create_code(idInColl = Rule) ->
             ?SP,
             lists:nth(rand:uniform(Expression_Length), Expression)
         ])
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1143,7 +1209,7 @@ create_code(implicitProcedureInvocation = Rule) ->
     [{procedureName, ProcedureName}] = dets:lookup(?CODE_TEMPLATES, procedureName),
 
     Code = [re:replace(PN, "_PN_", "_IPI_", [{return, list}]) || PN <- ProcedureName],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1177,10 +1243,25 @@ create_code(inQueryCall = Rule) ->
                     ])
             end
         ])
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% IntegerLiteral = HexInteger
+%%                | OctalInteger
+%%                | DecimalInteger
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(integerLiteral = Rule) ->
+    ?CREATE_CODE_START,
+    [{decimalInteger, DecimalInteger}] = dets:lookup(?CODE_TEMPLATES, decimalInteger),
+    [{hexInteger, HexInteger}] = dets:lookup(?CODE_TEMPLATES, hexInteger),
+    [{octalInteger, OctalInteger}] = dets:lookup(?CODE_TEMPLATES, octalInteger),
+
+    Code = lists:append([HexInteger, OctalInteger, DecimalInteger]),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1192,7 +1273,7 @@ create_code(labelName = Rule) ->
     [{schemaName, SchemaName}] = dets:lookup(?CODE_TEMPLATES, schemaName),
 
     Code = [re:replace(SN, "_SCHN_", "_LN_", [{return, list}]) || SN <- SchemaName],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1204,7 +1285,7 @@ create_code(limit = Rule) ->
     [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
-    TargetSize = min(?MAX_CLAUSE, Expression_Length),
+    TargetSize = min(?MAX_CYPHER, Expression_Length),
 
     Code = [
         lists:append([
@@ -1214,7 +1295,7 @@ create_code(limit = Rule) ->
         ])
         || _ <- lists:seq(1, TargetSize)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1243,10 +1324,9 @@ create_code(listComprehension = Rule) ->
             end,
             "]"
         ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1266,28 +1346,68 @@ create_code(listLiteral = Rule) ->
             ?SP_OPT,
             "]"
         ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Literal = ...
+%% Literal = NumberLiteral
+%%         | StringLiteral
+%%         | BooleanLiteral
 %%         | (N,U,L,L)
-%%         | ... ;
+%%         | MapLiteral
+%%         | ListLiteral
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-create_code(literalNull = Rule) ->
+create_code(literal = Rule) ->
     ?CREATE_CODE_START,
+    [{booleanLiteral, BooleanLiteral}] = dets:lookup(?CODE_TEMPLATES, booleanLiteral),
+    [{listLiteral, ListLiteral}] = dets:lookup(?CODE_TEMPLATES, listLiteral),
+    ListLiteral_Length = length(ListLiteral),
+    [{mapLiteral, MapLiteral}] = dets:lookup(?CODE_TEMPLATES, mapLiteral),
+    MapLiteral_Length = length(MapLiteral),
+    [{numberLiteral, NumberLiteral}] = dets:lookup(?CODE_TEMPLATES, numberLiteral),
+    [{stringLiteral, StringLiteral}] = dets:lookup(?CODE_TEMPLATES, stringLiteral),
 
-    Code = [
-        "Null"
-    ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
+    Code = lists:append([
+        NumberLiteral,
+        StringLiteral,
+        BooleanLiteral,
+        ["Null"],
+        [
+            case rand:uniform(2) rem 2 of
+                1 -> lists:nth(rand:uniform(MapLiteral_Length), MapLiteral);
+                _ -> lists:nth(rand:uniform(ListLiteral_Length), ListLiteral)
+            end
+            || _ <- lists:seq(1, ?MAX_CYPHER)
+        ]
+    ]),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Literal = NumberLiteral
+%%         | StringLiteral
+%%         | BooleanLiteral
+%%         | (N,U,L,L)
+%%         | MapLiteral
+%%         | ListLiteral
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(literal_1 = _Rule) ->
+    ?CREATE_CODE_START,
+    [{booleanLiteral, BooleanLiteral}] = dets:lookup(?CODE_TEMPLATES, booleanLiteral),
+    [{numberLiteral, NumberLiteral}] = dets:lookup(?CODE_TEMPLATES, numberLiteral),
+    [{stringLiteral, StringLiteral}] = dets:lookup(?CODE_TEMPLATES, stringLiteral),
+
+    Code = lists:append([
+        NumberLiteral,
+        StringLiteral,
+        BooleanLiteral,
+        ["Null"]
+    ]),
+    store_code(literal, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1332,12 +1452,10 @@ create_code(mapLiteral = Rule) ->
                 end,
                 "}"
             ])
-            || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+            || _ <- lists:seq(1, ?MAX_CYPHER * 2)
         ]
     ),
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1453,10 +1571,9 @@ create_code(match = Rule) ->
                     lists:nth(rand:uniform(Pattern_Length), Pattern)
                 ])
         end
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1491,10 +1608,9 @@ create_code(merge = Rule) ->
                 _ -> []
             end
         ])
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1528,7 +1644,75 @@ create_code(mergeAction = Rule) ->
         ])
         || _ <- lists:seq(1, Set_Length)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MultiPartQuery = (ReadPart | (UpdatingStartClause, [SP], UpdatingPart)), With, [SP], { ReadPart, UpdatingPart, With, [SP] }, SinglePartQuery ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% MultiPartQuery = (ReadPart | (UpdatingStartClause, SP, UpdatingPart)), With, SP, { ReadPart, UpdatingPart, With, SP }, SinglePartQuery ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(multiPartQuery = Rule) ->
+    ?CREATE_CODE_START,
+    [{readingClauseList, ReadingClauseList}] = dets:lookup(?CODE_TEMPLATES, readingClauseList),
+    ReadingClauseList_Length = length(ReadingClauseList),
+    [{readPartUpdatingPartWithList, ReadPartUpdatingPartWithList}] = dets:lookup(?CODE_TEMPLATES, readPartUpdatingPartWithList),
+    ReadPartUpdatingPartWithList_Length = length(ReadPartUpdatingPartWithList),
+    [{singlePartQuery, SinglePartQuery}] = dets:lookup(?CODE_TEMPLATES, singlePartQuery),
+    SinglePartQuery_Length = length(SinglePartQuery),
+    [{updatingClauseList, UpdatingClauseList}] = dets:lookup(?CODE_TEMPLATES, updatingClauseList),
+    UpdatingClauseList_Length = length(UpdatingClauseList),
+    [{updatingStartClause, UpdatingStartClause}] = dets:lookup(?CODE_TEMPLATES, updatingStartClause),
+    UpdatingStartClause_Length = length(UpdatingStartClause),
+    [{with, With}] = dets:lookup(?CODE_TEMPLATES, with),
+    With_Length = length(With),
+
+    Code = [
+        lists:append([
+            case rand:uniform(2) rem 2 of
+                1 -> case rand:uniform(20) rem 20 of
+                         1 -> [];
+                         _ ->
+                             lists:nth(rand:uniform(ReadingClauseList_Length), ReadingClauseList)
+                     end;
+                _ -> lists:append(
+                    [
+                        lists:nth(rand:uniform(UpdatingStartClause_Length), UpdatingStartClause),
+                        ?SP,
+                        case rand:uniform(20) rem 20 of
+                            1 -> [];
+                            _ ->
+                                lists:nth(rand:uniform(UpdatingClauseList_Length), UpdatingClauseList)
+                        end
+                    ])
+            end,
+            ?SP,
+            lists:nth(rand:uniform(With_Length), With),
+            case rand:uniform(20) rem 20 of
+                1 -> [];
+                _ ->
+                    ?SP ++ lists:nth(rand:uniform(ReadPartUpdatingPartWithList_Length), ReadPartUpdatingPartWithList)
+            end,
+            ?SP,
+            lists:nth(rand:uniform(SinglePartQuery_Length), SinglePartQuery)
+        ])
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, true),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Namespace = { SymbolicName, '.' } ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(namespace = Rule) ->
+    ?CREATE_CODE_START,
+    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+
+    Code = [re:replace(SN, "_SYMN_", "_NS_", [{return, list}]) ++ "." || SN <- SymbolicName],
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1542,7 +1726,7 @@ create_code(nodeLabel = Rule) ->
     Code = [
         lists:append([":", ?SP_OPT, LN]) || LN <- LabelName
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1562,7 +1746,7 @@ create_code(nodeLabels = Rule) ->
                 _ -> []
             end
         || NL <- NodeLabel],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1581,11 +1765,12 @@ create_code(nodePattern = Rule) ->
     [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
-    Code = [
-        lists:append([
+    Code = lists:append([
+        [lists:append(["(", ?SP_OPT, ")"])],
+        [lists:append([
             "(",
             ?SP_OPT,
-            case rand:uniform(8) rem 8 of
+            case rand:uniform(7) rem 7 of
                 1 -> lists:append(
                     [
                         lists:nth(rand:uniform(Variable_Length), Variable),
@@ -1609,7 +1794,8 @@ create_code(nodePattern = Rule) ->
                         lists:nth(rand:uniform(Properties_Length), Properties),
                         ?SP_OPT
                     ]);
-                4 -> lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP;
+                4 ->
+                    lists:nth(rand:uniform(Variable_Length), Variable) ++ ?SP;
                 5 -> lists:append(
                     [
                         lists:nth(rand:uniform(NodeLabels_Length), NodeLabels),
@@ -1619,15 +1805,29 @@ create_code(nodePattern = Rule) ->
                     ]);
                 6 ->
                     lists:nth(rand:uniform(NodeLabels_Length), NodeLabels) ++ ?SP_OPT;
-                7 ->
-                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT;
-                _ -> []
+                _ ->
+                    lists:nth(rand:uniform(Properties_Length), Properties) ++ ?SP_OPT
             end,
             ")"
         ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
-    ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+            || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+        ]
+    ]),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NumberLiteral = DoubleLiteral
+%%               | IntegerLiteral
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(numberLiteral = Rule) ->
+    ?CREATE_CODE_START,
+    [{doubleLiteral, DoubleLiteral}] = dets:lookup(?CODE_TEMPLATES, doubleLiteral),
+    [{integerLiteral, IntegerLiteral}] = dets:lookup(?CODE_TEMPLATES, integerLiteral),
+
+    Code = DoubleLiteral ++ IntegerLiteral,
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1648,11 +1848,7 @@ create_code(octalInteger = Rule) ->
         "0123456"
         "01234567"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(integerLiteral, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
-    store_code(numberLiteral, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1664,7 +1860,7 @@ create_code(order = Rule) ->
     [{sortItem, SortItem}] = dets:lookup(?CODE_TEMPLATES, sortItem),
     SortItem_Length = length(SortItem),
 
-    TargetSize = min(?MAX_CLAUSE, SortItem_Length),
+    TargetSize = min(?MAX_CYPHER, SortItem_Length),
 
     Code = [
         lists:append([
@@ -1694,7 +1890,7 @@ create_code(order = Rule) ->
         ])
         || _ <- lists:seq(1, TargetSize)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1710,8 +1906,7 @@ create_code(parameter = Rule) ->
         ["$" ++ re:replace(SN, "symbolic_name", "parameter", [{return, list}]) || SN <- SymbolicName],
         ["$" ++ DI || DI <- DecimalInteger]
     ),
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1731,10 +1926,9 @@ create_code(parenthesizedExpression = Rule) ->
             ?SP_OPT,
             ")"
         ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1746,45 +1940,49 @@ create_code(pattern = Rule) ->
     [{patternPart, PatternPart}] = dets:lookup(?CODE_TEMPLATES, patternPart),
     PatternPart_Length = length(PatternPart),
 
-    Code = [
-            lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
-            case rand:uniform(4) rem 4 of
-                1 -> lists:append(
-                    [
-                        ?SP_OPT,
-                        ",",
-                        ?SP_OPT,
-                        lists:nth(rand:uniform(PatternPart_Length), PatternPart),
-                        ?SP_OPT,
-                        ",",
-                        ?SP_OPT,
-                        lists:nth(rand:uniform(PatternPart_Length), PatternPart),
-                        ?SP_OPT,
-                        ",",
-                        ?SP_OPT, lists:nth(rand:uniform(PatternPart_Length), PatternPart)
-                    ]);
-                2 -> lists:append(
-                    [
-                        ?SP_OPT,
-                        ",",
-                        ?SP_OPT,
-                        lists:nth(rand:uniform(PatternPart_Length), PatternPart),
-                        ?SP_OPT,
-                        ",",
-                        ?SP_OPT, lists:nth(rand:uniform(PatternPart_Length), PatternPart)
-                    ]);
-                3 -> lists:append(
-                    [
-                        ?SP_OPT,
-                        ",",
-                        ?SP_OPT,
-                        lists:nth(rand:uniform(PatternPart_Length), PatternPart)
-                    ]);
-                _ -> []
-            end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
-    ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    Code = lists:append([
+        [""],
+        [
+                lists:nth(rand:uniform(PatternPart_Length), PatternPart) ++
+                case rand:uniform(3) rem 3 of
+                    1 -> lists:append(
+                        [
+                            ?SP_OPT,
+                            ",",
+                            ?SP_OPT,
+                            lists:nth(rand:uniform(PatternPart_Length), PatternPart),
+                            ?SP_OPT,
+                            ",",
+                            ?SP_OPT,
+                            lists:nth(rand:uniform(PatternPart_Length), PatternPart),
+                            ?SP_OPT,
+                            ",",
+                            ?SP_OPT,
+                            lists:nth(rand:uniform(PatternPart_Length), PatternPart)
+                        ]);
+                    2 -> lists:append(
+                        [
+                            ?SP_OPT,
+                            ",",
+                            ?SP_OPT,
+                            lists:nth(rand:uniform(PatternPart_Length), PatternPart),
+                            ?SP_OPT,
+                            ",",
+                            ?SP_OPT,
+                            lists:nth(rand:uniform(PatternPart_Length), PatternPart)
+                        ]);
+                    _ -> lists:append(
+                        [
+                            ?SP_OPT,
+                            ",",
+                            ?SP_OPT,
+                            lists:nth(rand:uniform(PatternPart_Length), PatternPart)
+                        ])
+                end
+            || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+        ]
+    ]),
+    store_code(Rule, Code, ?MAX_CYPHER * 2, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1867,10 +2065,9 @@ create_code(patternComprehension = Rule) ->
                     "]"
                 ])
         end
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1939,9 +2136,10 @@ create_code(patternElement = Rule) ->
                 ]);
             _ -> lists:nth(rand:uniform(NodePattern_Length), NodePattern)
         end
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    store_code(anonymousPatternPart, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1961,9 +2159,9 @@ create_code(patternElementChain = Rule) ->
             ?SP_OPT,
             lists:nth(rand:uniform(NodePattern_Length), NodePattern)
         ])
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1979,21 +2177,21 @@ create_code(patternPart = Rule) ->
     Variable_Length = length(Variable),
 
     Code = [
-        case rand:uniform(2) rem 2 of
-            1 -> lists:append(
+        case rand:uniform(4) rem 4 of
+            1 ->
+                lists:nth(rand:uniform(AnonymousPatternPart_Length), AnonymousPatternPart);
+            _ -> lists:append(
                 [
                     lists:nth(rand:uniform(Variable_Length), Variable),
                     ?SP_OPT,
                     "=",
                     ?SP_OPT,
                     lists:nth(rand:uniform(AnonymousPatternPart_Length), AnonymousPatternPart)
-                ]);
-            _ ->
-                lists:nth(rand:uniform(AnonymousPatternPart_Length), AnonymousPatternPart)
+                ])
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2002,10 +2200,19 @@ create_code(patternPart = Rule) ->
 
 create_code(procedureName = Rule) ->
     ?CREATE_CODE_START,
+    [{namespace, Namespace}] = dets:lookup(?CODE_TEMPLATES, namespace),
+    Namespace_Length = length(Namespace),
     [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
 
-    Code = [re:replace(SN, "_SYMN_", "_PN_", [{return, list}]) || SN <- SymbolicName],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    ProcedureName = [re:replace(SN, "_SYMN_", "_PN_", [{return, list}]) || SN <- SymbolicName],
+    ProcedureName_Length = length(ProcedureName),
+
+    Code = [
+            lists:nth(rand:uniform(Namespace_Length), Namespace) ++
+            lists:nth(rand:uniform(ProcedureName_Length), ProcedureName)
+        || _ <- lists:seq(1, ?MAX_BASIC_RULE * 2)
+    ],
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2017,26 +2224,29 @@ create_code(procedureResultField = Rule) ->
     [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
 
     Code = [re:replace(SN, "_SYMN_", "_PRF_", [{return, list}]) || SN <- SymbolicName],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Properties = MapLiteral
-%%            | Parameter ;
+%%            | Parameter
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(properties = Rule) ->
     ?CREATE_CODE_START,
     [{mapLiteral, MapLiteral}] = dets:lookup(?CODE_TEMPLATES, mapLiteral),
+    MapLiteral_Length = length(MapLiteral),
     [{parameter, Parameter}] = dets:lookup(?CODE_TEMPLATES, parameter),
+    Parameter_Length = length(Parameter),
 
-    Code = lists:append(
-        [
-            MapLiteral,
-            Parameter
-        ]
-    ),
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    Code = [
+        case rand:uniform(2) rem 2 of
+            1 -> lists:nth(rand:uniform(MapLiteral_Length), MapLiteral);
+            _ -> lists:nth(rand:uniform(Parameter_Length), Parameter)
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2072,9 +2282,9 @@ create_code(propertyExpression = Rule) ->
                 _ ->
                     ?SP_OPT ++ lists:nth(rand:uniform(PropertyLookup_Length), PropertyLookup)
             end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2088,7 +2298,7 @@ create_code(propertyKeyName = Rule) ->
     Code = [
         re:replace(SN, "_SCHN_", "_PKN_", [{return, list}]) || SN <- SchemaName
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2102,24 +2312,30 @@ create_code(propertyLookup = Rule) ->
     Code = [
         lists:append([".", ?SP_OPT, PK]) || PK <- PropertyKeyName
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Query = RegularQuery
-%%       | BulkImportQuery ;
+%%       | StandaloneCall
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(query = Rule) ->
     ?CREATE_CODE_START,
     [{regularQuery, RegularQuery}] = dets:lookup(?CODE_TEMPLATES, regularQuery),
     RegularQuery_Length = length(RegularQuery),
+    [{standaloneCall, StandaloneCall}] = dets:lookup(?CODE_TEMPLATES, standaloneCall),
+    StandaloneCall_Length = length(StandaloneCall),
 
-    Code = case RegularQuery_Length > ?MAX_QUERY of
-               true -> lists:sublist(RegularQuery, 1, ?MAX_QUERY);
-               _ -> RegularQuery
-           end,
-    store_code(Rule, Code, ?MAX_QUERY, true),
+    Code = [
+        case rand:uniform(2) rem 2 of
+            1 -> lists:nth(rand:uniform(RegularQuery_Length), RegularQuery);
+            _ -> lists:nth(rand:uniform(StandaloneCall_Length), StandaloneCall)
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, true),
+    store_code(statement, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2157,7 +2373,187 @@ create_code(rangeLiteral = Rule) ->
             || IL <- IntegerLiteral
         ]
     ),
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ReadingClause = Match
+%%               | Unwind
+%%               | InQueryCall
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(readingClause = Rule) ->
+    ?CREATE_CODE_START,
+    [{inQueryCall, InQueryCall}] = dets:lookup(?CODE_TEMPLATES, inQueryCall),
+    InQueryCall_Length = length(InQueryCall),
+    [{match, Match}] = dets:lookup(?CODE_TEMPLATES, match),
+    Match_Length = length(Match),
+    [{unwind, Unwind}] = dets:lookup(?CODE_TEMPLATES, unwind),
+    Unwind_Length = length(Unwind),
+
+    Code = [
+        case rand:uniform(3) rem 3 of
+            1 -> lists:nth(rand:uniform(Match_Length), Match);
+            2 -> lists:nth(rand:uniform(Unwind_Length), Unwind);
+            _ -> lists:nth(rand:uniform(InQueryCall_Length), InQueryCall)
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% { ReadingClause, [SP] }
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% { ReadingClause, SP }
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(readingClauseList = Rule) ->
+    ?CREATE_CODE_START,
+    [{readingClause, ReadingClause}] = dets:lookup(?CODE_TEMPLATES, readingClause),
+    ReadingClause_Length = length(ReadingClause),
+
+    Code = [
+        case rand:uniform(3) rem 3 of
+            1 -> lists:append(
+                [
+                    lists:nth(rand:uniform(ReadingClause_Length), ReadingClause),
+                    ?SP,
+                    lists:nth(rand:uniform(ReadingClause_Length), ReadingClause),
+                    ?SP,
+                    lists:nth(rand:uniform(ReadingClause_Length), ReadingClause),
+                    ?SP
+                ]);
+            2 -> lists:append(
+                [
+                    lists:nth(rand:uniform(ReadingClause_Length), ReadingClause),
+                    ?SP,
+                    lists:nth(rand:uniform(ReadingClause_Length), ReadingClause),
+                    ?SP
+                ]);
+            _ ->
+                lists:nth(rand:uniform(ReadingClause_Length), ReadingClause) ++ ?SP
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    store_code(readPart, Code, ?MAX_CYPHER, true),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ReadOnlyEnd = ReadPart, Return ;
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% ReadOnlyEnd = ReadPart, SP, Return ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(readOnlyEnd = Rule) ->
+    ?CREATE_CODE_START,
+    [{readingClauseList, ReadingClauseList}] = dets:lookup(?CODE_TEMPLATES, readingClauseList),
+    ReadingClauseList_Length = length(ReadingClauseList),
+    [{return, Return}] = dets:lookup(?CODE_TEMPLATES, return),
+    Return_Length = length(Return),
+
+    Code = [
+        lists:append([
+            lists:nth(rand:uniform(ReadingClauseList_Length), ReadingClauseList),
+            ?SP,
+            lists:nth(rand:uniform(Return_Length), Return)
+        ])
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, true),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% { ReadPart, UpdatingPart, With, [SP]
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(readPartUpdatingPartWithList = Rule) ->
+    ?CREATE_CODE_START,
+    [{readingClauseList, ReadingClauseList}] = dets:lookup(?CODE_TEMPLATES, readingClauseList),
+    ReadingClauseList_Length = length(ReadingClauseList),
+    [{updatingClauseList, UpdatingClauseList}] = dets:lookup(?CODE_TEMPLATES, updatingClauseList),
+    UpdatingClauseList_Length = length(UpdatingClauseList),
+    [{with, With}] = dets:lookup(?CODE_TEMPLATES, with),
+    With_Length = length(With),
+
+    ReadPartUpdatingPartWith = [
+        lists:append([
+            case rand:uniform(20) rem 20 of
+                1 -> [];
+                _ ->
+                    lists:nth(rand:uniform(ReadingClauseList_Length), ReadingClauseList)
+            end,
+            case rand:uniform(20) rem 20 of
+                1 -> [];
+                _ ->
+                    ?SP ++
+                    lists:nth(rand:uniform(UpdatingClauseList_Length), UpdatingClauseList)
+            end,
+            ?SP,
+            lists:nth(rand:uniform(With_Length), With),
+            ?SP_OPT
+        ])
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    ReadPartUpdatingPartWith_Length = length(ReadPartUpdatingPartWith),
+
+    Code = [
+        case rand:uniform(3) rem 3 of
+            1 -> lists:append(
+                [
+                    lists:nth(rand:uniform(ReadPartUpdatingPartWith_Length), ReadPartUpdatingPartWith),
+                    ?SP,
+                    lists:nth(rand:uniform(ReadPartUpdatingPartWith_Length), ReadPartUpdatingPartWith),
+                    ?SP,
+                    lists:nth(rand:uniform(ReadPartUpdatingPartWith_Length), ReadPartUpdatingPartWith)
+                ]);
+            2 -> lists:append(
+                [
+                    lists:nth(rand:uniform(ReadPartUpdatingPartWith_Length), ReadPartUpdatingPartWith),
+                    ?SP,
+                    lists:nth(rand:uniform(ReadPartUpdatingPartWith_Length), ReadPartUpdatingPartWith)
+                ]);
+            _ ->
+                lists:nth(rand:uniform(ReadPartUpdatingPartWith_Length), ReadPartUpdatingPartWith)
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ReadUpdateEnd = ReadingClause, { [SP], ReadingClause }, { [SP], UpdatingClause }-, [[SP], Return] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(readUpdateEnd = Rule) ->
+    ?CREATE_CODE_START,
+    [{readingClauseList, ReadingClauseList}] = dets:lookup(?CODE_TEMPLATES, readingClauseList),
+    ReadingClauseList_Length = length(ReadingClauseList),
+    [{return, Return}] = dets:lookup(?CODE_TEMPLATES, return),
+    Return_Length = length(Return),
+    [{updatingClauseList, UpdatingClauseList}] = dets:lookup(?CODE_TEMPLATES, updatingClauseList),
+    UpdatingClauseList_Length = length(UpdatingClauseList),
+
+    Code = [
+        lists:append([
+            lists:nth(rand:uniform(ReadingClauseList_Length), ReadingClauseList),
+            ?SP,
+            lists:nth(rand:uniform(UpdatingClauseList_Length), UpdatingClauseList),
+            case rand:uniform(2) rem 2 of
+                1 -> lists:append(
+                    [
+                        ?SP,
+                        lists:nth(rand:uniform(Return_Length), Return)
+                    ]);
+                _ -> []
+            end
+        ])
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2175,11 +2571,7 @@ create_code(regularDecimalReal = Rule) ->
         "12.0",
         "123.654"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(doubleLiteral, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
-    store_code(numberLiteral, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2192,26 +2584,35 @@ create_code(regularDecimalReal = Rule) ->
 create_code(regularQuery = Rule) ->
     ?CREATE_CODE_START,
     [{singleQuery, SingleQuery}] = dets:lookup(?CODE_TEMPLATES, singleQuery),
+    SingleQuery_Length = length(SingleQuery),
     [{union, Union}] = dets:lookup(?CODE_TEMPLATES, union),
     Union_Length = length(Union),
 
     Code = [
-            SQ ++
-            case rand:uniform(3) rem 3 of
+            lists:nth(rand:uniform(SingleQuery_Length), SingleQuery) ++
+            case rand:uniform(4) rem 4 of
                 1 -> lists:append(
+                    [
+                        ?SP,
+                        lists:nth(rand:uniform(Union_Length), Union),
+                        ?SP,
+                        lists:nth(rand:uniform(Union_Length), Union),
+                        ?SP,
+                        lists:nth(rand:uniform(Union_Length), Union)
+                    ]);
+                2 -> lists:append(
                     [
                         ?SP,
                         lists:nth(rand:uniform(Union_Length), Union),
                         ?SP,
                         lists:nth(rand:uniform(Union_Length), Union)
                     ]);
-                2 -> ?SP ++ lists:nth(rand:uniform(Union_Length), Union);
+                3 -> ?SP ++ lists:nth(rand:uniform(Union_Length), Union);
                 _ -> []
             end
-        || SQ <- SingleQuery
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_QUERY, true),
-    store_code(query, Code, ?MAX_QUERY, false),
+    store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2231,7 +2632,7 @@ create_code(relationshipDetail = Rule) ->
 
     Code = lists:append(
         [
-%%            currently not suported
+%% wwe
 %%            "[]",
 %%            "[ ]"
         ],
@@ -2336,10 +2737,10 @@ create_code(relationshipDetail = Rule) ->
                 end,
                 "]"
             ])
-            || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+            || _ <- lists:seq(1, ?MAX_CYPHER * 2)
         ]
     ),
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2404,10 +2805,10 @@ create_code(relationshipPattern = Rule) ->
                         ?DASH
                     ])
             end
-            || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+            || _ <- lists:seq(1, ?MAX_CYPHER * 2)
         ]
     ),
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2434,10 +2835,9 @@ create_code(relationshipsPattern = Rule) ->
                 _ ->
                     ?SP_OPT ++ lists:nth(rand:uniform(PatternElementChain_Length), PatternElementChain)
             end
-        || _ <- lists:seq(1, ?MAX_BASIC_RULE)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2475,7 +2875,7 @@ create_code(relationshipTypes = Rule) ->
         ])
         || RTN <- RelTypeName
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2487,7 +2887,7 @@ create_code(relTypeName = Rule) ->
     [{schemaName, SchemaName}] = dets:lookup(?CODE_TEMPLATES, schemaName),
 
     Code = [re:replace(SN, "_SCHN_", "_RTN_", [{return, list}]) || SN <- SchemaName],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2526,10 +2926,9 @@ create_code(remove = Rule) ->
                 _ -> []
             end
         ])
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2553,9 +2952,9 @@ create_code(removeItem = Rule) ->
             _ ->
                 lists:nth(rand:uniform(PropertyExpression_Length), PropertyExpression)
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2607,13 +3006,18 @@ create_code(removeItem = Rule) ->
 %%              | (T,H,E,N)
 %%              | (E,L,S,E)
 %%              | (E,N,D)
-%%              ;
+%%              | (M,A,N,D,A,T,O,R,Y)
+%%              | (S,C,A,L,A,R)
+%%              | (O,F)
+%%              | (A,D,D)
+%%              | (D,R,O,P)
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(reservedWord = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
+        "adD",
         "alL",
         "anD",
         "aS",
@@ -2630,6 +3034,7 @@ create_code(reservedWord = Rule) ->
         "detacH",
         "distincT",
         "dO",
+        "droP",
         "elsE",
         "enD",
         "endS",
@@ -2639,10 +3044,12 @@ create_code(reservedWord = Rule) ->
         "iN",
         "iS",
         "limiT",
+        "mandatorY",
         "matcH",
         "mergE",
         "noT",
         "nulL",
+        "oF",
         "oN",
         "optionaL",
         "oR",
@@ -2650,6 +3057,7 @@ create_code(reservedWord = Rule) ->
         "removE",
         "requirE",
         "returN",
+        "scalaR",
         "seT",
         "skiP",
         "startS",
@@ -2663,8 +3071,7 @@ create_code(reservedWord = Rule) ->
         "witH",
         "xoR"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(schemaName, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2686,10 +3093,9 @@ create_code(return = Rule) ->
             end,
             lists:nth(rand:uniform(ReturnBody_Length), ReturnBody)
         ])
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2745,9 +3151,9 @@ create_code(returnBody = Rule) ->
                 7 -> ?SP ++ lists:nth(rand:uniform(Limit_Length), Limit);
                 _ -> []
             end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2774,9 +3180,9 @@ create_code(returnItem = Rule) ->
                     ]);
                 _ -> []
             end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2837,26 +3243,28 @@ create_code(returnItems = Rule) ->
                     ]);
                 _ -> lists:nth(rand:uniform(ReturnItem_Length), ReturnItem)
             end
-            || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+            || _ <- lists:seq(1, ?MAX_CYPHER * 2)
         ]
     ),
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SchemaName = SymbolicName
 %%            | ReservedWord
-%%            ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(schemaName = Rule) ->
     ?CREATE_CODE_START,
     [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+%% wwe
+%%    [{reservedWord, ReservedWord}] = dets:lookup(?CODE_TEMPLATES, reservedWord),
+    ReservedWord = [],
 
     Code = [
         re:replace(SN, "_SYMN_", "_SCHN_", [{return, list}]) || SN <- SymbolicName
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code ++ ReservedWord, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2888,10 +3296,9 @@ create_code(set = Rule) ->
                 _ -> []
             end
         ])
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2945,39 +3352,58 @@ create_code(setItem = Rule) ->
                     lists:nth(rand:uniform(NodeLabels_Length), NodeLabels)
                 ])
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% SingleQuery = Clause, { [SP], Clause } ;
-%% -----------------------------------------------------------------------------
-%% wwe ???
-%% SingleQuery = Clause, { SP, Clause } ;
+%% SinglePartQuery = ReadOnlyEnd
+%%                 | ReadUpdateEnd
+%%                 | UpdatingEnd
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(singlePartQuery = Rule) ->
+    ?CREATE_CODE_START,
+    [{readOnlyEnd, ReadOnlyEnd}] = dets:lookup(?CODE_TEMPLATES, readOnlyEnd),
+    ReadOnlyEnd_Length = length(ReadOnlyEnd),
+    [{readUpdateEnd, ReadUpdateEnd}] = dets:lookup(?CODE_TEMPLATES, readUpdateEnd),
+    ReadUpdateEnd_Length = length(ReadUpdateEnd),
+    [{updatingEnd, UpdatingEnd}] = dets:lookup(?CODE_TEMPLATES, updatingEnd),
+    UpdatingEnd_Length = length(UpdatingEnd),
+
+    Code = [
+        case rand:uniform(3) rem 3 of
+            1 -> lists:nth(rand:uniform(ReadOnlyEnd_Length), ReadOnlyEnd);
+            2 -> lists:nth(rand:uniform(ReadUpdateEnd_Length), ReadUpdateEnd);
+            _ -> lists:nth(rand:uniform(UpdatingEnd_Length), UpdatingEnd)
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, true),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SingleQuery = SinglePartQuery
+%%             | MultiPartQuery
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(singleQuery = Rule) ->
     ?CREATE_CODE_START,
-    [{clause, Clause}] = dets:lookup(?CODE_TEMPLATES, clause),
-    Clause_Length = length(Clause),
+    [{multiPartQuery, MultiPartQuery}] = dets:lookup(?CODE_TEMPLATES, multiPartQuery),
+    MultiPartQuery_Length = length(MultiPartQuery),
+    [{singlePartQuery, SinglePartQuery}] = dets:lookup(?CODE_TEMPLATES, singlePartQuery),
+    SinglePartQuery_Length = length(SinglePartQuery),
 
     Code = [
-            C ++
-            case rand:uniform(3) rem 3 of
-                1 -> lists:append(
-                    [
-                        ?SP,
-                        lists:nth(rand:uniform(Clause_Length), Clause),
-                        ?SP,
-                        lists:nth(rand:uniform(Clause_Length), Clause)
-                    ]);
-                2 -> ?SP ++ lists:nth(rand:uniform(Clause_Length), Clause);
-                _ -> []
-            end
-        || C <- Clause
+        case rand:uniform(2) rem 2 of
+            1 ->
+                lists:nth(rand:uniform(SinglePartQuery_Length), SinglePartQuery);
+            _ -> lists:nth(rand:uniform(MultiPartQuery_Length), MultiPartQuery)
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_QUERY, false),
+    store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2995,9 +3421,9 @@ create_code(skip = Rule) ->
             ?SP,
             lists:nth(rand:uniform(Expression_Length), Expression)
         ])
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3020,9 +3446,9 @@ create_code(sortItem = Rule) ->
                 3 -> ?SP ++ "Ascending";
                 _ -> ?SP ++ "Asc"
             end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3047,7 +3473,7 @@ create_code(special = Rule) ->
         %% pattern_element_chain -> relationship_pattern node_pattern
         %% relationship_pattern -> '<' '-' relationship_detail '-' '>'
         %% relationship_detail -> '[' range_literal ']'
-        "Match ()<-[*]->()",
+        "Match ()<-[*]->() Return a",
         %% ---------------------------------------------------------------------
         %% Problem: relationship_detail
         %% ---------------------------------------------------------------------
@@ -3063,7 +3489,7 @@ create_code(special = Rule) ->
         %% pattern_element_chain -> relationship_pattern node_pattern
         %% relationship_pattern -> '<' '-' relationship_detail '-' '>'
         %% relationship_detail -> '[' ']'
-        "Match ()<-[]->()",
+        "Match ()<-[]->() Return a",
         %% ---------------------------------------------------------------------
         %% Problem: relationship_detail
         %% ---------------------------------------------------------------------
@@ -3077,7 +3503,7 @@ create_code(special = Rule) ->
         %% pattern_element_chain -> relationship_pattern node_pattern
         %% relationship_pattern -> '<' '-' relationship_detail '-' '>'
         %% relationship_detail -> '[' relationship_types range_literal ']'
-        "Match ()<-[:rtn *]->()",
+        "Match ()<-[:rtn *]->() Return a",
         %% ---------------------------------------------------------------------
         %% Problem: relationship_detail
         %% ---------------------------------------------------------------------
@@ -3091,7 +3517,7 @@ create_code(special = Rule) ->
         %% pattern_element_chain -> relationship_pattern node_pattern
         %% relationship_pattern -> '<' '-' relationship_detail '-' '>'
         %% relationship_detail -> '[' variable ']'
-        "Match ()<-[vn]->()",
+        "Match ()<-[vn]->() Return a",
         %% ---------------------------------------------------------------------
         %% Problem: relationship_detail
         %% ---------------------------------------------------------------------
@@ -3105,7 +3531,7 @@ create_code(special = Rule) ->
         %% pattern_element_chain -> relationship_pattern node_pattern
         %% relationship_pattern -> '<' '-' relationship_detail '-' '>'
         %% relationship_detail -> '[' variable properties ']'
-        "Match ()<-[vn $1]->()",
+        "Match ()<-[vn $1]->() Return a",
         %% ---------------------------------------------------------------------
         %% Problem: relationship_detail
         %% ---------------------------------------------------------------------
@@ -3119,7 +3545,7 @@ create_code(special = Rule) ->
         %% pattern_element_chain -> relationship_pattern node_pattern
         %% relationship_pattern -> '<' '-' relationship_detail '-' '>'
         %% relationship_detail -> '[' variable range_literal properties ']'
-        "Match ()<-[vn * $1]->()",
+        "Match ()<-[vn * $1]->() Return a",
         %% ---------------------------------------------------------------------
         %% Problem: relationship_detail
         %% ---------------------------------------------------------------------
@@ -3133,7 +3559,7 @@ create_code(special = Rule) ->
         %% pattern_element_chain -> relationship_pattern node_pattern
         %% relationship_pattern -> '<' '-' relationship_detail '-' '>'
         %% relationship_detail -> '[' variable relationship_types properties ']'
-        "Match ()<-[vn :rtn  $1]->()",
+        "Match ()<-[vn :rtn  $1]->() Return a",
         %% ---------------------------------------------------------------------
         %% Problem: relationship_detail
         %% ---------------------------------------------------------------------
@@ -3147,7 +3573,7 @@ create_code(special = Rule) ->
         %% pattern_element_chain -> relationship_pattern node_pattern
         %% relationship_pattern -> '<' '-' relationship_detail '-' '>'
         %% relationship_detail -> '[' variable relationship_types range_literal ']'
-        "Match ()<-[vn :rtn  *]->()",
+        "Match ()<-[vn :rtn  *]->() Return a",
         %% ---------------------------------------------------------------------
         %% Problem: sort_item
         %% ---------------------------------------------------------------------
@@ -3158,9 +3584,9 @@ create_code(special = Rule) ->
         %% return_body -> return_items order
         %% order -> ORDER BY sort_item_commalist
         %% sort_item -> expression
-        "With * Order by 5"
+        "Match (a) With * Order by 5 Return a"
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3203,27 +3629,9 @@ create_code(standaloneCall = Rule) ->
                     ])
             end
         ])
-        || _ <- lists:seq(1, ?MAX_QUERY * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_QUERY, true),
-    store_code(query, Code, ?MAX_QUERY, false),
-    ?CREATE_CODE_END;
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Statement = Command
-%%           | Query ;
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_code(statement = Rule) ->
-    ?CREATE_CODE_START,
-    [{query, Query}] = dets:lookup(?CODE_TEMPLATES, query),
-    Query_Length = length(Query),
-
-    Code = case Query_Length > ?MAX_STATEMENT of
-               true -> lists:sublist(Query, 1, ?MAX_STATEMENT);
-               _ -> Query
-           end,
-    store_code(Rule, Code, ?MAX_STATEMENT, true),
+    store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3242,13 +3650,13 @@ create_code(stringLiteral = Rule) ->
         "'s_str_1'",
         "'s_str_2'"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_RULE_OTHERS, false),
-    store_code(literal, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% SymbolicName = ...
+%% SymbolicName = UnescapedSymbolicName
+%%              | EscapedSymbolicName
+%%              | HexLetter
 %%              | (C,O,U,N,T)
 %%              | (F,I,L,T,E,R)
 %%              | (E,X,T,R,A,C,T)
@@ -3256,22 +3664,30 @@ create_code(stringLiteral = Rule) ->
 %%              | (A,L,L)
 %%              | (N,O,N,E)
 %%              | (S,I,N,G,L,E)
-%%              ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(symbolicName = Rule) ->
     ?CREATE_CODE_START,
+    [{escapedSymbolicName, EscapedSymbolicName}] = dets:lookup(?CODE_TEMPLATES, escapedSymbolicName),
+    [{hexLetter, HexLetter}] = dets:lookup(?CODE_TEMPLATES, hexLetter),
+    [{unescapedSymbolicName, UnescapedSymbolicName}] = dets:lookup(?CODE_TEMPLATES, unescapedSymbolicName),
 
-    Code = [
-        "alL",
-        "anY",
-        "counT",
-        "extracT",
-        "filteR",
-        "nonE",
-        "singlE"
-    ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    Code = lists:append([
+        UnescapedSymbolicName,
+        EscapedSymbolicName,
+%% wwe
+%%        HexLetter,
+%%        [
+%%            "anY",
+%%            "counT",
+%%            "extracT",
+%%            "filteR",
+%%            "nonE",
+%%            "singlE"
+%%        ]
+        HexLetter
+    ]),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3298,8 +3714,8 @@ create_code(unescapedSymbolicName = Rule) ->
         "@usnf_SYMN_usn",
         "#usng_SYMN_usn"
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(symbolicName, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
+    store_code(symbolicName, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3327,7 +3743,7 @@ create_code(union = Rule) ->
         ])
         || SQ <- SingleQuery
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3354,10 +3770,135 @@ create_code(unwind = Rule) ->
             ?SP,
             lists:nth(rand:uniform(Variable_Length), Variable)
         ])
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% UpdatingClause = Create
+%%                | Merge
+%%                | Delete
+%%                | Set
+%%                | Remove
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(updatingClause = Rule) ->
+    ?CREATE_CODE_START,
+    [{create, Create}] = dets:lookup(?CODE_TEMPLATES, create),
+    Create_Length = length(Create),
+    [{delete, Delete}] = dets:lookup(?CODE_TEMPLATES, delete),
+    Delete_Length = length(Delete),
+    [{merge, Merge}] = dets:lookup(?CODE_TEMPLATES, merge),
+    Merge_Length = length(Merge),
+    [{remove, Remove}] = dets:lookup(?CODE_TEMPLATES, remove),
+    Remove_Length = length(Remove),
+    [{set, Set}] = dets:lookup(?CODE_TEMPLATES, set),
+    Set_Length = length(Set),
+
+    Code = [
+        case rand:uniform(5) rem 5 of
+            1 -> lists:nth(rand:uniform(Create_Length), Create);
+            2 -> lists:nth(rand:uniform(Merge_Length), Merge);
+            3 -> lists:nth(rand:uniform(Delete_Length), Delete);
+            4 -> lists:nth(rand:uniform(Set_Length), Set);
+            _ -> lists:nth(rand:uniform(Remove_Length), Remove)
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% { UpdatingClause, [SP] }
+%% -----------------------------------------------------------------------------
+%% wwe ???
+%% { UpdatingClause, SP }
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(updatingClauseList = Rule) ->
+    ?CREATE_CODE_START,
+    [{updatingClause, UpdatingClause}] = dets:lookup(?CODE_TEMPLATES, updatingClause),
+    UpdatingClause_Length = length(UpdatingClause),
+
+    Code = [
+        case rand:uniform(3) rem 3 of
+            1 -> lists:append(
+                [
+                    lists:nth(rand:uniform(UpdatingClause_Length), UpdatingClause),
+                    ?SP,
+                    lists:nth(rand:uniform(UpdatingClause_Length), UpdatingClause),
+                    ?SP,
+                    lists:nth(rand:uniform(UpdatingClause_Length), UpdatingClause),
+                    ?SP
+                ]);
+            2 -> lists:append(
+                [
+                    lists:nth(rand:uniform(UpdatingClause_Length), UpdatingClause),
+                    ?SP,
+                    lists:nth(rand:uniform(UpdatingClause_Length), UpdatingClause),
+                    ?SP
+                ]);
+            _ ->
+                lists:nth(rand:uniform(UpdatingClause_Length), UpdatingClause) ++ ?SP
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, false),
+    store_code(updatingPart, Code, ?MAX_CYPHER, true),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% UpdatingEnd = UpdatingStartClause, { [SP], UpdatingClause }, [[SP], Return] ;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(updatingEnd = Rule) ->
+    ?CREATE_CODE_START,
+    [{return, Return}] = dets:lookup(?CODE_TEMPLATES, return),
+    Return_Length = length(Return),
+    [{updatingClauseList, UpdatingClauseList}] = dets:lookup(?CODE_TEMPLATES, updatingClauseList),
+    UpdatingClauseList_Length = length(UpdatingClauseList),
+    [{updatingStartClause, UpdatingStartClause}] = dets:lookup(?CODE_TEMPLATES, updatingStartClause),
+    UpdatingStartClause_Length = length(UpdatingStartClause),
+
+    Code = [
+        lists:append([
+            lists:nth(rand:uniform(UpdatingStartClause_Length), UpdatingStartClause),
+            case rand:uniform(2) rem 2 of
+                1 ->
+                    ?SP ++ lists:nth(rand:uniform(UpdatingClauseList_Length), UpdatingClauseList);
+                _ -> []
+            end,
+            case rand:uniform(2) rem 2 of
+                1 -> ?SP ++ lists:nth(rand:uniform(Return_Length), Return);
+                _ -> []
+            end
+        ])
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, true),
+    ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% UpdatingStartClause = Create
+%%                     | Merge
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(updatingStartClause = Rule) ->
+    ?CREATE_CODE_START,
+    [{create, Create}] = dets:lookup(?CODE_TEMPLATES, create),
+    Create_Length = length(Create),
+    [{merge, Merge}] = dets:lookup(?CODE_TEMPLATES, merge),
+    Merge_Length = length(Merge),
+
+    Code = [
+        case rand:uniform(2) rem 2 of
+            1 -> lists:nth(rand:uniform(Create_Length), Create);
+            _ -> lists:nth(rand:uniform(Merge_Length), Merge)
+        end
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
+    ],
+    store_code(Rule, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3369,8 +3910,7 @@ create_code(variable = Rule) ->
     [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
 
     Code = [re:replace(SN, "_SYMN_", "_V_", [{return, list}]) || SN <- SymbolicName],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
-    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3384,7 +3924,7 @@ create_code(where = Rule) ->
     Code = [
         lists:append(["Where", ?SP, E]) || E <- Expression
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3401,37 +3941,20 @@ create_code(with = Rule) ->
     Code = [
         lists:append([
             "With",
+            case rand:uniform(2) rem 2 of
+                1 -> " Distinct";
+                _ -> []
+            end,
             ?SP,
-            case rand:uniform(4) rem 4 of
-                1 -> lists:append(
-                    [
-                        "Distinct",
-                        ?SP,
-                        lists:nth(rand:uniform(ReturnBody_Length), ReturnBody),
-                        ?SP,
-                        lists:nth(rand:uniform(Where_Length), Where)
-                    ]);
-                2 -> lists:append(
-                    [
-                        "Distinct",
-                        ?SP,
-                        lists:nth(rand:uniform(ReturnBody_Length), ReturnBody)
-                    ]);
-                3 -> lists:append(
-                    [
-                        ?SP,
-                        lists:nth(rand:uniform(ReturnBody_Length), ReturnBody),
-                        ?SP,
-                        lists:nth(rand:uniform(Where_Length), Where)
-                    ]);
-                _ -> ?SP ++
-                lists:nth(rand:uniform(ReturnBody_Length), ReturnBody)
+            lists:nth(rand:uniform(ReturnBody_Length), ReturnBody),
+            case rand:uniform(2) rem 2 of
+                1 -> ?SP ++ lists:nth(rand:uniform(Where_Length), Where);
+                _ -> []
             end
         ])
-        || _ <- lists:seq(1, ?MAX_CLAUSE * 2)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_CLAUSE, true),
-    store_code(clause, Code, ?MAX_CLAUSE, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3457,15 +3980,14 @@ create_code(yieldItem = Rule) ->
                 ]);
             _ -> lists:nth(rand:uniform(Variable_Length), Variable)
         end
-        || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+        || _ <- lists:seq(1, ?MAX_CYPHER * 2)
     ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% YieldItems = (YieldItem, { [SP], ',', [SP], YieldItem })
 %%            | '-'
-%%            ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(yieldItems = Rule) ->
@@ -3496,9 +4018,9 @@ create_code(yieldItems = Rule) ->
                     ]);
                 _ -> lists:nth(rand:uniform(YieldItem_Length), YieldItem)
             end
-            || _ <- lists:seq(1, ?MAX_RULE_OTHERS)
+            || _ <- lists:seq(1, ?MAX_CYPHER * 2)
         ],
-    store_code(Rule, Code, ?MAX_RULE_OTHERS, false),
+    store_code(Rule, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3512,7 +4034,7 @@ create_code(addOrSubtractExpression = Rule, Max) ->
 
     Code = [
             lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression) ++
-            case rand:uniform(5) rem 5 of
+            case rand:uniform(7) rem 7 of
                 1 -> lists:append(
                     [
                         ?SP_OPT,
@@ -3526,12 +4048,12 @@ create_code(addOrSubtractExpression = Rule, Max) ->
                 2 -> lists:append(
                     [
                         ?SP_OPT,
-                        "-",
-                        ?SP,
+                        "+",
+                        ?SP_OPT,
                         lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression),
                         ?SP_OPT,
                         "-",
-                        ?SP, lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression)
+                        ?SP_OPT, lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression)
                     ]);
                 3 -> lists:append(
                     [
@@ -3544,6 +4066,26 @@ create_code(addOrSubtractExpression = Rule, Max) ->
                         ?SP_OPT,
                         "-",
                         ?SP,
+                        lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression),
+                        ?SP_OPT,
+                        "-",
+                        ?SP, lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression)
+                    ]);
+                5 -> lists:append(
+                    [
+                        ?SP_OPT,
+                        "-",
+                        ?SP,
+                        lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression),
+                        ?SP_OPT,
+                        "+",
+                        ?SP, lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression)
+                    ]);
+                6 -> lists:append(
+                    [
+                        ?SP_OPT,
+                        "-",
+                        ?SP,
                         lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression)
                     ]);
                 _ -> []
@@ -3551,7 +4093,6 @@ create_code(addOrSubtractExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     store_code(andExpression, Code, Max, false),
@@ -3593,7 +4134,6 @@ create_code(andExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     ?CREATE_CODE_END;
@@ -3626,7 +4166,6 @@ create_code(comparisonExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     store_code(andExpression, Code, Max, false),
@@ -3704,7 +4243,6 @@ create_code(multiplyDivideModuloExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     store_code(andExpression, Code, Max, false),
@@ -3735,7 +4273,6 @@ create_code(notExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     store_code(andExpression, Code, Max, false),
@@ -3872,7 +4409,6 @@ create_code(powerOfExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     store_code(andExpression, Code, Max, false),
@@ -3916,7 +4452,6 @@ create_code(propertyOrLabelsExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     store_code(andExpression, Code, Max, false),
@@ -4200,7 +4735,6 @@ create_code(stringListNullOperatorExpression = Rule, Max) ->
         ]
     ),
     store_code(Rule, Code, Max * 2, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     store_code(andExpression, Code, Max, false),
@@ -4235,7 +4769,6 @@ create_code(unaryAddOrSubtractExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     store_code(orExpression, Code, Max, false),
     store_code(xorExpression, Code, Max, false),
     store_code(andExpression, Code, Max, false),
@@ -4281,7 +4814,6 @@ create_code(xorExpression = Rule, Max) ->
         || _ <- lists:seq(1, Max)
     ],
     store_code(Rule, Code, Max, false),
-    store_code(expression, Code, Max, false),
     ?CREATE_CODE_END.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4306,24 +4838,28 @@ create_code_expression(Max) ->
 %% Creating Common Test data files.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-file_create_ct_all(_Type, []) ->
+file_create_ct_all(_Type, _CompactedDetailed, []) ->
     ok;
-file_create_ct_all(Type, [Rule | Rules]) ->
-    file_create_ct(Type, Rule),
-    file_create_ct_all(Type, Rules).
+file_create_ct_all(Type, CompactedDetailed, [Rule | Rules]) ->
+    file_create_ct(Type, CompactedDetailed, Rule),
+    file_create_ct_all(Type, CompactedDetailed, Rules).
 
-file_create_ct(Type, Rule) ->
+file_create_ct(Type, CompactedDetailed, Rule) ->
     [{Rule, Code}] = dets:lookup(?CODE_TEMPLATES, Rule),
-    erlang:display(io:format("final common tests ===> ~12.. B type: ~s rule: ~s ~n", [length(Code), atom_to_list(Type), atom_to_list(Rule)])),
 
-    FileName = lists:append([atom_to_list(Type), "_", atom_to_list(Rule), "_SUITE"]),
+    CodeLength = length(Code),
+    RuleString = atom_to_list(Rule),
+
+    FileName = lists:append([Type, "_", CompactedDetailed, "_", RuleString, "_SUITE"]),
     {ok, File, _} = file:path_open([?PATH_CT], FileName ++ ".erl", [write]),
+
+    erlang:display(io:format("final common tests ===> ~12.. B file_name: ~s ", [CodeLength, FileName ++ ".erl"])),
 
     {{Current_Year, Current_Month, Current_Day}, _} = calendar:local_time(),
 
     io:format(File, "~s~n", ["%%%-------------------------------------------------------------------"]),
     io:format(File, "~s~n", [lists:append(["%%% File        : ", FileName, ".erl"])]),
-    io:format(File, "~s~n", [lists:append(["%%% Description : Test Suite for rule: ", atom_to_list(Rule), "."])]),
+    io:format(File, "~s~n", [lists:append(["%%% Description : Test Suite for rule: ", RuleString, "."])]),
     io:format(File, "~s~n", ["%%%"]),
     io:format(File, "~s~n", ["%%% Created     : " ++ lists:flatten(io_lib:format("~2..0w.~2..0w.~4..0w", [Current_Day, Current_Month, Current_Year]))]),
     io:format(File, "~s~n", ["%%%-------------------------------------------------------------------"]),
@@ -4334,7 +4870,13 @@ file_create_ct(Type, Rule) ->
     io:format(File, "~s~n", ["    end_per_suite/1,"]),
     io:format(File, "~s~n", ["    init_per_suite/1,"]),
     io:format(File, "~s~n", ["    suite/0,"]),
-    io:format(File, "~s~n", [lists:append(["    test_", atom_to_list(Rule), "/1"])]),
+
+    case CompactedDetailed of
+        "compacted" ->
+            io:format(File, "~s~n", [lists:append(["    test_compacted/1"])]);
+        _ -> file_write_ct_export(1, File, CodeLength, Code)
+    end,
+
     io:format(File, "~s~n", ["])."]),
     io:format(File, "~s~n", [""]),
     io:format(File, "~s~n", ["-include_lib(\"common_test/include/ct.hrl\")."]),
@@ -4360,34 +4902,76 @@ file_create_ct(Type, Rule) ->
     io:format(File, "~s~n", ["%%--------------------------------------------------------------------"]),
     io:format(File, "~s~n", [""]),
     io:format(File, "~s~n", ["all() ->"]),
-    io:format(File, "~s~n", [lists:append(["    [test_", atom_to_list(Rule), "]."])]),
+    io:format(File, "~s~n", ["    ["]),
+
+    case CompactedDetailed of
+        "compacted" ->
+            io:format(File, "~s~n", [lists:append(["        test_compacted"])]);
+        _ -> file_write_ct_all(1, File, CodeLength, Code)
+    end,
+
+    io:format(File, "~s~n", ["    ]."]),
     io:format(File, "~s~n", [""]),
     io:format(File, "~s~n", ["%%--------------------------------------------------------------------"]),
     io:format(File, "~s~n", ["%% TEST CASES"]),
     io:format(File, "~s~n", ["%%--------------------------------------------------------------------"]),
     io:format(File, "~s~n", [""]),
 
-    io:format(File, "~s~n", [lists:append(["test_", atom_to_list(Rule), "(_Config) ->"])]),
+    case CompactedDetailed of
+        "compacted" ->
+            io:format(File, "~s~n", [lists:append(["test_compacted(_Config) ->"])]);
+        _ -> ok
+    end,
 
-    file_write_ct(Type, File, Code).
+    file_write_ct(1, Type, CompactedDetailed, File, Code).
 
-file_write_ct(_Type, File, []) ->
-    io:format(File, "~s~n", ["    ok."]),
+file_write_ct(_Current, _Type, CompactedDetailed, File, []) ->
+    case CompactedDetailed of
+        "compacted" -> io:format(File, "~s~n", ["    ok."]);
+        _ -> ok
+    end,
     file:close(File);
-file_write_ct(Type, File, [H | T]) ->
-    io:format(File, "~s~n", [lists:append([
-        "    ",
-        case Type of
-            performance ->
-                "{ok, _} = ocparse:source_to_pt";
-            _ ->
-                "ocparse_test:common_test_source"
-        end,
-        "(\"",
-        H,
-        "\"),"
-    ])]),
-    file_write_ct(Type, File, T).
+file_write_ct(Current, Type, CompactedDetailed, File, [H | T]) ->
+    case CompactedDetailed of
+        "compacted" -> io:format(File, "~s~n", [lists:append([
+            "    ",
+            case Type of
+                "performance" -> "{ok, _} = ocparse:source_to_pt";
+                _ -> "ocparse_test:common_test_source"
+            end,
+            "(\"",
+            H,
+            "\"),"
+        ])]);
+        _ ->
+            io:format(File, "~s~n", [lists:append(["test_", integer_to_list(Current), "_", integer_to_list(length(H)), "(_Config) ->"])]),
+            io:format(File, "~s~n", [lists:append([
+                "    ",
+                case Type of
+                    "performance" -> "{ok, _} = ocparse:source_to_pt";
+                    _ -> "ocparse_test:common_test_source"
+                end,
+                "(\"",
+                H,
+                "\")."
+            ])]),
+            io:format(File, "~s~n", [""])
+    end,
+    file_write_ct(Current + 1, Type, CompactedDetailed, File, T).
+
+file_write_ct_all(Current, File, Target, [H])
+    when Current == Target ->
+    io:format(File, "~s~n", [lists:append(["        test_", integer_to_list(Current), "_", integer_to_list(length(H))])]);
+file_write_ct_all(Current, File, Target, [H | T]) ->
+    io:format(File, "~s~n", [lists:append(["        test_", integer_to_list(Current), "_", integer_to_list(length(H)), ","])]),
+    file_write_ct_all(Current + 1, File, Target, T).
+
+file_write_ct_export(Current, File, Target, [H])
+    when Current == Target ->
+    io:format(File, "~s~n", [lists:append(["    test_", integer_to_list(Current), "_", integer_to_list(length(H)), "/1"])]);
+file_write_ct_export(Current, File, Target, [H | T]) ->
+    io:format(File, "~s~n", [lists:append(["    test_", integer_to_list(Current), "_", integer_to_list(length(H)), "/1,"])]),
+    file_write_ct_export(Current + 1, File, Target, T).
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Creating EUnit data files.
@@ -4401,9 +4985,13 @@ file_create_eunit_all(Type, [Rule | Rules]) ->
 
 file_create_eunit(Type, Rule) ->
     [{Rule, Code}] = dets:lookup(?CODE_TEMPLATES, Rule),
-    erlang:display(io:format("final eunit  tests ===> ~12.. B type: ~s rule: ~s ~n", [length(Code), atom_to_list(Type), atom_to_list(Rule)])),
-    FileName = lists:append([atom_to_list(Type), "_", atom_to_list(Rule), ".tst"]),
+
+    RuleStrimg = atom_to_list(Rule),
+
+    FileName = lists:append([Type, "_", RuleStrimg, ".tst"]),
     {ok, File, _} = file:path_open([?PATH_EUNIT], FileName, [write]),
+
+    erlang:display(io:format("final eunit  tests ===> ~12.. B file_name: ~s ", [length(Code), FileName])),
 
     io:format(File, "~s~n", ["%%-*- mode: erlang -*-"]),
     io:format(File, "~s~n", ["%%-*- coding: utf-8 -*-"]),
@@ -4412,7 +5000,7 @@ file_create_eunit(Type, Rule) ->
     io:format(File, "~s~n", ["[{tests, []}]."]),
     io:format(File, "~s~n", [""]),
     io:format(File, "~s~n", ["%%"]),
-    io:format(File, "~s~n", ["%% Tests for rule: " ++ atom_to_list(Rule)]),
+    io:format(File, "~s~n", ["%% Tests for rule: " ++ RuleStrimg]),
     io:format(File, "~s~n", ["%%"]),
     io:format(File, "~s~n", [""]),
 
@@ -4429,28 +5017,33 @@ file_write_eunit(Type, File, [H | T]) ->
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 store_code(Rule, Code, Max, Strict) ->
-%   erlang:display(io:format("store Code         ===> ~12.. B rule: ~s ~n", [length(Code), atom_to_list(Rule)])),
-    FRandom = fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end,
+%   erlang:display(io:format("store Code         ===> ~12.. B rule: ~s ", [length(Code), atom_to_list(Rule)])),
 
+%%    case Max == 0 of
+%%        true ->
+%%            erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [0, atom_to_list(Rule)])),
+%%            ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [0, atom_to_list(Rule)]);
+%%        _ ->
     CodeUnique = ordsets:to_list(ordsets:from_list(Code)),
     CodeUnique_Length = length(CodeUnique),
+    CodeUniqueSorted = lists:sort(?F_RANDOM, CodeUnique),
     CodeUniqueLimited = case CodeUnique_Length > Max of
                             true ->
-                                lists:sublist(lists:sort(FRandom, CodeUnique), 1, Max);
+                                lists:sublist(CodeUniqueSorted, 1, Max);
                             _ -> CodeUnique
                         end,
     CodeTotal = case dets:lookup(?CODE_TEMPLATES, Rule) of
                     [{Rule, CodeOld}] ->
-                        ordsets:to_list(ordsets:from_list(lists:append([CodeOld, CodeUniqueLimited])));
+                        lists:sort(?F_RANDOM, ordsets:to_list(ordsets:from_list(lists:append([CodeOld, CodeUniqueLimited]))));
                     _ -> CodeUniqueLimited
                 end,
     CodeTotal_Length = length(CodeTotal),
     CodeNew = case Strict andalso CodeTotal_Length > Max of
                   true ->
-                      CodeTotalSorted = lists:sort(FRandom, CodeTotal),
-                      [lists:nth(rand:uniform(CodeTotal_Length), CodeTotalSorted) || _ <- lists:seq(1, Max)];
+                      [lists:nth(rand:uniform(CodeTotal_Length), CodeTotal) || _ <- lists:seq(1, Max)];
                   _ -> CodeTotal
               end,
     dets:insert(?CODE_TEMPLATES, {Rule, CodeNew}),
-%   erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ~n", [length(CodeNew), atom_to_list(Rule)])),
+%   erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [length(CodeNew), atom_to_list(Rule)])),
     ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [length(CodeNew), atom_to_list(Rule)]).
+%%    end.

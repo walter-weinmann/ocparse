@@ -92,6 +92,7 @@ Erlang code.
 -export([reserved_keywords/0]).
 
 -define(TOKEN_PATTERNS, [
+    {"^(?i)(ADD)$",              'ADD'},
     {"^(?i)(ALL)$",              'ALL'},
     {"^(?i)(ALLSHORTESTPATHS)$", 'ALLSHORTESTPATHS'},
     {"^(?i)(AND)$",              'AND'},
@@ -137,12 +138,14 @@ Erlang code.
     {"^(?i)(L_SKIP)$",           'L_SKIP'},
     {"^(?i)(LIMIT)$",            'LIMIT'},
     {"^(?i)(LOAD)$",             'LOAD'},
+    {"^(?i)(MANDATORY)$",        'MANDATORY'},
     {"^(?i)(MATCH)$",            'MATCH'},
     {"^(?i)(MERGE)$",            'MERGE'},
     {"^(?i)(NODE)$",             'NODE'},
     {"^(?i)(NONE)$",             'NONE'},
     {"^(?i)(NOT)$",              'NOT'},
     {"^(?i)(NULL)$",             'NULL'},
+    {"^(?i)(OF)$",               'OF'},
     {"^(?i)(ON)$",               'ON'},
     {"^(?i)(OPTIONAL)$",         'OPTIONAL'},
     {"^(?i)(OR)$",               'OR'},
@@ -154,6 +157,7 @@ Erlang code.
     {"^(?i)(REMOVE)$",           'REMOVE'},
     {"^(?i)(REQUIRE)$",          'REQUIRE'},
     {"^(?i)(RETURN)$",           'RETURN'},
+    {"^(?i)(SCALAR)$",           'SCALAR'},
     {"^(?i)(SCAN)$",             'SCAN'},
     {"^(?i)(SET)$",              'SET'},
     {"^(?i)(SHORTESTPATH)$",     'SHORTESTPATH'},

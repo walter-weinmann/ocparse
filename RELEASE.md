@@ -95,6 +95,20 @@ New: ReadUpdateEnd = ReadingClause, { [SP], ReadingClause }, { [SP], UpdatingCla
 Old: n/a
 ```
 
+- **ReservedWord**
+
+```
+New: ReservedWord = ...
+                  | (M,A,N,D,A,T,O,R,Y)
+                  | (S,C,A,L,A,R)
+                  | (O,F)
+                  | (A,D,D)
+                  | (D,R,O,P)
+                  ;
+
+Old: n/a
+```
+
 - **SingleQuery**
 
 ```
