@@ -71,7 +71,7 @@
 
 -define(LEFT_ARROW_HEAD, "<").
 
--define(MAX_BASIC_RULE, 100).
+-define(MAX_BASIC_RULE, 150).
 % -define(MAX_BASIC_RULE, 250).
 -define(MAX_CYPHER, ?MAX_BASIC_RULE * 8).
 
