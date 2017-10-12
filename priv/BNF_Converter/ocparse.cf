@@ -236,13 +236,13 @@ MergeActionList01.                               MergeActionList ::= MergeAction
 MergeActionList02.                               MergeActionList ::= MergeAction  MergeActionList ;
 -- -----------------------------------------------------------------------------
 
--- merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
 -- merge_action -> ON MATCH  set                                                                   : {mergeAction, "match",  '$3'}.
+-- merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
 
-MergeAction01.                                   MergeAction ::= "ON" "MATCH"  Set ;
-MergeAction02.                                   MergeAction ::= "ON" "CREATE" Set ;
+MergeAction01.                                   MergeAction ::= "ON" "CREATE" Set ;
+MergeAction02.                                   MergeAction ::= "ON" "MATCH"  Set ;
 
-- create -> CREATE pattern                                                                        : {create, '$2'}.
+-- create -> CREATE pattern                                                                        : {create, '$2'}.
 
 Create01.                                        Create ::= "CREATE" Pattern ;
 
@@ -396,11 +396,11 @@ ReturnItemCommalist01.                           ReturnItemCommalist ::= ReturnI
 ReturnItemCommalist02.                           ReturnItemCommalist ::= ReturnItem "," ReturnItemCommalist ;
 -- -----------------------------------------------------------------------------
 
--- return_item -> expression                                                                       : {returnItem, '$1', []}.
 -- return_item -> expression AS variable                                                           : {returnItem, '$1', '$3'}.
+-- return_item -> expression                                                                       : {returnItem, '$1', []}.
 
-ReturnItem01.                                    ReturnItem ::= Expression               ;
-ReturnItem02.                                    ReturnItem ::= Expression "AS" Variable ;
+ReturnItem01.                                    ReturnItem ::= Expression "AS" Variable ;
+ReturnItem02.                                    ReturnItem ::= Expression               ;
 
 -- order -> ORDER BY sort_item_commalist                                                           : {order, '$3'}.
 
@@ -466,13 +466,11 @@ AnonymousPatternPart01.                          AnonymousPatternPart ::= Patter
 
 -- pattern_element -> node_pattern                                                                 : {patternElement, '$1', []}.
 -- pattern_element -> node_pattern pattern_element_chain_list                                      : {patternElement, '$1', '$2'}.
--- pattern_element -> relationships_pattern                                                        : {patternElement, '$1', []}.
 -- pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2', "("}.
 
 PatternElement01.                                PatternElement ::= NodePattern                         ;
 PatternElement02.                                PatternElement ::= NodePattern PatternElementChainList ;
-PatternElement03.                                PatternElement ::= RelationshipsPattern                ;
-PatternElement04.                                PatternElement ::= "(" PatternElement ")"              ;
+PatternElement03.                                PatternElement ::= "(" PatternElement ")"              ;
 
 -- =============================================================================
 -- Helper definitions.
@@ -515,14 +513,14 @@ PatternElementChain01.                           PatternElementChain ::= Relatio
 -- relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
 -- relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
 
-RelationshipPattern01.                           RelationshipPattern ::= LeftArrowHead Dash                    Dash RightArrowHead ;
-RelationshipPattern02.                           RelationshipPattern ::= LeftArrowHead Dash RelationshipDetail Dash RightArrowHead ;
-RelationshipPattern03.                           RelationshipPattern ::= LeftArrowHead Dash                    Dash                ;
-RelationshipPattern04.                           RelationshipPattern ::= LeftArrowHead Dash RelationshipDetail Dash                ;
-RelationshipPattern05.                           RelationshipPattern ::=               Dash                    Dash RightArrowHead ;
-RelationshipPattern06.                           RelationshipPattern ::=               Dash RelationshipDetail Dash RightArrowHead ;
-RelationshipPattern07.                           RelationshipPattern ::=               Dash                    Dash                ;
-RelationshipPattern08.                           RelationshipPattern ::=               Dash RelationshipDetail Dash                ;
+RelationshipPattern01.                           RelationshipPattern ::= "<" "-"                    "-" ">" ;
+RelationshipPattern02.                           RelationshipPattern ::= "<" "-" RelationshipDetail "-" ">" ;
+RelationshipPattern03.                           RelationshipPattern ::= "<" "-"                    "-"     ;
+RelationshipPattern04.                           RelationshipPattern ::= "<" "-" RelationshipDetail "-"     ;
+RelationshipPattern05.                           RelationshipPattern ::=     "-"                    "-" ">" ;
+RelationshipPattern06.                           RelationshipPattern ::=     "-" RelationshipDetail "-" ">" ;
+RelationshipPattern07.                           RelationshipPattern ::=     "-"                    "-"     ;
+RelationshipPattern08.                           RelationshipPattern ::=     "-" RelationshipDetail "-"     ;
 
 -- relationship_detail -> '['                                                       ']'            : {relationshipDetail, [],   [],   [],   []}.
 -- relationship_detail -> '['                                            properties ']'            : {relationshipDetail, [],   [],   [],   '$2'}.
@@ -565,18 +563,18 @@ Properties01.                                    Properties ::= MapLiteral ;
 Properties02.                                    Properties ::= Parameter  ;
 
 -- relationship_types -> ':' rel_type_name                                                         : {relationshipTypes, '$2', []}.
--- relationship_types -> ':' rel_type_name rel_type_verticalbarlist                                : {relationshipTypes, '$2', '$3'}.
+-- relationship_types -> ':' rel_type_name rel_type_name_verticalbarlist                           : {relationshipTypes, '$2', '$3'}.
 
 RelationshipTypes01.                             RelationshipTypes ::= ":" RelTypeName                            ;
-RelationshipTypes01.                             RelationshipTypes ::= ":" RelTypeName RelTypeNameVerticalbarlist ;
+RelationshipTypes02.                             RelationshipTypes ::= ":" RelTypeName RelTypeNameVerticalbarlist ;
 
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
--- rel_type_verticalbarlist ->                          '|'     rel_type_name                      : [{'$2', []}].
--- rel_type_verticalbarlist ->                          '|' ':' rel_type_name                      : [{'$3', ":"}].
--- rel_type_verticalbarlist -> rel_type_verticalbarlist '|'     rel_type_name                      : '$1' ++ [{'$3', []}].
--- rel_type_verticalbarlist -> rel_type_verticalbarlist '|' ':' rel_type_name                      : '$1' ++ [{'$4', ":"}].
+-- rel_type_name_verticalbarlist ->                               '|'     rel_type_name            : [{'$2', []}].
+-- rel_type_name_verticalbarlist ->                               '|' ':' rel_type_name            : [{'$3', ":"}].
+-- rel_type_name_verticalbarlist -> rel_type_name_verticalbarlist '|'     rel_type_name            : '$1' ++ [{'$3', []}].
+-- rel_type_name_verticalbarlist -> rel_type_name_verticalbarlist '|' ':' rel_type_name            : '$1' ++ [{'$4', ":"}].
 
 RelTypeNameVerticalbarlist01.                    RelTypeNameVerticalbarlist ::=                            "|"      RelTypeName ;
 RelTypeNameVerticalbarlist02.                    RelTypeNameVerticalbarlist ::=                            "|" ":"  RelTypeName ;
@@ -584,7 +582,7 @@ RelTypeNameVerticalbarlist03.                    RelTypeNameVerticalbarlist ::= 
 RelTypeNameVerticalbarlist04.                    RelTypeNameVerticalbarlist ::= RelTypeNameVerticalbarlist "|" ":"  RelTypeName ;
 -- =============================================================================
 
-- node_labels -> node_label_list                                                                  : {nodeLabels, '$1'}.
+-- node_labels -> node_label_list                                                                  : {nodeLabels, '$1'}.
 
 NodeLabels01.                                    NodeLabels ::= NodeLabelList ;
 
@@ -631,135 +629,260 @@ Expression01.                                    Expression ::= OrExpression ;
 -- or_expression -> xor_expression                                                                 : {orExpression, '$1', []}.
 -- or_expression -> xor_expression xor_expression_addon_list                                       : {orExpression, '$1', '$2'}.
 
-OrExpression01.                                  OrExpression ::= XorExpressionList                            ;
-OrExpression02.                                  OrExpression ::= XorExpressionList XorExpressionListAddonList ;
+OrExpression01.                                  OrExpression ::= XorExpression                        ;
+OrExpression02.                                  OrExpression ::= XorExpression XorExpressionAddonList ;
 
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
-XorExpressionListAddonList01.                    XorExpressionListAddonList ::=                            "OR" XorExpressionList ;
-XorExpressionListAddonList02.                    XorExpressionListAddonList ::= XorExpressionListAddonList "OR" XorExpressionList ;
+-- xor_expression_addon_list ->                           OR xor_expression                        :         [{"or", '$2'}].
+-- xor_expression_addon_list -> xor_expression_addon_list OR xor_expression                        : '$1' ++ [{"or", '$3'}].
+
+XorExpressionAddonList01.                        XorExpressionAddonList ::=                        "OR" XorExpression ;
+XorExpressionAddonList02.                        XorExpressionAddonList ::= XorExpressionAddonList "OR" XorExpression ;
 -- =============================================================================
 
-XorExpression01.                                 XorExpression ::= AndExpressionList ;
+-- xor_expression -> and_expression                                                                : {xorExpression, '$1', []}.
+-- xor_expression -> and_expression and_expression_addon_list                                      : {xorExpression, '$1', '$2'}.
 
--- =============================================================================
--- Helper definitions.
--- -----------------------------------------------------------------------------
-AndExpressionList01.                             AndExpressionList ::= AndExpression                         ;
-AndExpressionList02.                             AndExpressionList ::= AndExpression "XOR" AndExpressionList ;
--- =============================================================================
-
-AndExpression01.                                 AndExpression ::= NotExpressionList ;
+XorExpression01.                                 XorExpression ::= AndExpression                        ;
+XorExpression02.                                 XorExpression ::= AndExpression AndExpressionAddonList ;
 
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
-NotExpressionList01.                             NotExpressionList ::= NotExpression                         ;
-NotExpressionList02.                             NotExpressionList ::= NotExpression "AND" NotExpressionList ;
+-- and_expression_addon_list ->                           XOR and_expression                       :         [{"xor", '$2'}].
+-- and_expression_addon_list -> and_expression_addon_list XOR and_expression                       : '$1' ++ [{"xor", '$3'}].
+
+AndExpressionAddonList01.                        AndExpressionAddonList ::=                        "XOR" AndExpression ;
+AndExpressionAddonList02.                        AndExpressionAddonList ::= AndExpressionAddonList "XOR" AndExpression ;
 -- =============================================================================
 
-NotExpression01.                                 NotExpression ::=         ComparisonExpression ;
-NotExpression02.                                 NotExpression ::= NotList ComparisonExpression ;
+-- and_expression -> not_expression                                                                : {andExpression, '$1', []}.
+-- and_expression -> not_expression not_expression_addon_list                                      : {andExpression, '$1', '$2'}.
 
--- =============================================================================
--- Helper definitions.
--- -----------------------------------------------------------------------------
-NotList02.                                       NotList ::= "NOT"         ;
-NotList03.                                       NotList ::= "NOT" NotList ;
--- =============================================================================
-
-ComparisonExpression01.                          ComparisonExpression ::= AddOrSubtractExpression                                 ;
-ComparisonExpression02.                          ComparisonExpression ::= AddOrSubtractExpression PartialComparisonExpressionList ;
+AndExpression01.                                 AndExpression ::= NotExpression                        ;
+AndExpression02.                                 AndExpression ::= NotExpression NotExpressionAddonList ;
 
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
-PartialComparisonExpressionList02.               PartialComparisonExpressionList ::= PartialComparisonExpression                                 ;
-PartialComparisonExpressionList03.               PartialComparisonExpressionList ::= PartialComparisonExpression PartialComparisonExpressionList ;
+-- not_expression_addon_list ->                           AND not_expression                       :         [{"and", '$2'}].
+-- not_expression_addon_list -> not_expression_addon_list AND not_expression                       : '$1' ++ [{"and", '$3'}].
+
+NotExpressionAddonList01.                        NotExpressionAddonList ::=                        "AND" NotExpression ;
+NotExpressionAddonList02.                        NotExpressionAddonList ::= NotExpressionAddonList "AND" NotExpression ;
 -- =============================================================================
 
-AddOrSubtractExpression01.                       AddOrSubtractExpression ::= MultiplyDivideModuloExpressionList ;
+-- not_expression ->                comparison_expression                                          : {notExpression, '$1', []}.
+-- not_expression -> not_addon_list comparison_expression                                          : {notExpression, '$2', '$1'}.
 
--- =============================================================================
--- Helper definitions.
--- -----------------------------------------------------------------------------
-MultiplyDivideModuloExpressionList01.            MultiplyDivideModuloExpressionList ::= MultiplyDivideModuloExpression                                        ;
-MultiplyDivideModuloExpressionList02.            MultiplyDivideModuloExpressionList ::= MultiplyDivideModuloExpression "+" MultiplyDivideModuloExpressionList ;
-MultiplyDivideModuloExpressionList02.            MultiplyDivideModuloExpressionList ::= MultiplyDivideModuloExpression "-" MultiplyDivideModuloExpressionList ;
--- =============================================================================
-
-MultiplyDivideModuloExpression01.                MultiplyDivideModuloExpression ::= PowerOfExpressionList ;
+NotExpression01.                                 NotExpression ::=              ComparisonExpression ;
+NotExpression02.                                 NotExpression ::= NotAddonList ComparisonExpression ;
 
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
-PowerOfExpressionList01.                         PowerOfExpressionList ::= PowerOfExpression                           ;
-PowerOfExpressionList02.                         PowerOfExpressionList ::= PowerOfExpression "*" PowerOfExpressionList ;
-PowerOfExpressionList02.                         PowerOfExpressionList ::= PowerOfExpression "/" PowerOfExpressionList ;
-PowerOfExpressionList02.                         PowerOfExpressionList ::= PowerOfExpression "%" PowerOfExpressionList ;
+-- not_addon_list ->                NOT                                                            :         [{"not"}].
+-- not_addon_list -> not_addon_list NOT                                                            : '$1' ++ [{"not"}].
+
+NotAddonList01.                                  NotAddonList ::=              "NOT" ;
+NotAddonList02.                                  NotAddonList ::= NotAddonList "NOT" ;
 -- =============================================================================
 
-PowerOfExpression01.                             PowerOfExpression ::= UnaryAddOrSubtractExpressionList ;
+-- comparison_expression -> add_or_subtract_expression                                             : {comparisonExpression, '$1', []}.
+-- comparison_expression -> add_or_subtract_expression partial_comparison_expression_addon_list    : {comparisonExpression, '$1', '$2'}.
 
--- =============================================================================
--- Helper definitions.
--- -----------------------------------------------------------------------------
-UnaryAddOrSubtractExpressionList01.              UnaryAddOrSubtractExpressionList ::= UnaryAddOrSubtractExpression                                      ;
-UnaryAddOrSubtractExpressionList02.              UnaryAddOrSubtractExpressionList ::= UnaryAddOrSubtractExpression "^" UnaryAddOrSubtractExpressionList ;
--- =============================================================================
-
-UnaryAddOrSubtractExpression01.                  UnaryAddOrSubtractExpression ::=                   StringListNullOperatorExpression ;
-UnaryAddOrSubtractExpression02.                  UnaryAddOrSubtractExpression ::= UnaryOperatorList StringListNullOperatorExpression ;
+ComparisonExpression01.                          ComparisonExpression ::= AddOrSubtractExpression                                                      ;
+ComparisonExpression02.                          ComparisonExpression ::= AddOrSubtractExpression PartialComparisonExpressionAddonList ;
 
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
-UnaryOperatorList01.                             UnaryOperatorList ::= "+"                   ;
-UnaryOperatorList02.                             UnaryOperatorList ::= "-"                   ;
-UnaryOperatorList03.                             UnaryOperatorList ::= "+" UnaryOperatorList ;
-UnaryOperatorList04.                             UnaryOperatorList ::= "-" UnaryOperatorList ;
+-- partial_comparison_expression_addon_list ->                                          partial_comparison_expression
+--                                                                                                 :         ['$1'].
+-- partial_comparison_expression_addon_list -> partial_comparison_expression_addon_list partial_comparison_expression
+--                                                                                                 : '$1' ++ ['$2'].
 
-StringListNullOperatorExpression01.              StringListNullOperatorExpression ::= PropertyOrLabelsExpression                            ;
-StringListNullOperatorExpression02.              StringListNullOperatorExpression ::= PropertyOrLabelsExpression StringListNullOperatorList ;
+PartialComparisonExpressionAddonList01.          PartialComparisonExpressionAddonList ::=                                      PartialComparisonExpression ;
+PartialComparisonExpressionAddonList02.          PartialComparisonExpressionAddonList ::= PartialComparisonExpressionAddonList PartialComparisonExpression ;
 -- =============================================================================
 
-StringListNullOperatorList01.                    StringListNullOperatorList ::= "[" Expression                 "]"                                      ;
-StringListNullOperatorList02.                    StringListNullOperatorList ::= "["            ".."            "]"                                      ;
-StringListNullOperatorList03.                    StringListNullOperatorList ::= "["            ".." Expression "]"                                      ;
-StringListNullOperatorList04.                    StringListNullOperatorList ::= "[" Expression ".."            "]"                                      ;
-StringListNullOperatorList05.                    StringListNullOperatorList ::= "[" Expression ".." Expression "]"                                      ;
-StringListNullOperatorList06.                    StringListNullOperatorList ::= "=~"              PropertyOrLabelsExpression                            ;
-StringListNullOperatorList07.                    StringListNullOperatorList ::= "IN"              PropertyOrLabelsExpression                            ;
-StringListNullOperatorList08.                    StringListNullOperatorList ::= "STARTS" "WITH"   PropertyOrLabelsExpression                            ;
-StringListNullOperatorList09.                    StringListNullOperatorList ::= "ENDS"   "WITH"   PropertyOrLabelsExpression                            ;
-StringListNullOperatorList10.                    StringListNullOperatorList ::= "CONTAINS"        PropertyOrLabelsExpression                            ;
-StringListNullOperatorList11.                    StringListNullOperatorList ::= "IS"       "NULL"                                                       ;
-StringListNullOperatorList12.                    StringListNullOperatorList ::= "IS" "NOT" "NULL"                                                       ;
-StringListNullOperatorList13.                    StringListNullOperatorList ::= "[" Expression                 "]"           StringListNullOperatorList ;
-StringListNullOperatorList14.                    StringListNullOperatorList ::= "["            ".."            "]"           StringListNullOperatorList ;
-StringListNullOperatorList15.                    StringListNullOperatorList ::= "["            ".." Expression "]"           StringListNullOperatorList ;
-StringListNullOperatorList16.                    StringListNullOperatorList ::= "[" Expression ".."            "]"           StringListNullOperatorList ;
-StringListNullOperatorList17.                    StringListNullOperatorList ::= "[" Expression ".." Expression "]"           StringListNullOperatorList ;
-StringListNullOperatorList18.                    StringListNullOperatorList ::= "=~"              PropertyOrLabelsExpression StringListNullOperatorList ;
-StringListNullOperatorList19.                    StringListNullOperatorList ::= "IN"              PropertyOrLabelsExpression StringListNullOperatorList ;
-StringListNullOperatorList20.                    StringListNullOperatorList ::= "STARTS" "WITH"   PropertyOrLabelsExpression StringListNullOperatorList ;
-StringListNullOperatorList21.                    StringListNullOperatorList ::= "ENDS"   "WITH"   PropertyOrLabelsExpression StringListNullOperatorList ;
-StringListNullOperatorList22.                    StringListNullOperatorList ::= "CONTAINS"        PropertyOrLabelsExpression StringListNullOperatorList ;
-StringListNullOperatorList23.                    StringListNullOperatorList ::= "IS"       "NULL"                            StringListNullOperatorList ;
-StringListNullOperatorList24.                    StringListNullOperatorList ::= "IS" "NOT" "NULL"                            StringListNullOperatorList ;
+-- add_or_subtract_expression -> multiply_divide_modulo_expression                                 : {addOrSubtractExpression, '$1', []}.
+-- add_or_subtract_expression -> multiply_divide_modulo_expression multiply_divide_modulo_expression_addon_list
+--                                                                                                 : {addOrSubtractExpression, '$1', '$2'}.
+
+AddOrSubtractExpression01.                       AddOrSubtractExpression ::= MultiplyDivideModuloExpression                                         ;
+AddOrSubtractExpression02.                       AddOrSubtractExpression ::= MultiplyDivideModuloExpression MultiplyDivideModuloExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- multiply_divide_modulo_expression_addon_list ->                                              '+' multiply_divide_modulo_expression
+--                                                                                                 :         [{"+", '$2'}].
+-- multiply_divide_modulo_expression_addon_list ->                                              '-' multiply_divide_modulo_expression
+--                                                                                                 :         [{"-", '$2'}].
+-- multiply_divide_modulo_expression_addon_list -> multiply_divide_modulo_expression_addon_list '+' multiply_divide_modulo_expression
+--                                                                                                 : '$1' ++ [{"+", '$3'}].
+-- multiply_divide_modulo_expression_addon_list -> multiply_divide_modulo_expression_addon_list '-' multiply_divide_modulo_expression
+--                                                                                                 : '$1' ++ [{"-", '$3'}].
+
+MultiplyDivideModuloExpressionAddonList01.       MultiplyDivideModuloExpressionAddonList ::=                                         "+" MultiplyDivideModuloExpression ;
+MultiplyDivideModuloExpressionAddonList02.       MultiplyDivideModuloExpressionAddonList ::=                                         "-" MultiplyDivideModuloExpression ;
+MultiplyDivideModuloExpressionAddonList03.       MultiplyDivideModuloExpressionAddonList ::= MultiplyDivideModuloExpressionAddonList "+" MultiplyDivideModuloExpression ;
+MultiplyDivideModuloExpressionAddonList04.       MultiplyDivideModuloExpressionAddonList ::= MultiplyDivideModuloExpressionAddonList "-" MultiplyDivideModuloExpression ;
+-- =============================================================================
+
+-- multiply_divide_modulo_expression -> power_of_expression                                        : {multiplyDivideModuloExpression, '$1', []}.
+-- multiply_divide_modulo_expression -> power_of_expression power_of_expression_addon_list         : {multiplyDivideModuloExpression, '$1', '$2'}.
+
+MultiplyDivideModuloExpression01.                MultiplyDivideModuloExpression ::= PowerOfExpression                            ;
+MultiplyDivideModuloExpression02.                MultiplyDivideModuloExpression ::= PowerOfExpression PowerOfExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- power_of_expression_addon_list ->                                '*' power_of_expression        :         [{"*", '$2'}].
+-- power_of_expression_addon_list ->                                '/' power_of_expression        :         [{"/", '$2'}].
+-- power_of_expression_addon_list ->                                '%' power_of_expression        :         [{"%", '$2'}].
+-- power_of_expression_addon_list -> power_of_expression_addon_list '*' power_of_expression        : '$1' ++ [{"*", '$3'}].
+-- power_of_expression_addon_list -> power_of_expression_addon_list '/' power_of_expression        : '$1' ++ [{"/", '$3'}].
+-- power_of_expression_addon_list -> power_of_expression_addon_list '%' power_of_expression        : '$1' ++ [{"%", '$3'}].
+
+PowerOfExpressionAddonList01.                    PowerOfExpressionAddonList ::=                            "*" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList02.                    PowerOfExpressionAddonList ::=                            "/" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList03.                    PowerOfExpressionAddonList ::=                            "%" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList04.                    PowerOfExpressionAddonList ::= PowerOfExpressionAddonList "*" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList05.                    PowerOfExpressionAddonList ::= PowerOfExpressionAddonList "/" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList06.                    PowerOfExpressionAddonList ::= PowerOfExpressionAddonList "%" PowerOfExpressionAddonList ;
+-- =============================================================================
+
+-- power_of_expression -> unary_add_or_subtract_expression                                         : {powerOfExpression, '$1', []}.
+-- power_of_expression -> unary_add_or_subtract_expression unary_add_or_subtract_expression_addon_list
+--                                                                                                 : {powerOfExpression, '$1', '$2'}.
+
+PowerOfExpression01.                             PowerOfExpression ::=                              UnaryAddOrSubtractExpressionAddonList ;
+PowerOfExpression02.                             PowerOfExpression ::= UnaryAddOrSubtractExpression UnaryAddOrSubtractExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- unary_add_or_subtract_expression_addon_list ->                                             '^' unary_add_or_subtract_expression
+--                                                                                                 :         [{"^", '$2'}].
+-- unary_add_or_subtract_expression_addon_list -> unary_add_or_subtract_expression_addon_list '^' unary_add_or_subtract_expression
+--                                                                                                 : '$1' ++ [{"^", '$3'}].
+
+UnaryAddOrSubtractExpressionAddonList01.         UnaryAddOrSubtractExpressionAddonList ::=                                       "^" UnaryAddOrSubtractExpression ;
+UnaryAddOrSubtractExpressionAddonList02.         UnaryAddOrSubtractExpressionAddonList ::= UnaryAddOrSubtractExpressionAddonList "^" UnaryAddOrSubtractExpression ;
+-- =============================================================================
+
+-- unary_add_or_subtract_expression ->                            string_list_null_operator_expression
+--                                                                                                 : {unaryAddOrSubtractExpression, '$1', []}.
+-- unary_add_or_subtract_expression -> unary_add_or_subtract_list string_list_null_operator_expression
+--                                                                                                 : {unaryAddOrSubtractExpression, '$2', '$1'}.
+
+UnaryAddOrSubtractExpression01.                  UnaryAddOrSubtractExpression ::=                             StringListNullOperatorExpression ;
+UnaryAddOrSubtractExpression02.                  UnaryAddOrSubtractExpression ::= UnaryAddOrSubtractAddonList StringListNullOperatorExpression ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- unary_add_or_subtract_list ->                            unary_add_or_subtract                  :         ['$1'].
+-- unary_add_or_subtract_list -> unary_add_or_subtract_list unary_add_or_subtract                  : '$1' ++ ['$2'].
+
+UnaryAddOrSubtractAddonList01.                   UnaryAddOrSubtractAddonList ::=                             UnaryAddOrSubtract ;
+UnaryAddOrSubtractAddonList02.                   UnaryAddOrSubtractAddonList ::= UnaryAddOrSubtractAddonList UnaryAddOrSubtract ;
+
+-- unary_add_or_subtract -> '+'                                                                    : {"+"}.
+-- unary_add_or_subtract -> '-'                                                                    : {"-"}.
+
+UnaryAddOrSubtract01.                            UnaryAddOrSubtract ::= "+" ;
+UnaryAddOrSubtract02.                            UnaryAddOrSubtract ::= "-" ;
+-- =============================================================================
+
+-- string_list_null_operator_expression -> property_or_labels_expression                           : {stringListNullOperatorExpression, '$1', []}.
+-- string_list_null_operator_expression -> property_or_labels_expression property_or_labels_expression_addon_list
+--                                                                                                 : {stringListNullOperatorExpression, '$1', '$2'}.
+
+StringListNullOperatorExpression01.              StringListNullOperatorExpression ::=                                     PropertyOrLabelsExpression ;
+StringListNullOperatorExpression02.              StringListNullOperatorExpression ::= PropertyOrLabelsExpressionAddonList PropertyOrLabelsExpression ;
+
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- property_or_labels_expression_addon_list ->                                          property_or_labels_expression_addon
+--                                                                                                 :         ['$1'].
+-- property_or_labels_expression_addon_list -> property_or_labels_expression_addon_list property_or_labels_expression_addon
+--                                                                                                 : '$1' ++ ['$2'].
+
+PropertyOrLabelsExpressionAddonList01.           PropertyOrLabelsExpressionAddonList ::=                                     PropertyOrLabelsExpressionAddon ;
+PropertyOrLabelsExpressionAddonList02.           PropertyOrLabelsExpressionAddonList ::= PropertyOrLabelsExpressionAddonList PropertyOrLabelsExpressionAddon ;
+
+-- property_or_labels_expression_addon -> '[' expression                 ']'                       : {"[",           '$2'}.
+-- property_or_labels_expression_addon -> '['            '..'            ']'                       : {"[",           [],   []}.
+-- property_or_labels_expression_addon -> '['            '..' expression ']'                       : {"[",           [],   '$3'}.
+-- property_or_labels_expression_addon -> '[' expression '..'            ']'                       : {"[",           '$2', []}.
+-- property_or_labels_expression_addon -> '[' expression '..' expression ']'                       : {"[",           '$2', '$4'}.
+-- property_or_labels_expression_addon -> '=~'        property_or_labels_expression                : {"=~",          '$2'}.
+-- property_or_labels_expression_addon -> IN          property_or_labels_expression                : {"in",          '$2'}.
+-- property_or_labels_expression_addon -> STARTS WITH property_or_labels_expression                : {"starts with", '$3'}.
+-- property_or_labels_expression_addon -> ENDS   WITH property_or_labels_expression                : {"ends with",   '$3'}.
+-- property_or_labels_expression_addon -> CONTAINS    property_or_labels_expression                : {"contains",    '$2'}.
+-- property_or_labels_expression_addon -> IS     NULL                                              : {"is null"}.
+-- property_or_labels_expression_addon -> IS NOT NULL                                              : {"is not null"}.
+
+PropertyOrLabelsExpressionAddon01.               PropertyOrLabelsExpressionAddon ::= "[" Expression                 "]"           ;
+PropertyOrLabelsExpressionAddon02.               PropertyOrLabelsExpressionAddon ::= "["            ".."            "]"           ;
+PropertyOrLabelsExpressionAddon03.               PropertyOrLabelsExpressionAddon ::= "["            ".." Expression "]"           ;
+PropertyOrLabelsExpressionAddon04.               PropertyOrLabelsExpressionAddon ::= "[" Expression ".."            "]"           ;
+PropertyOrLabelsExpressionAddon05.               PropertyOrLabelsExpressionAddon ::= "[" Expression ".." Expression "]"           ;
+PropertyOrLabelsExpressionAddon06.               PropertyOrLabelsExpressionAddon ::= "=~"              PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon07.               PropertyOrLabelsExpressionAddon ::= "IN"              PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon08.               PropertyOrLabelsExpressionAddon ::= "STARTS" "WITH"   PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon09.               PropertyOrLabelsExpressionAddon ::= "ENDS"   "WITH"   PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon10.               PropertyOrLabelsExpressionAddon ::= "CONTAINS"        PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon11.               PropertyOrLabelsExpressionAddon ::= "IS"       "NULL"                            ;
+PropertyOrLabelsExpressionAddon12.               PropertyOrLabelsExpressionAddon ::= "IS" "NOT" "NULL"                            ;
+-- =============================================================================
+
+-- property_or_labels_expression -> atom                                                           : {propertyOrLabelsExpression, '$1', []}.
+-- property_or_labels_expression -> atom node_labels_property_lookup_list                          : {propertyOrLabelsExpression, '$1', '$2'}.
 
 PropertyOrLabelsExpression01.                    PropertyOrLabelsExpression ::= Atom                              ;
-PropertyOrLabelsExpression02.                    PropertyOrLabelsExpression ::= Atom PropertyLookupNodeLabelsList ;
+PropertyOrLabelsExpression02.                    PropertyOrLabelsExpression ::= Atom NodeLabelsPropertyLookupList ;
 
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
-PropertyLookupNodeLabelsList01.                  PropertyLookupNodeLabelsList ::= PropertyLookup                              ;
-PropertyLookupNodeLabelsList02.                  PropertyLookupNodeLabelsList ::= NodeLabels                                  ;
-PropertyLookupNodeLabelsList03.                  PropertyLookupNodeLabelsList ::= PropertyLookup PropertyLookupNodeLabelsList ;
-PropertyLookupNodeLabelsList04.                  PropertyLookupNodeLabelsList ::= NodeLabels     PropertyLookupNodeLabelsList ;
+-- node_labels_property_lookup_list ->                                  property_lookup            :         ['$1'].
+-- node_labels_property_lookup_list ->                                  node_labels                :         ['$1'].
+-- node_labels_property_lookup_list -> node_labels_property_lookup_list property_lookup            : '$1' ++ ['$2'].
+-- node_labels_property_lookup_list -> node_labels_property_lookup_list node_labels                : '$1' ++ ['$2'].
+
+NodeLabelsPropertyLookupList01.                  NodeLabelsPropertyLookupList ::=                              PropertyLookup ;
+NodeLabelsPropertyLookupList02.                  NodeLabelsPropertyLookupList ::=                              NodeLabels     ;
+NodeLabelsPropertyLookupList03.                  NodeLabelsPropertyLookupList ::= NodeLabelsPropertyLookupList PropertyLookup ;
+NodeLabelsPropertyLookupList04.                  NodeLabelsPropertyLookupList ::= NodeLabelsPropertyLookupList NodeLabels     ;
 -- =============================================================================
+
+-- atom -> literal                                                                                 : {atom, '$1'}.
+-- atom -> parameter                                                                               : {atom, '$1'}.
+-- atom -> case_expression                                                                         : {atom, '$1'}.
+-- atom -> COUNT   '(' '*'               ')'                                                       : {atom, {'count',   []}}.
+-- atom -> list_comprehension                                                                      : {atom, '$1'}.
+-- atom -> pattern_comprehension                                                                   : {atom, '$1'}.
+-- atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
+-- atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
+-- atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
+-- atom -> ALL     '(' filter_expression ')'                                                       : {atom, {'all',     '$3'}}.
+-- atom -> ANY     '(' filter_expression ')'                                                       : {atom, {'any',     '$3'}}.
+-- atom -> NONE    '(' filter_expression ')'                                                       : {atom, {'none',    '$3'}}.
+-- atom -> SINGLE  '(' filter_expression ')'                                                       : {atom, {'single',  '$3'}}.
+-- atom -> relationships_pattern                                                                   : {atom, '$1'}.
+-- atom -> parenthesized_expression                                                                : {atom, '$1'}.
+-- atom -> function_invocation                                                                     : {atom, '$1'}.
+-- atom -> variable                                                                                : {atom, '$1'}.
 
 Atom01.                                          Atom ::= Literal                                           ;
 Atom02.                                          Atom ::= Parameter                                         ;
@@ -768,8 +891,8 @@ Atom04.                                          Atom ::= "COUNT" "(" "*" ")"   
 Atom05.                                          Atom ::= ListComprehension                                 ;
 Atom06.                                          Atom ::= PatternComprehension                              ;
 Atom07.                                          Atom ::= "FILTER"  "(" FilterExpression                ")" ;
-Atom08.                                          Atom ::= "EXTRACT" "(" FilterExpression                ")" ;
-Atom09.                                          Atom ::= "EXTRACT" "(" FilterExpression "|" Expression ")" ;
+Atom08.                                          Atom ::= "EXTRACT" "(" FilterExpression "|" Expression ")" ;
+Atom09.                                          Atom ::= "EXTRACT" "(" FilterExpression                ")" ;
 Atom10.                                          Atom ::= "ALL"     "(" FilterExpression                ")" ;
 Atom11.                                          Atom ::= "ANY"     "(" FilterExpression                ")" ;
 Atom12.                                          Atom ::= "NONE"    "(" FilterExpression                ")" ;
@@ -779,6 +902,13 @@ Atom15.                                          Atom ::= ParenthesizedExpressio
 Atom16.                                          Atom ::= FunctionInvocation                                ;
 Atom17.                                          Atom ::= Variable                                          ;
 
+-- literal -> number_literal                                                                       : {literal, '$1'}.
+-- literal -> STRING_LITERAL                                                                       : {literal, {stringLiteral, unwrap('$1')}}.
+-- literal -> boolean_literal                                                                      : {literal, '$1'}.
+-- literal -> NULL                                                                                 : {literal, {terminal, "null"}}.
+-- literal -> map_literal                                                                          : {literal, '$1'}.
+-- literal -> list_literal                                                                         : {literal, '$1'}.
+
 Literal01.                                       Literal ::= NumberLiteral    ;
 Literal02.                                       Literal ::= "STRING_LITERAL" ;
 Literal03.                                       Literal ::= BooleanLiteral   ;
@@ -786,11 +916,24 @@ Literal04.                                       Literal ::= "NULL"           ;
 Literal05.                                       Literal ::= MapLiteral       ;
 Literal06.                                       Literal ::= ListLiteral      ;
 
+-- boolean_literal -> FALSE                                                                        : {booleanLiteral, {terminal, "false"}}.
+-- boolean_literal -> TRUE                                                                         : {booleanLiteral, {terminal, "true"}}.
+
 BooleanLiteral01.                                BooleanLiteral ::= "TRUE"  ;
 BooleanLiteral02.                                BooleanLiteral ::= "FALSE" ;
 
+-- list_literal -> '['                      ']'                                                    : {listLiteral, []}.
+-- list_literal -> '[' expression_commalist ']'                                                    : {listLiteral, '$2'}.
+
 ListLiteral01.                                   ListLiteral ::= "["                      "]" ;
 ListLiteral02.                                   ListLiteral ::= "["  ExpressionCommalist "]" ;
+
+-- partial_comparison_expression -> '='  add_or_subtract_expression                                : {partialComparisonExpression, '$2', "="}.
+-- partial_comparison_expression -> '<>' add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<>"}.
+-- partial_comparison_expression -> '<'  add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<"}.
+-- partial_comparison_expression -> '>'  add_or_subtract_expression                                : {partialComparisonExpression, '$2', ">"}.
+-- partial_comparison_expression -> '<=' add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<="}.
+-- partial_comparison_expression -> '>=' add_or_subtract_expression                                : {partialComparisonExpression, '$2', ">="}.
 
 PartialComparisonExpression01.                   PartialComparisonExpression ::= "="  AddOrSubtractExpression ;
 PartialComparisonExpression02.                   PartialComparisonExpression ::= "<>" AddOrSubtractExpression ;
@@ -799,44 +942,102 @@ PartialComparisonExpression04.                   PartialComparisonExpression ::=
 PartialComparisonExpression05.                   PartialComparisonExpression ::= "<=" AddOrSubtractExpression ;
 PartialComparisonExpression06.                   PartialComparisonExpression ::= ">=" AddOrSubtractExpression ;
 
+-- parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
+
 ParenthesizedExpression01.                       ParenthesizedExpression ::= "(" Expression ")" ;
 
-RelationshipsPattern01.                          RelationshipsPattern ::= NodePattern                         ;
-RelationshipsPattern02.                          RelationshipsPattern ::= NodePattern PatternElementChainList ;
+-- relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
+
+RelationshipsPattern01.                          RelationshipsPattern ::= NodePattern PatternElementChainList ;
+
+-- filter_expression -> id_in_coll                                                                 : {filterExpression, '$1', []}.
+-- filter_expression -> id_in_coll where                                                           : {filterExpression, '$1', '$2'}.
 
 FilterExpression01.                              FilterExpression ::= IdInColl       ;
 FilterExpression02.                              FilterExpression ::= IdInColl Where ;
 
+-- id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
+
 IdInColl01.                                      IdInColl ::= Variable "IN" Expression ;
+
+-- function_invocation -> function_name '('                               ')'                      : {functionInvocation, '$1', [],         []}.
+-- function_invocation -> function_name '('          expression_commalist ')'                      : {functionInvocation, '$1', [],         '$3'}.
+-- function_invocation -> function_name '(' DISTINCT                      ')'                      : {functionInvocation, '$1', "distinct", []}.
+-- function_invocation -> function_name '(' DISTINCT expression_commalist ')'                      : {functionInvocation, '$1', "distinct", '$4'}.
 
 FunctionInvocation01.                            FunctionInvocation ::= FunctionName "("                                ")" ;
 FunctionInvocation02.                            FunctionInvocation ::= FunctionName "("            ExpressionCommalist ")" ;
 FunctionInvocation03.                            FunctionInvocation ::= FunctionName "(" "DISTINCT"                     ")" ;
 FunctionInvocation04.                            FunctionInvocation ::= FunctionName "(" "DISTINCT" ExpressionCommalist ")" ;
 
+-- function_name -> symbolic_name                                                                  : {functionName, '$1'}.
+-- function_name -> EXISTS                                                                         : {functionName, "exists"}.
+
 FunctionName01.                                  FunctionName ::= SymbolicName ;
 FunctionName02.                                  FunctionName ::= "EXISTS"     ;
+
+-- explicit_procedure_invocation -> procedure_name '('                      ')'                    : {explicitProcedureInvocation, '$1', []}.
+-- explicit_procedure_invocation -> procedure_name '(' expression_commalist ')'                    : {explicitProcedureInvocation, '$1', '$3'}.
 
 ExplicitProcedureInvocation01.                   ExplicitProcedureInvocation ::= ProcedureName "("                     ")" ;
 ExplicitProcedureInvocation02.                   ExplicitProcedureInvocation ::= ProcedureName "(" ExpressionCommalist ")" ;
 
+-- implicit_procedure_invocation -> procedure_name                                                 : {explicitProcedureInvocation, '$1', []}.
+
 ImplicitProcedureInvocation01.                   ImplicitProcedureInvocation ::= ProcedureName ;
+
+-- procedure_result_field -> symbolic_name                                                         : {procedureResultField, '$1'}.
 
 ProcedureResultField01.                          ProcedureResultField ::= SymbolicName ;
 
-ProcedureName01.                                 ProcedureName ::= Namespace SymbolicName ;
+-- procedure_name ->                symbolic_name                                                  : {procedureName, [],   '$1'}.
+-- procedure_name -> namespace_list symbolic_name                                                  : {procedureName, '$1', '$2'}.
+
+ProcedureName01.                                 ProcedureName ::=               SymbolicName ;
+ProcedureName02.                                 ProcedureName ::= NamespaceList SymbolicName ;
+
+-- namespace -> symbolic_name '.'                                                                  : {namespace, '$1'}.
 
 Namespace01.                                     Namespace ::= "." SymbolicName ;
 
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- namespace_list ->                namespace                                                      :         ['$1'].
+-- namespace_list -> namespace_list namespace                                                      : '$1' ++ ['$2'].
+
+NamespaceList01.                                 NamespaceList ::=               Namespace ;
+NamespaceList02.                                 NamespaceList ::= NamespaceList Namespace ;
+-- =============================================================================
+
+-- list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.
+-- list_comprehension -> '[' filter_expression '|' expression ']'                                  : {listComprehension, '$2', '$4'}.
+
 ListComprehension01.                             ListComprehension ::= "[" FilterExpression                "]" ;
 ListComprehension02.                             ListComprehension ::= "[" FilterExpression "|" Expression "]" ;
+
+-- pattern_comprehension -> '['              relationships_pattern                  '|' expression ']'
+--                                                                                                 : {patternComprehension, [],   '$2', [],   '$4'}.
+-- pattern_comprehension -> '['              relationships_pattern WHERE expression '|' expression ']'
+--                                                                                                 : {patternComprehension, [],   '$2', '$4', '$6'}.
+-- pattern_comprehension -> '[' variable '=' relationships_pattern                  '|' expression ']'
+--                                                                                                 : {patternComprehension, '$2', '$4', [],   '$6'}.
+-- pattern_comprehension -> '[' variable '=' relationships_pattern WHERE expression '|' expression ']'
+--                                                                                                 : {patternComprehension, '$2', '$4', '$6', '$8'}.
 
 PatternComprehension01.                          PatternComprehension ::= "["              RelationshipsPattern                    "|" Expression "]" ;
 PatternComprehension02.                          PatternComprehension ::= "[" Variable "=" RelationshipsPattern                    "|" Expression "]" ;
 PatternComprehension03.                          PatternComprehension ::= "["              RelationshipsPattern "WHERE" Expression "|" Expression "]" ;
 PatternComprehension04.                          PatternComprehension ::= "[" Variable "=" RelationshipsPattern "WHERE" Expression "|" Expression "]" ;
 
+-- property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2'}.
+
 PropertyLookup01.                                PropertyLookup ::= "." PropertyKeyName ;
+
+-- case_expression -> CASE            case_alternatives_list                 END                   : {caseExpression, [],   '$2', []}.
+-- case_expression -> CASE            case_alternatives_list ELSE expression END                   : {caseExpression, [],   '$2', '$4'}.
+-- case_expression -> CASE expression case_alternatives_list                 END                   : {caseExpression, '$2', '$3', []}.
+-- case_expression -> CASE expression case_alternatives_list ELSE expression END                   : {caseExpression, '$2', '$3', '$5'}.
 
 CaseExpression01.                                CaseExpression ::= "CASE"            CaseAlternativesList                   "END" ;
 CaseExpression02.                                CaseExpression ::= "CASE"            CaseAlternativesList "ELSE" Expression "END" ;
@@ -846,16 +1047,29 @@ CaseExpression04.                                CaseExpression ::= "CASE" Expre
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
+-- case_alternatives_list ->                        case_alternatives                              :         ['$1'].
+-- case_alternatives_list -> case_alternatives_list case_alternatives                              : '$1' ++ ['$2'].
+
 CaseAlternativesList01.                          CaseAlternativesList ::= CaseAlternatives                      ;
 CaseAlternativesList02.                          CaseAlternativesList ::= CaseAlternatives CaseAlternativesList ;
 -- =============================================================================
 
+-- case_alternatives -> WHEN expression THEN expression                                            : {caseAlternatives, '$2', '$4'}.
+
 CaseAlternatives01.                              CaseAlternatives ::= "WHEN" Expression "THEN" Expression ;
+
+-- variable -> symbolic_name                                                                       : {variable, '$1'}.
 
 Variable01.                                      Variable ::= SymbolicName ;
 
-NumberLiteral01.                                 NumberLiteral ::= "DOUBLE_LITERAL" ;
-NumberLiteral02.                                 NumberLiteral ::= IntegerLiteral   ;
+-- number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
+-- number_literal -> integer_literal                                                               : {numberLiteral, '$1'}.
+
+NumberLiteral01.                                 NumberLiteral ::= DoubleLiteral  ;
+NumberLiteral02.                                 NumberLiteral ::= IntegerLiteral ;
+
+-- map_literal -> '{'                                        '}'                                   : {mapLiteral, []}.
+-- map_literal -> '{' property_key_name_expression_commalist '}'                                   : {mapLiteral, '$2'}.
 
 MapLiteral01.                                    MapLiteral ::= "{"                                    "}" ;
 MapLiteral02.                                    MapLiteral ::= "{" PropertyKeyNameExpressionCommalist "}" ;
@@ -863,12 +1077,25 @@ MapLiteral02.                                    MapLiteral ::= "{" PropertyKeyN
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
-PropertyKeyNameExpressionCommalist01.            PropertyKeyNameExpressionCommalist ::= PropertyKeyName ":" Expression                                        ;
-PropertyKeyNameExpressionCommalist02.            PropertyKeyNameExpressionCommalist ::= PropertyKeyName ":" Expression "," PropertyKeyNameExpressionCommalist ;
+-- property_key_name_expression -> property_key_name ':' expression                                : {'$1', '$3'}.
+
+PropertyKeyNameExpression.                       PropertyKeyNameExpression ::= PropertyKeyName ":" Expression                                        ;
+
+-- property_key_name_expression_commalist -> property_key_name_expression                          : ['$1'].
+-- property_key_name_expression_commalist -> property_key_name_expression ',' property_key_name_expression_commalist
+--                                                                                                 : ['$1' | '$3'].
+
+PropertyKeyNameExpressionCommalist01.            PropertyKeyNameExpressionCommalist ::= PropertyKeyNameExpression                                        ;
+PropertyKeyNameExpressionCommalist02.            PropertyKeyNameExpressionCommalist ::= PropertyKeyNameExpression "," PropertyKeyNameExpressionCommalist ;
 -- =============================================================================
 
-Parameter01.                                     Parameter ::= "$" SymbolicName   ;
-Parameter02.                                     Parameter ::= "$" DecimalInteger ;
+-- parameter -> '$' symbolic_name                                                                  : {parameter, '$2'}.
+-- parameter -> '$' DECIMAL_INTEGER                                                                : {parameter, unwrap('$2')}.
+
+Parameter01.                                     Parameter ::= "$" SymbolicName      ;
+Parameter02.                                     Parameter ::= "$" "DECIMAL_INTEGER" ;
+
+-- property_expression -> atom property_lookup_list                                                : {propertyExpression, '$1', '$2'}.
 
 PropertyExpression01.                            PropertyExpression ::= Atom                    ;
 PropertyExpression02.                            PropertyExpression ::= Atom PropertyLookupList ;
@@ -876,114 +1103,164 @@ PropertyExpression02.                            PropertyExpression ::= Atom Pro
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
-PropertyLookupList01.                            PropertyLookupList ::= PropertyLookup                    ;
-PropertyLookupList02.                            PropertyLookupList ::= PropertyLookup PropertyLookupList ;
+-- property_lookup_list ->                      property_lookup                                    :         ['$1'].
+-- property_lookup_list -> property_lookup_list property_lookup                                    : '$1' ++ ['$2'].
+
+PropertyLookupList01.                            PropertyLookupList ::=                    PropertyLookup ;
+PropertyLookupList02.                            PropertyLookupList ::= PropertyLookupList PropertyLookup ;
 -- =============================================================================
+
+-- property_key_name -> schema_name                                                                : {propertyKeyName, '$1'}.
 
 PropertyKeyName01.                               PropertyKeyName ::= SchemaName ;
 
-IntegerLiteral01.                                IntegerLiteral ::= HexInteger     ;
-IntegerLiteral02.                                IntegerLiteral ::= OctalInteger   ;
-IntegerLiteral03.                                IntegerLiteral ::= DecimalInteger ;
+-- integer_literal -> HEX_INTEGER                                                                  : {integerLiteral, unwrap('$1')}.
+-- integer_literal -> OCTAL_INTEGER                                                                : {integerLiteral, unwrap('$1')}.
+-- integer_literal -> DECIMAL_INTEGER                                                              : {integerLiteral, unwrap('$1')}.
 
-HexInteger01.                                    HexInteger ::= "0x" HexDigitList ;
+IntegerLiteral01.                                IntegerLiteral ::= "HEX_INTEGER"     ;
+IntegerLiteral02.                                IntegerLiteral ::= "OCTAL_INTEGER"   ;
+IntegerLiteral03.                                IntegerLiteral ::= "DECIMAL_INTEGER" ;
 
-HexDigitList01.                                  HexDigitList ::= HexDigit              ;
-HexDigitList02.                                  HexDigitList ::= HexDigit HexDigitList ;
+-- double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, unwrap('$1')}.
+-- double_literal -> REGULAR_DECIMAL_REAL                                                          : {doubleLiteral, unwrap('$1')}.
 
-DecimalInteger01.                                DecimalInteger ::= "0"                        ;
-DecimalInteger02.                                DecimalInteger ::= "NON_ZERO_DIGIT"           ;
-DecimalInteger03.                                DecimalInteger ::= "NON_ZERO_DIGIT" DigitList ;
+DoubleLiteral01.                                 DoubleLiteral ::= "EXPONENT_DECIMAL_REAL" ;
+DoubleLiteral02.                                 DoubleLiteral ::= "REGULAR_DECIMAL_REAL"  ;
 
-DigitList01.                                     DigitList ::= Digit           ;
-DigitList02.                                     DigitList ::= Digit DigitList ;
-
-OctalInteger01.                                  OctalInteger ::= "0" OctDigitList ;
-
-OctDigitList01.                                  OctDigitList ::= OctDigit              ;
-OctDigitList02.                                  OctDigitList ::= OctDigit OctDigitList ;
-
-HexDigit01.                                      HexDigit ::= Digit        ;
-HexDigit02.                                      HexDigit ::= "HEX_LETTER" ;
-
-Digit01.                                         Digit ::= "0"              ;
-Digit02.                                         Digit ::= "NON_ZERO_DIGIT" ;
-
-OctDigit01.                                      OctDigit ::= "0"                  ;
-OctDigit02.                                      OctDigit ::= "NON_ZERO_OCT_DIGIT" ;
+-- schema_name -> symbolic_name                                                                    : {schemaName, '$1'}.
+-- schema_name -> reserved_word                                                                    : {schemaName, '$1'}.
 
 SchemaName01.                                    SchemaName ::= SymbolicName ;
--- SchemaName02.                                    SchemaName ::= ReservedWord ;
+SchemaName02.                                    SchemaName ::= ReservedWord ;
 
--- ReservedWord01.                                  ReservedWord ::= "ALL"        ;
--- ReservedWord02.                                  ReservedWord ::= "ASC"        ;
--- ReservedWord03.                                  ReservedWord ::= "ASCENDING"  ;
--- ReservedWord04.                                  ReservedWord ::= "BY"         ;
--- ReservedWord05.                                  ReservedWord ::= "CREATE"     ;
--- ReservedWord06.                                  ReservedWord ::= "DELETE"     ;
--- ReservedWord07.                                  ReservedWord ::= "DESC"       ;
--- ReservedWord08.                                  ReservedWord ::= "DESCENDING" ;
--- ReservedWord09.                                  ReservedWord ::= "DETACH"     ;
--- ReservedWord10.                                  ReservedWord ::= "EXISTS"     ;
--- ReservedWord11.                                  ReservedWord ::= "LIMIT"      ;
--- ReservedWord12.                                  ReservedWord ::= "MATCH"      ;
--- ReservedWord13.                                  ReservedWord ::= "MERGE"      ;
--- ReservedWord14.                                  ReservedWord ::= "ON"         ;
--- ReservedWord15.                                  ReservedWord ::= "OPTIONAL"   ;
--- ReservedWord16.                                  ReservedWord ::= "ORDER"      ;
--- ReservedWord17.                                  ReservedWord ::= "REMOVE"     ;
--- ReservedWord18.                                  ReservedWord ::= "RETURN"     ;
--- ReservedWord19.                                  ReservedWord ::= "SET"        ;
--- ReservedWord20.                                  ReservedWord ::= "SKIP"       ;
--- ReservedWord21.                                  ReservedWord ::= "WHERE"      ;
--- ReservedWord22.                                  ReservedWord ::= "WITH"       ;
--- ReservedWord23.                                  ReservedWord ::= "UNION"      ;
--- ReservedWord24.                                  ReservedWord ::= "UNWIND"     ;
--- ReservedWord25.                                  ReservedWord ::= "AND"        ;
--- ReservedWord26.                                  ReservedWord ::= "AS"         ;
--- ReservedWord27.                                  ReservedWord ::= "CONTAINS"   ;
--- ReservedWord28.                                  ReservedWord ::= "DISTINCT"   ;
--- ReservedWord29.                                  ReservedWord ::= "ENDS"       ;
--- ReservedWord30.                                  ReservedWord ::= "IN"         ;
--- ReservedWord31.                                  ReservedWord ::= "IS"         ;
--- ReservedWord32.                                  ReservedWord ::= "NOT"        ;
--- ReservedWord33.                                  ReservedWord ::= "OR"         ;
--- ReservedWord34.                                  ReservedWord ::= "STARTS"     ;
--- ReservedWord35.                                  ReservedWord ::= "XOR"        ;
--- ReservedWord36.                                  ReservedWord ::= "FALSE"      ;
--- ReservedWord37.                                  ReservedWord ::= "TRUE"       ;
--- ReservedWord38.                                  ReservedWord ::= "NULL"       ;
--- ReservedWord39.                                  ReservedWord ::= "CONSTRAINT" ;
--- ReservedWord40.                                  ReservedWord ::= "DO"         ;
--- ReservedWord41.                                  ReservedWord ::= "FOR"        ;
--- ReservedWord42.                                  ReservedWord ::= "REQUIRE"    ;
--- ReservedWord43.                                  ReservedWord ::= "UNIQUE"     ;
--- ReservedWord44.                                  ReservedWord ::= "CASE"       ;
--- ReservedWord45.                                  ReservedWord ::= "WHEN"       ;
--- ReservedWord46.                                  ReservedWord ::= "THEN"       ;
--- ReservedWord47.                                  ReservedWord ::= "ELSE"       ;
--- ReservedWord48.                                  ReservedWord ::= "END"        ;
--- ReservedWord49.                                  ReservedWord ::= "MANDATORY"  ;
--- ReservedWord50.                                  ReservedWord ::= "SCALAR"     ;
--- ReservedWord51.                                  ReservedWord ::= "OF"         ;
--- ReservedWord52.                                  ReservedWord ::= "ADD"        ;
--- ReservedWord53.                                  ReservedWord ::= "DROP"       ;
+-- reserved_word -> ALL                                                                            : {reservedWord, "all"}.
+-- reserved_word -> ASC                                                                            : {reservedWord, "asc"}.
+-- reserved_word -> ASCENDING                                                                      : {reservedWord, "ascending"}.
+-- reserved_word -> BY                                                                             : {reservedWord, "by"}.
+-- reserved_word -> CREATE                                                                         : {reservedWord, "create"}.
+-- reserved_word -> DELETE                                                                         : {reservedWord, "delete"}.
+-- reserved_word -> DESC                                                                           : {reservedWord, "desc"}.
+-- reserved_word -> DESCENDING                                                                     : {reservedWord, "descending"}.
+-- reserved_word -> DETACH                                                                         : {reservedWord, "detach"}.
+-- reserved_word -> EXISTS                                                                         : {reservedWord, "exists"}.
+-- reserved_word -> LIMIT                                                                          : {reservedWord, "limit"}.
+-- reserved_word -> MATCH                                                                          : {reservedWord, "all"}.
+-- reserved_word -> MERGE                                                                          : {reservedWord, "all"}.
+-- reserved_word -> ON                                                                             : {reservedWord, "on"}.
+-- reserved_word -> OPTIONAL                                                                       : {reservedWord, "optional"}.
+-- reserved_word -> ORDER                                                                          : {reservedWord, "order"}.
+-- reserved_word -> REMOVE                                                                         : {reservedWord, "remove"}.
+-- reserved_word -> RETURN                                                                         : {reservedWord, "return"}.
+-- reserved_word -> SET                                                                            : {reservedWord, "set"}.
+-- reserved_word -> SKIP                                                                           : {reservedWord, "skip"}.
+-- reserved_word -> WHERE                                                                          : {reservedWord, "where"}.
+-- reserved_word -> WITH                                                                           : {reservedWord, "with"}.
+-- reserved_word -> UNION                                                                          : {reservedWord, "union"}.
+-- reserved_word -> UNWIND                                                                         : {reservedWord, "unwind"}.
+-- reserved_word -> AND                                                                            : {reservedWord, "and"}.
+-- reserved_word -> AS                                                                             : {reservedWord, "as"}.
+-- reserved_word -> CONTAINS                                                                       : {reservedWord, "contains"}.
+-- reserved_word -> DISTINCT                                                                       : {reservedWord, "distinct"}.
+-- reserved_word -> ENDS                                                                           : {reservedWord, "ends"}.
+-- reserved_word -> IN                                                                             : {reservedWord, "in"}.
+-- reserved_word -> IS                                                                             : {reservedWord, "is"}.
+-- reserved_word -> NOT                                                                            : {reservedWord, "not"}.
+-- reserved_word -> OR                                                                             : {reservedWord, "or"}.
+-- reserved_word -> STARTS                                                                         : {reservedWord, "starts"}.
+-- reserved_word -> XOR                                                                            : {reservedWord, "xor"}.
+-- reserved_word -> FALSE                                                                          : {reservedWord, "false"}.
+-- reserved_word -> TRUE                                                                           : {reservedWord, "true"}.
+-- reserved_word -> NULL                                                                           : {reservedWord, "null"}.
+-- reserved_word -> CONSTRAINT                                                                     : {reservedWord, "constraint"}.
+-- reserved_word -> DO                                                                             : {reservedWord, "do"}.
+-- reserved_word -> FOR                                                                            : {reservedWord, "for"}.
+-- reserved_word -> REQUIRE                                                                        : {reservedWord, "require"}.
+-- reserved_word -> UNIQUE                                                                         : {reservedWord, "unique"}.
+-- reserved_word -> CASE                                                                           : {reservedWord, "case"}.
+-- reserved_word -> WHEN                                                                           : {reservedWord, "when"}.
+-- reserved_word -> THEN                                                                           : {reservedWord, "then"}.
+-- reserved_word -> ELSE                                                                           : {reservedWord, "else"}.
+-- reserved_word -> END                                                                            : {reservedWord, "end"}.
+-- reserved_word -> MANDATORY                                                                      : {reservedWord, "mandatory"}.
+-- reserved_word -> SCALAR                                                                         : {reservedWord, "scalar"}.
+-- reserved_word -> OF                                                                             : {reservedWord, "of"}.
+-- reserved_word -> ADD                                                                            : {reservedWord, "add"}.
+-- reserved_word -> DROP                                                                           : {reservedWord, "drop"}.
+
+ReservedWord01.                                  ReservedWord ::= "ALL"        ;
+ReservedWord02.                                  ReservedWord ::= "ASC"        ;
+ReservedWord03.                                  ReservedWord ::= "ASCENDING"  ;
+ReservedWord04.                                  ReservedWord ::= "BY"         ;
+ReservedWord05.                                  ReservedWord ::= "CREATE"     ;
+ReservedWord06.                                  ReservedWord ::= "DELETE"     ;
+ReservedWord07.                                  ReservedWord ::= "DESC"       ;
+ReservedWord08.                                  ReservedWord ::= "DESCENDING" ;
+ReservedWord09.                                  ReservedWord ::= "DETACH"     ;
+ReservedWord10.                                  ReservedWord ::= "EXISTS"     ;
+ReservedWord11.                                  ReservedWord ::= "LIMIT"      ;
+ReservedWord12.                                  ReservedWord ::= "MATCH"      ;
+ReservedWord13.                                  ReservedWord ::= "MERGE"      ;
+ReservedWord14.                                  ReservedWord ::= "ON"         ;
+ReservedWord15.                                  ReservedWord ::= "OPTIONAL"   ;
+ReservedWord16.                                  ReservedWord ::= "ORDER"      ;
+ReservedWord17.                                  ReservedWord ::= "REMOVE"     ;
+ReservedWord18.                                  ReservedWord ::= "RETURN"     ;
+ReservedWord19.                                  ReservedWord ::= "SET"        ;
+ReservedWord20.                                  ReservedWord ::= "SKIP"       ;
+ReservedWord21.                                  ReservedWord ::= "WHERE"      ;
+ReservedWord22.                                  ReservedWord ::= "WITH"       ;
+ReservedWord23.                                  ReservedWord ::= "UNION"      ;
+ReservedWord24.                                  ReservedWord ::= "UNWIND"     ;
+ReservedWord25.                                  ReservedWord ::= "AND"        ;
+ReservedWord26.                                  ReservedWord ::= "AS"         ;
+ReservedWord27.                                  ReservedWord ::= "CONTAINS"   ;
+ReservedWord28.                                  ReservedWord ::= "DISTINCT"   ;
+ReservedWord29.                                  ReservedWord ::= "ENDS"       ;
+ReservedWord30.                                  ReservedWord ::= "IN"         ;
+ReservedWord31.                                  ReservedWord ::= "IS"         ;
+ReservedWord32.                                  ReservedWord ::= "NOT"        ;
+ReservedWord33.                                  ReservedWord ::= "OR"         ;
+ReservedWord34.                                  ReservedWord ::= "STARTS"     ;
+ReservedWord35.                                  ReservedWord ::= "XOR"        ;
+ReservedWord36.                                  ReservedWord ::= "FALSE"      ;
+ReservedWord37.                                  ReservedWord ::= "TRUE"       ;
+ReservedWord38.                                  ReservedWord ::= "NULL"       ;
+ReservedWord39.                                  ReservedWord ::= "CONSTRAINT" ;
+ReservedWord40.                                  ReservedWord ::= "DO"         ;
+ReservedWord41.                                  ReservedWord ::= "FOR"        ;
+ReservedWord42.                                  ReservedWord ::= "REQUIRE"    ;
+ReservedWord43.                                  ReservedWord ::= "UNIQUE"     ;
+ReservedWord44.                                  ReservedWord ::= "CASE"       ;
+ReservedWord45.                                  ReservedWord ::= "WHEN"       ;
+ReservedWord46.                                  ReservedWord ::= "THEN"       ;
+ReservedWord47.                                  ReservedWord ::= "ELSE"       ;
+ReservedWord48.                                  ReservedWord ::= "END"        ;
+ReservedWord49.                                  ReservedWord ::= "MANDATORY"  ;
+ReservedWord50.                                  ReservedWord ::= "SCALAR"     ;
+ReservedWord51.                                  ReservedWord ::= "OF"         ;
+ReservedWord52.                                  ReservedWord ::= "ADD"        ;
+ReservedWord53.                                  ReservedWord ::= "DROP"       ;
+
+-- symbolic_name -> ESCAPED_SYMBOLIC_NAME                                                          : {symbolicName, unwrap('$1')}.
+-- symbolic_name -> UNESCAPED_SYMBOLIC_NAME                                                        : {symbolicName, unwrap('$1')}.
+-- symbolic_name -> HEX_LETTER                                                                     : {symbolicName, unwrap('$1')}.
+-- symbolic_name -> COUNT                                                                          : {symbolicName, "count"}.
+-- symbolic_name -> FILTER                                                                         : {symbolicName, "filter"}.
+-- symbolic_name -> EXTRACT                                                                        : {symbolicName, "extract"}.
+-- symbolic_name -> ANY                                                                            : {symbolicName, "any"}.
+-- symbolic_name -> NONE                                                                           : {symbolicName, "none"}.
+-- symbolic_name -> SINGLE                                                                         : {symbolicName, "single"}.
 
 SymbolicName01.                                  SymbolicName ::= "UNESCAPED_SYMBOLIC_NAME" ;
 SymbolicName02.                                  SymbolicName ::= "ESCAPED_SYMBOLIC_NAME"   ;
 SymbolicName03.                                  SymbolicName ::= "HEX_LETTER"              ;
--- SymbolicName04.                                  SymbolicName ::= "COUNT"                   ;
--- SymbolicName05.                                  SymbolicName ::= "FILTER"                  ;
--- SymbolicName06.                                  SymbolicName ::= "EXTRACT"                 ;
--- SymbolicName07.                                  SymbolicName ::= "ANY"                     ;
--- SymbolicName08.                                  SymbolicName ::= "NONE"                    ;
--- SymbolicName09.                                  SymbolicName ::= "SINGLE"                  ;
-
-LeftArrowHead01.                                 LeftArrowHead ::= "<" ;
-
-RightArrowHead01.                                RightArrowHead ::= ">" ;
-
-Dash01.                                          Dash ::= "-" ;
+SymbolicName04.                                  SymbolicName ::= "COUNT"                   ;
+SymbolicName05.                                  SymbolicName ::= "FILTER"                  ;
+SymbolicName06.                                  SymbolicName ::= "EXTRACT"                 ;
+SymbolicName07.                                  SymbolicName ::= "ANY"                     ;
+SymbolicName08.                                  SymbolicName ::= "NONE"                    ;
+SymbolicName09.                                  SymbolicName ::= "SINGLE"                  ;
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -- LBNF specifica

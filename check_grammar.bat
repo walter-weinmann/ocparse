@@ -29,7 +29,7 @@ rem ----------------------------------------------------------------------------
 
     DEL /Q tmp\*
 
-    bnfc -o tmp --haskell priv\BNF_Converter\ocparse.cf
+    bnfc -o tmp --haskell priv\bnf_converter\ocparse.cf
 
     happy -i tmp\ParOcparse.y
 

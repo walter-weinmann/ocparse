@@ -134,8 +134,8 @@ unwind ::= 'UNWIND' expression 'AS' variable
 merge ::= 'MERGE' patternPart mergeAction*
 
 /* =============================================================================
-merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
 merge_action -> ON MATCH  set                                                                   : {mergeAction, "match",  '$3'}.
+merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
 
 create -> CREATE pattern                                                                        : {create, '$2'}.
 
@@ -233,8 +233,8 @@ returnItems ::= '*'
               | ( returnItem ( ',' returnItem )* )
 
 /* =============================================================================
-return_item -> expression                                                                       : {returnItem, '$1', []}.
 return_item -> expression AS variable                                                           : {returnItem, '$1', '$3'}.
+return_item -> expression                                                                       : {returnItem, '$1', []}.
 
 order -> ORDER BY sort_item_commalist                                                           : {order, '$3'}.
 ============================================================================= */
@@ -277,7 +277,6 @@ anonymous_pattern_part -> pattern_element                                       
 
 pattern_element -> node_pattern                                                                 : {patternElement, '$1', []}.
 pattern_element -> node_pattern pattern_element_chain_list                                      : {patternElement, '$1', '$2'}.
-pattern_element -> relationships_pattern                                                        : {patternElement, '$1', []}.
 pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2', "("}.
 ============================================================================= */
 
@@ -286,7 +285,6 @@ patternPart ::= ( variable '=' )? anonymousPatternPart
 anonymousPatternPart ::= patternElement
 
 patternElement ::= ( nodePattern patternElementChain* )
-                 | relationshipsPattern
                  | ( '(' patternElement ')' )
 
 /* =============================================================================
@@ -301,14 +299,14 @@ node_pattern -> '(' variable node_labels properties ')'                         
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
-relationship_pattern ->     '-'                     '-'                                         : {relationshipPattern, "--",  [],   []}.
-relationship_pattern ->     '-'                     '-' '>'                                     : {relationshipPattern, "-->", [],   []}.
-relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
-relationship_pattern ->     '-' relationship_detail '-' '>'                                     : {relationshipPattern, "-",   '$2', "->"}.
 relationship_pattern -> '<' '-'                     '-'                                         : {relationshipPattern, "<--", [],   []}.
 relationship_pattern -> '<' '-'                     '-' '>'                                     : {relationshipPattern, "<-->",[],   []}.
 relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
 relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
+relationship_pattern ->     '-'                     '-'                                         : {relationshipPattern, "--",  [],   []}.
+relationship_pattern ->     '-'                     '-' '>'                                     : {relationshipPattern, "-->", [],   []}.
+relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
+relationship_pattern ->     '-' relationship_detail '-' '>'                                     : {relationshipPattern, "-",   '$2', "->"}.
 
 relationship_detail -> '['                                                       ']'            : {relationshipDetail, [],   [],   [],   []}.
 relationship_detail -> '['                                            properties ']'            : {relationshipDetail, [],   [],   [],   '$2'}.
@@ -331,7 +329,7 @@ properties -> map_literal                                                       
 properties -> parameter                                                                         : {properties, '$1'}.
 
 relationship_types -> ':' rel_type_name                                                         : {relationshipTypes, '$2', []}.
-relationship_types -> ':' rel_type_name rel_type_verticalbarlist                                : {relationshipTypes, '$2', '$3'}.
+relationship_types -> ':' rel_type_name rel_type_name_verticalbarlist                           : {relationshipTypes, '$2', '$3'}.
 ============================================================================= */
 
 nodePattern ::= '(' variable? nodeLabels? properties? ')'
@@ -563,9 +561,13 @@ implicit_procedure_invocation -> procedure_name                                 
 
 procedure_result_field -> symbolic_name                                                         : {procedureResultField, '$1'}.
 
-procedure_name -> name_space symbolic_name                                                      : {procedureName, '$1', '$2'}.
+procedure_name ->           symbolic_name                                                       : {procedureName, [],   '$1'}.
+procedure_name -> namespace symbolic_name                                                       : {procedureName, '$1', '$2'}.
 
-name_space -> symbolic_name '.'                                                                 : {namespace, '$1'}.
+namespace -> symbolic_name '.'                                                                  : {namespace, '$1'}.
+
+namespace_list ->                namespace                                                      :         ['$1'].
+namespace_list -> namespace_list namespace                                                      : '$1' ++ ['$2'].
 
 list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.
 list_comprehension -> '[' filter_expression '|' expression ']'                                  : {listComprehension, '$2', '$4'}.
@@ -595,9 +597,9 @@ implicitProcedureInvocation ::= procedureName
 
 procedureResultField ::= symbolicName
 
-procedureName ::= namespace symbolicName
+procedureName ::= namespace? symbolicName
 
-namespace ::= '.' symbolicName
+namespace ::= ( '.' symbolicName )+
 
 listComprehension ::= '[' filterExpression ( '|' expression )? ']'
 
