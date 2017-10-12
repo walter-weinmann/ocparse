@@ -72,10 +72,8 @@
 -define(LEFT_ARROW_HEAD, "<").
 
 -define(MAX_BASIC_RULE, 50).
--define(MAX_CYPHER, ?MAX_BASIC_RULE * 4).
-
 % -define(MAX_BASIC_RULE, 250).
-% -define(MAX_CYPHER, ?MAX_BASIC_RULE * 8).
+-define(MAX_CYPHER, ?MAX_BASIC_RULE * 8).
 
 -define(PATH_CT, "test").
 -define(PATH_EUNIT, "test").
