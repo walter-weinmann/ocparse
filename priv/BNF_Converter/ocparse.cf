@@ -1,0 +1,1269 @@
+-- -----------------------------------------------------------------------------
+--
+-- ocparse.cf: opencypher - grammar definition in BNF Converter format.
+--
+-- Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
+--
+-- This file is provided to you under the Apache License,
+-- Version 2.0 (the "License"); you may not use this file
+-- except in compliance with the License.  You may obtain
+-- a copy of the License at
+--
+--   http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing,
+-- software distributed under the License is distributed on an
+-- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+-- KIND, either express or implied.  See the License for the
+-- specific language governing permissions and limitations
+-- under the License.
+--
+-- -----------------------------------------------------------------------------
+
+-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+-- Grammar rules.
+-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-- cypher -> statement                                                                             : {cypher, '$1', []}.
+-- cypher -> statement ';'                                                                         : {cypher, '$1', ";"}.
+
+Cypher01.                                        Cypher ::= Statement     ;
+Cypher02.                                        Cypher ::= Statement ";" ;
+
+-- statement -> query                                                                              : {statement, '$1'}.
+
+Statement01.                                     Statement ::= Query ;
+
+-- query -> regular_query                                                                          : {query, '$1'}.
+-- query -> stand_alone_call                                                                       : {query, '$1'}.
+
+Query01.                                         Query ::= RegularQuery   ;
+Query02.                                         Query ::= StandaloneCall ;
+
+-- regular_query -> single_query                                                                   : {regularQuery, '$1', []}.
+-- regular_query -> single_query union_list                                                        : {regularQuery, '$1', '$2'}.
+
+RegularQuery01.                                  RegularQuery ::= SingleQuery           ;
+RegularQuery02.                                  RegularQuery ::= SingleQuery UnionList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- union_list ->            union                                                                  :         ['$1'].
+-- union_list -> union_list union                                                                  : '$1' ++ ['$2'].
+
+UnionList01.                                     UnionList ::=           Union ;
+UnionList02.                                     UnionList ::= UnionList Union ;
+-- =============================================================================
+
+-- union -> UNION     single_query                                                                 : {union, [],    '$2'}.
+-- union -> UNION ALL single_query                                                                 : {union, "all", '$3'}.
+
+Union01.                                         Union ::= "UNION"       SingleQuery ;
+Union02.                                         Union ::= "UNION" "ALL" SingleQuery ;
+
+-- single_query -> single_part_query                                                               : {singleQuery, '$1'}.
+-- single_query -> multi_part_query                                                                : {singleQuery, '$1'}.
+
+SingleQuery01.                                   SingleQuery ::= SinglePartQuery ;
+SingleQuery02.                                   SingleQuery ::= MultiPartQuery  ;
+
+-- single_part_query -> read_only_end                                                              : {singlePartQuery, '$1'}.
+-- single_part_query -> read_update_end                                                            : {singlePartQuery, '$1'}.
+-- single_part_query -> updating_end                                                               : {singlePartQuery, '$1'}.
+
+SinglePartQuery01.                               SinglePartQuery ::= ReadOnlyEnd   ;
+SinglePartQuery02.                               SinglePartQuery ::= ReadUpdateEnd ;
+SinglePartQuery03.                               SinglePartQuery ::= UpdatingEnd   ;
+
+-- read_only_end ->           return                                                               : {readOnlyEnd, {readPart, []}, '$1'}.
+-- read_only_end -> read_part return                                                               : {readOnlyEnd, '$1',           '$2'}.
+
+ReadOnlyEnd01.                                   ReadOnlyEnd ::=          Return ;
+ReadOnlyEnd02.                                   ReadOnlyEnd ::= ReadPart Return ;
+
+-- read_update_end -> reading_clause_list updating_clause_list                                     : {readUpdateEnd, '$1', '$2', []}.
+-- read_update_end -> reading_clause_list updating_clause_list return                              : {readUpdateEnd, '$1', '$2', '$3'}.
+
+ReadUpdateEnd01.                                 ReadUpdateEnd ::= ReadingClauseList UpdatingClauseList        ;
+ReadUpdateEnd02.                                 ReadUpdateEnd ::= ReadingClauseList UpdatingClauseList Return ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- reading_clause_list ->                     reading_clause                                       :         ['$1'].
+-- reading_clause_list -> reading_clause_list reading_clause                                       : '$1' ++ ['$2'].
+
+ReadingClauseList01.                             ReadingClauseList ::=                   ReadingClause ;
+ReadingClauseList02.                             ReadingClauseList ::= ReadingClauseList ReadingClause ;
+
+-- updating_clause_list ->                      updating_clause                                    :         ['$1'].
+-- updating_clause_list -> updating_clause_list updating_clause                                    : '$1' ++ ['$2'].
+
+UpdatingClauseList01.                            UpdatingClauseList ::=                    UpdatingClause ;
+UpdatingClauseList02.                            UpdatingClauseList ::= UpdatingClauseList UpdatingClause ;
+-- =============================================================================
+
+-- updating_end -> updating_start_clause                                                           : {updatingEnd, '$1', [],   []}.
+-- updating_end -> updating_start_clause                      return                               : {updatingEnd, '$1', [],   '$2'}.
+-- updating_end -> updating_start_clause updating_clause_list                                      : {updatingEnd, '$1', '$2', []}.
+-- updating_end -> updating_start_clause updating_clause_list return                               : {updatingEnd, '$1', '$2', '$3'}.
+
+UpdatingEnd01.                                   UpdatingEnd ::= UpdatingStartClause                           ;
+UpdatingEnd02.                                   UpdatingEnd ::= UpdatingStartClause                    Return ;
+UpdatingEnd03.                                   UpdatingEnd ::= UpdatingStartClause UpdatingClauseList        ;
+UpdatingEnd04.                                   UpdatingEnd ::= UpdatingStartClause UpdatingClauseList Return ;
+
+-- multi_part_query ->                                     with                                   single_part_query
+--                                                                                                 : {multiPartQuery, {readPart, []}, [],                 '$1', [],   '$2'}.
+-- multi_part_query ->                                     with read_part_updating_part_with_list single_part_query
+--                                                                                                 : {multiPartQuery, {readPart, []}, [],                 '$1', '$2', '$3'}.
+-- multi_part_query -> read_part                           with                                   single_part_query
+--                                                                                                 : {multiPartQuery, '$1',           [],                 '$2', [],   '$3'}.
+-- multi_part_query -> read_part                           with read_part_updating_part_with_list single_part_query
+--                                                                                                 : {multiPartQuery, '$1',           [],                 '$2', '$3', '$4'}.
+-- multi_part_query -> updating_start_clause               with                                   single_part_query
+--                                                                                                 : {multiPartQuery, '$1',           {updatingPart, []}, '$2', [],   '$3'}.
+-- multi_part_query -> updating_start_clause               with read_part_updating_part_with_list single_part_query
+--                                                                                                 : {multiPartQuery, '$1',           {updatingPart, []}, '$2', '$3', '$4'}.
+-- multi_part_query -> updating_start_clause updating_part with                                   single_part_query
+--                                                                                                 : {multiPartQuery, '$1',           '$2',               '$3', [],   '$4'}.
+-- multi_part_query -> updating_start_clause updating_part with read_part_updating_part_with_list single_part_query
+--                                                                                                 : {multiPartQuery, '$1',           '$2',               '$3', '$4', '$5'}.
+
+MultiPartQuery01.                                MultiPartQuery ::=                                  With                              SinglePartQuery ;
+MultiPartQuery02.                                MultiPartQuery ::=                                  With ReadPartUpdatingPartWithList SinglePartQuery ;
+MultiPartQuery03.                                MultiPartQuery ::= ReadPart                         With                              SinglePartQuery ;
+MultiPartQuery04.                                MultiPartQuery ::= ReadPart                         With ReadPartUpdatingPartWithList SinglePartQuery ;
+MultiPartQuery05.                                MultiPartQuery ::= UpdatingStartClause              With                              SinglePartQuery ;
+MultiPartQuery06.                                MultiPartQuery ::= UpdatingStartClause UpdatingPart With                              SinglePartQuery ;
+MultiPartQuery07.                                MultiPartQuery ::= UpdatingStartClause              With ReadPartUpdatingPartWithList SinglePartQuery ;
+MultiPartQuery08.                                MultiPartQuery ::= UpdatingStartClause UpdatingPart With ReadPartUpdatingPartWithList SinglePartQuery ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- read_part_updating_part_with_list ->                                                           with
+--                                                                                                 :         [{{readPart, []}, {updatingPart, []}, '$1'}].
+-- read_part_updating_part_with_list ->                                             updating_part with
+--                                                                                                 :         [{{readPart, []}, '$1',               '$2'}].
+-- read_part_updating_part_with_list ->                                   read_part               with
+--                                                                                                 :         [{'$1',           {updatingPart, []}, '$2'}].
+-- read_part_updating_part_with_list ->                                   read_part updating_part with
+--                                                                                                 :         [{'$1',           '$2',               '$3'}].
+-- read_part_updating_part_with_list -> read_part_updating_part_with_list                         with
+--                                                                                                 : '$1' ++ [{{readPart, []}, {updatingPart, []}, '$2'}].
+-- read_part_updating_part_with_list -> read_part_updating_part_with_list           updating_part with
+--                                                                                                 : '$1' ++ [{{readPart, []}, '$2',               '$3'}].
+-- read_part_updating_part_with_list -> read_part_updating_part_with_list read_part               with
+--                                                                                                 : '$1' ++ [{'$2',           {updatingPart, []}, '$3'}].
+-- read_part_updating_part_with_list -> read_part_updating_part_with_list read_part updating_part with
+--                                                                                                 : '$1' ++ [{'$2',           '$3',               '$4'}].
+
+ReadPartUpdatingPartWithList01.                  ReadPartUpdatingPartWithList ::=                                                    With ;
+ReadPartUpdatingPartWithList02.                  ReadPartUpdatingPartWithList ::=                                       UpdatingPart With ;
+ReadPartUpdatingPartWithList03.                  ReadPartUpdatingPartWithList ::=                              ReadPart              With ;
+ReadPartUpdatingPartWithList04.                  ReadPartUpdatingPartWithList ::=                              ReadPart UpdatingPart With ;
+ReadPartUpdatingPartWithList05.                  ReadPartUpdatingPartWithList ::= ReadPartUpdatingPartWithList                       With ;
+ReadPartUpdatingPartWithList06.                  ReadPartUpdatingPartWithList ::= ReadPartUpdatingPartWithList          UpdatingPart With ;
+ReadPartUpdatingPartWithList07.                  ReadPartUpdatingPartWithList ::= ReadPartUpdatingPartWithList ReadPart              With ;
+ReadPartUpdatingPartWithList08.                  ReadPartUpdatingPartWithList ::= ReadPartUpdatingPartWithList ReadPart UpdatingPart With ;
+-- =============================================================================
+
+-- read_part -> reading_clause_list                                                                : {readPart, '$1'}.
+
+ReadPart01.                                      ReadPart ::= ReadingClauseList ;
+
+-- updating_part -> updating_clause_list                                                           : {updatingPart, '$1'}.
+
+-- updating_part -> updating_clause_list                                                           : {updatingPart, '$1'}.
+
+UpdatingPart01.                                  UpdatingPart ::= UpdatingClauseList ;
+
+-- updating_start_clause -> create                                                                 : {updatingStartClause, '$1'}.
+-- updating_start_clause -> merge                                                                  : {updatingStartClause, '$1'}.
+
+UpdatingStartClause01.                           UpdatingStartClause ::= Create ;
+UpdatingStartClause02.                           UpdatingStartClause ::= Merge  ;
+
+-- updating_clause -> create                                                                       : {updatingClause, '$1'}.
+-- updating_clause -> merge                                                                        : {updatingClause, '$1'}.
+-- updating_clause -> delete                                                                       : {updatingClause, '$1'}.
+-- updating_clause -> set                                                                          : {updatingClause, '$1'}.
+-- updating_clause -> remove                                                                       : {updatingClause, '$1'}.
+
+UpdatingClause01.                                UpdatingClause ::= Create ;
+UpdatingClause02.                                UpdatingClause ::= Merge  ;
+UpdatingClause03.                                UpdatingClause ::= Delete ;
+UpdatingClause04.                                UpdatingClause ::= Set    ;
+UpdatingClause05.                                UpdatingClause ::= Remove ;
+
+-- reading_clause -> match                                                                         : {readingClause, '$1'}.
+-- reading_clause -> unwind                                                                        : {readingClause, '$1'}.
+-- reading_clause -> in_query_call                                                                 : {readingClause, '$1'}.
+
+ReadingClause01.                                 ReadingClause ::= Match       ;
+ReadingClause02.                                 ReadingClause ::= Unwind      ;
+ReadingClause03.                                 ReadingClause ::= InQueryCall ;
+
+-- match ->          MATCH pattern                                                                 : {match, [],         '$2', []}.
+-- match ->          MATCH pattern where                                                           : {match, [],         '$2', '$3'}.
+-- match -> OPTIONAL MATCH pattern                                                                 : {match, "optional", '$3', []}.
+-- match -> OPTIONAL MATCH pattern where                                                           : {match, "optional", '$3', '$4'}.
+
+Match01.                                         Match ::=            "MATCH" Pattern       ;
+Match02.                                         Match ::=            "MATCH" Pattern Where ;
+Match03.                                         Match ::= "OPTIONAL" "MATCH" Pattern       ;
+Match04.                                         Match ::= "OPTIONAL" "MATCH" Pattern Where ;
+
+-- unwind -> UNWIND expression AS variable                                                         : {unwind, '$2', '$4'}.
+
+Unwind01.                                        Unwind ::= "UNWIND" Expression "AS" Variable ;
+
+-- merge -> MERGE pattern_part                                                                     : {merge, '$2', []}.
+-- merge -> MERGE pattern_part merge_action_list                                                   : {merge, '$2', '$3'}.
+
+Merge01.                                         Merge ::= "MERGE" PatternPart                 ;
+Merge02.                                         Merge ::= "MERGE" PatternPart MergeActionList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- merge_action_list ->                   merge_action                                             :         ['$1'].
+-- merge_action_list -> merge_action_list merge_action                                             : '$1' ++ ['$2'].
+
+MergeActionList01.                               MergeActionList ::= MergeAction                  ;
+MergeActionList02.                               MergeActionList ::= MergeAction  MergeActionList ;
+-- -----------------------------------------------------------------------------
+
+-- merge_action -> ON MATCH  set                                                                   : {mergeAction, "match",  '$3'}.
+-- merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
+
+MergeAction01.                                   MergeAction ::= "ON" "CREATE" Set ;
+MergeAction02.                                   MergeAction ::= "ON" "MATCH"  Set ;
+
+-- create -> CREATE pattern                                                                        : {create, '$2'}.
+
+Create01.                                        Create ::= "CREATE" Pattern ;
+
+-- set -> SET set_item_commalist                                                                   : {set, '$2'}.
+
+Set01.                                           Set ::= "SET" SetItemCommalist ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- set_item_commalist -> set_item                                                                  : ['$1'].
+-- set_item_commalist -> set_item ',' set_item_commalist                                           : ['$1' | '$3'].
+
+SetItemCommalist01.                              SetItemCommalist ::= SetItem                      ;
+SetItemCommalist02.                              SetItemCommalist ::= SetItem "," SetItemCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- set_item -> property_expression '='  expression                                                 : {setItem, '$1', "=",  '$3'}.
+-- set_item -> variable            '='  expression                                                 : {setItem, '$1', "=",  '$3'}.
+-- set_item -> variable            '+=' expression                                                 : {setItem, '$1', "+=", '$3'}.
+-- set_item -> variable                 node_labels                                                : {setItem, '$1', [],   '$2'}.
+
+SetItem01.                                       SetItem ::= PropertyExpression "="  Expression ;
+SetItem02.                                       SetItem ::= Variable           "="  Expression ;
+SetItem03.                                       SetItem ::= Variable           "+=" Expression ;
+SetItem04.                                       SetItem ::= Variable                NodeLabels ;
+
+-- delete ->        DELETE expression_commalist                                                    : {delete, [],       '$2'}.
+-- delete -> DETACH DELETE expression_commalist                                                    : {delete, "detach", '$3'}.
+
+Delete01.                                        Delete ::=          "DELETE" ExpressionCommalist ;
+Delete02.                                        Delete ::= "DETACH" "DELETE" ExpressionCommalist ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- expression_commalist -> expression                                                              : ['$1'].
+-- expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
+
+ExpressionCommalist01.                           ExpressionCommalist ::= Expression                         ;
+ExpressionCommalist02.                           ExpressionCommalist ::= Expression "," ExpressionCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- remove -> REMOVE remove_item_commalist                                                          : {remove, '$2'}.
+
+Remove01.                                        Remove ::= "REMOVE" RemoveItemCommalist ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- remove_item_commalist -> remove_item                                                            : ['$1'].
+-- remove_item_commalist -> remove_item ',' remove_item_commalist                                  : ['$1' | '$3'].
+
+RemoveItemCommalist01.                           RemoveItemCommalist ::= RemoveItem                         ;
+RemoveItemCommalist02.                           RemoveItemCommalist ::= RemoveItem "," RemoveItemCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- remove_item -> variable            node_labels                                                  : {removeItem, '$1', '$2'}.
+-- remove_item -> property_expression                                                              : {removeItem, '$1'}.
+
+RemoveItem01.                                    RemoveItem ::= Variable           NodeLabels ;
+RemoveItem02.                                    RemoveItem ::= PropertyExpression            ;
+
+-- in_query_call -> CALL explicit_procedure_invocation                                             : {inQueryCall, '$2', []}.
+-- in_query_call -> CALL explicit_procedure_invocation YIELD yield_items                           : {inQueryCall, '$2', '$4'}.
+
+InQueryCall01.                                   InQueryCall ::= "CALL" ExplicitProcedureInvocation                    ;
+InQueryCall02.                                   InQueryCall ::= "CALL" ExplicitProcedureInvocation "YIELD" YieldItems ;
+
+-- stand_alone_call -> CALL explicit_procedure_invocation                                          : {standaloneCall, '$2', []}.
+-- stand_alone_call -> CALL explicit_procedure_invocation YIELD yield_items                        : {standaloneCall, '$2', '$4'}.
+-- stand_alone_call -> CALL implicit_procedure_invocation                                          : {standaloneCall, '$2', []}.
+-- stand_alone_call -> CALL implicit_procedure_invocation YIELD yield_items                        : {standaloneCall, '$2', '$4'}.
+
+StandaloneCall01.                                StandaloneCall ::= "CALL" ExplicitProcedureInvocation                    ;
+StandaloneCall02.                                StandaloneCall ::= "CALL" ExplicitProcedureInvocation "YIELD" YieldItems ;
+StandaloneCall03.                                StandaloneCall ::= "CALL" ImplicitProcedureInvocation                    ;
+StandaloneCall04.                                StandaloneCall ::= "CALL" ImplicitProcedureInvocation "YIELD" YieldItems ;
+
+-- yield_items -> yield_item_commalist                                                             : {yieldItems, '$1'}.
+-- yield_items -> '-'                                                                              : {yieldItems, "-"}.
+
+YieldItems01.                                    YieldItems ::= YieldItemCommalist ;
+YieldItems02.                                    YieldItems ::= "-"                ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- yield_item_commalist -> yield_item                                                              : ['$1'].
+-- yield_item_commalist -> yield_item ',' yield_item_commalist                                     : ['$1' | '$3'].
+
+YieldItemCommalist01.                            YieldItemCommalist ::= YieldItem                        ;
+YieldItemCommalist02.                            YieldItemCommalist ::= YieldItem "," YieldItemCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- yield_item ->                           variable                                                : {yieldItem, [],   '$1'}.
+-- yield_item -> procedure_result_field AS variable                                                : {yieldItem, '$1', '$3'}.
+
+YieldItem01.                                     YieldItem ::=                           Variable ;
+YieldItem02.                                     YieldItem ::= ProcedureResultField "AS" Variable ;
+
+-- with -> WITH          return_body                                                               : {with, [],         '$2', []}.
+-- with -> WITH          return_body where                                                         : {with, [],         '$2', '$3'}.
+-- with -> WITH DISTINCT return_body                                                               : {with, "distinct", '$3', []}.
+-- with -> WITH DISTINCT return_body where                                                         : {with, "distinct", '$3', '$4'}.
+
+With01.                                          With ::= "WITH"            ReturnBody       ;
+With02.                                          With ::= "WITH"            ReturnBody Where ;
+With03.                                          With ::= "WITH" "DISTINCT" ReturnBody       ;
+With04.                                          With ::= "WITH" "DISTINCT" ReturnBody Where ;
+
+-- return -> RETURN          return_body                                                           : {return, [],         '$2'}.
+-- return -> RETURN DISTINCT return_body                                                           : {return, "distinct", '$3'}.
+
+Return01.                                        Return ::= "RETURN"            ReturnBody ;
+Return02.                                        Return ::= "RETURN" "DISTINCT" ReturnBody ;
+
+-- return_body -> return_items                                                                     : {returnBody, '$1', [],   [],   []}.
+-- return_body -> return_items            limit                                                    : {returnBody, '$1', [],   [],   '$2'}.
+-- return_body -> return_items       skip                                                          : {returnBody, '$1', [],   '$2', []}.
+-- return_body -> return_items       skip limit                                                    : {returnBody, '$1', [],   '$2', '$3'}.
+-- return_body -> return_items order                                                               : {returnBody, '$1', '$2', [],   []}.
+-- return_body -> return_items order      limit                                                    : {returnBody, '$1', '$2', [],   '$3'}.
+-- return_body -> return_items order skip                                                          : {returnBody, '$1', '$2', '$3', []}.
+-- return_body -> return_items order skip limit                                                    : {returnBody, '$1', '$2', '$3', '$4'}.
+
+ReturnBody01.                                    ReturnBody ::= ReturnItems                  ;
+ReturnBody02.                                    ReturnBody ::= ReturnItems            Limit ;
+ReturnBody03.                                    ReturnBody ::= ReturnItems       Skip       ;
+ReturnBody04.                                    ReturnBody ::= ReturnItems       Skip Limit ;
+ReturnBody05.                                    ReturnBody ::= ReturnItems Order            ;
+ReturnBody06.                                    ReturnBody ::= ReturnItems Order      Limit ;
+ReturnBody07.                                    ReturnBody ::= ReturnItems Order Skip       ;
+ReturnBody08.                                    ReturnBody ::= ReturnItems Order Skip Limit ;
+
+-- return_items -> '*'                                                                             : {returnItems, "*", [],  []}.
+-- return_items -> '*' ',' return_item_commalist                                                   : {returnItems, "*", ",", '$3'}.
+-- return_items ->         return_item_commalist                                                   : {returnItems, [],  [],  '$1'}.
+
+ReturnItems01.                                   ReturnItems ::= "*"                         ;
+ReturnItems02.                                   ReturnItems ::= "*" "," ReturnItemCommalist ;
+ReturnItems03.                                   ReturnItems ::=         ReturnItemCommalist ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- return_item_commalist -> return_item                                                            : ['$1'].
+-- return_item_commalist -> return_item ',' return_item_commalist                                  : ['$1' | '$3'].
+
+ReturnItemCommalist01.                           ReturnItemCommalist ::= ReturnItem                         ;
+ReturnItemCommalist02.                           ReturnItemCommalist ::= ReturnItem "," ReturnItemCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- return_item -> expression AS variable                                                           : {returnItem, '$1', '$3'}.
+-- return_item -> expression                                                                       : {returnItem, '$1', []}.
+
+ReturnItem01.                                    ReturnItem ::= Expression "AS" Variable ;
+ReturnItem02.                                    ReturnItem ::= Expression               ;
+
+-- order -> ORDER BY sort_item_commalist                                                           : {order, '$3'}.
+
+Order01.                                         Order ::= "ORDER" "BY" SortItemCommalist ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- sort_item_commalist -> sort_item                                                                : ['$1'].
+-- sort_item_commalist -> sort_item ',' sort_item_commalist                                        : ['$1' | '$3'].
+
+SortItemCommalist01.                             SortItemCommalist ::= SortItem                       ;
+SortItemCommalist02.                             SortItemCommalist ::= SortItem "," SortItemCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- skip -> SKIP expression                                                                         : {skip, '$2'}.
+
+Skip01.                                          Skip ::= "SKIP" Expression ;
+
+-- limit -> LIMIT expression                                                                       : {limit, '$2'}.
+
+Limit01.                                         Limit ::= "LIMIT" Expression ;
+
+-- sort_item -> expression                                                                         : {sortItem, '$1', []}.
+-- sort_item -> expression ASCENDING                                                               : {sortItem, '$1', "ascending"}.
+-- sort_item -> expression ASC                                                                     : {sortItem, '$1', "asc"}.
+-- sort_item -> expression DESCENDING                                                              : {sortItem, '$1', "descending"}.
+-- sort_item -> expression DESC                                                                    : {sortItem, '$1', "desc"}.
+
+SortItem01.                                      SortItem ::= Expression              ;
+SortItem02.                                      SortItem ::= Expression "ASCENDING"  ;
+SortItem03.                                      SortItem ::= Expression "ASC"        ;
+SortItem04.                                      SortItem ::= Expression "DESCENDING" ;
+SortItem05.                                      SortItem ::= Expression "DESC"       ;
+
+-- where -> WHERE expression                                                                       : {where, '$2'}.
+
+Where01.                                         Where ::= "WHERE" Expression ;
+
+-- pattern -> pattern_part_commalist                                                               : {pattern, '$1'}.
+
+Pattern01.                                       Pattern ::= PatternPartCommalist ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- pattern_part_commalist -> pattern_part                                                          : ['$1'].
+-- pattern_part_commalist -> pattern_part ',' pattern_part_commalist                               : ['$1' | '$3'].
+
+PatternPartCommalist01.                          PatternPartCommalist ::= PatternPart                          ;
+PatternPartCommalist02.                          PatternPartCommalist ::= PatternPart "," PatternPartCommalist ;
+-- =============================================================================
+
+-- pattern_part -> variable '=' anonymous_pattern_part                                             : {patternPart, '$1', '$3'}.
+-- pattern_part ->              anonymous_pattern_part                                             : {patternPart, [],   '$1'}.
+
+PatternPart01.                                   PatternPart ::= Variable "=" AnonymousPatternPart ;
+PatternPart02.                                   PatternPart ::=              AnonymousPatternPart ;
+
+-- anonymous_pattern_part -> pattern_element                                                       : {anonymousPatternPart, '$1'}.
+
+AnonymousPatternPart01.                          AnonymousPatternPart ::= PatternElement ;
+
+-- pattern_element -> node_pattern                                                                 : {patternElement, '$1', []}.
+-- pattern_element -> node_pattern pattern_element_chain_list                                      : {patternElement, '$1', '$2'}.
+-- pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2', "("}.
+
+PatternElement01.                                PatternElement ::= NodePattern                         ;
+PatternElement02.                                PatternElement ::= NodePattern PatternElementChainList ;
+PatternElement03.                                PatternElement ::= "(" PatternElement ")"              ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- pattern_element_chain_list ->                            pattern_element_chain                  :         ['$1'].
+-- pattern_element_chain_list -> pattern_element_chain_list pattern_element_chain                  : '$1' ++ ['$2'].
+
+PatternElementChainList01.                       PatternElementChainList ::= PatternElementChain                                             ;
+PatternElementChainList02.                       PatternElementChainList ::= PatternElementChain PatternElementChainList ;
+-- =============================================================================
+
+-- node_pattern -> '('                                 ')'                                         : {nodePattern, [],   [],   []}.
+-- node_pattern -> '('                      properties ')'                                         : {nodePattern, [],   [],   '$2'}.
+-- node_pattern -> '('          node_labels            ')'                                         : {nodePattern, [],   '$2', []}.
+-- node_pattern -> '('          node_labels properties ')'                                         : {nodePattern, [],   '$2', '$3'}.
+-- node_pattern -> '(' variable                        ')'                                         : {nodePattern, '$2', [],   []}.
+-- node_pattern -> '(' variable             properties ')'                                         : {nodePattern, '$2', [],   '$3'}.
+-- node_pattern -> '(' variable node_labels            ')'                                         : {nodePattern, '$2', '$3', []}.
+-- node_pattern -> '(' variable node_labels properties ')'                                         : {nodePattern, '$2', '$3', '$4'}.
+
+NodePattern01.                                   NodePattern ::= "("                                ")" ;
+NodePattern02.                                   NodePattern ::= "("                     Properties ")" ;
+NodePattern03.                                   NodePattern ::= "("          NodeLabels            ")" ;
+NodePattern04.                                   NodePattern ::= "("          NodeLabels Properties ")" ;
+NodePattern05.                                   NodePattern ::= "(" Variable                       ")" ;
+NodePattern06.                                   NodePattern ::= "(" Variable            Properties ")" ;
+NodePattern07.                                   NodePattern ::= "(" Variable NodeLabels            ")" ;
+NodePattern08.                                   NodePattern ::= "(" Variable NodeLabels Properties ")" ;
+
+-- pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
+
+PatternElementChain01.                           PatternElementChain ::= RelationshipPattern NodePattern ;
+
+-- relationship_pattern ->     '-'                     '-'                                         : {relationshipPattern, "--",  [],   []}.
+-- relationship_pattern ->     '-'                     '-' '>'                                     : {relationshipPattern, "-->", [],   []}.
+-- relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
+-- relationship_pattern ->     '-' relationship_detail '-' '>'                                     : {relationshipPattern, "-",   '$2', "->"}.
+-- relationship_pattern -> '<' '-'                     '-'                                         : {relationshipPattern, "<--", [],   []}.
+-- relationship_pattern -> '<' '-'                     '-' '>'                                     : {relationshipPattern, "<-->",[],   []}.
+-- relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
+-- relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
+
+RelationshipPattern01.                           RelationshipPattern ::= "<" "-"                    "-" ">" ;
+RelationshipPattern02.                           RelationshipPattern ::= "<" "-" RelationshipDetail "-" ">" ;
+RelationshipPattern03.                           RelationshipPattern ::= "<" "-"                    "-"     ;
+RelationshipPattern04.                           RelationshipPattern ::= "<" "-" RelationshipDetail "-"     ;
+RelationshipPattern05.                           RelationshipPattern ::=     "-"                    "-" ">" ;
+RelationshipPattern06.                           RelationshipPattern ::=     "-" RelationshipDetail "-" ">" ;
+RelationshipPattern07.                           RelationshipPattern ::=     "-"                    "-"     ;
+RelationshipPattern08.                           RelationshipPattern ::=     "-" RelationshipDetail "-"     ;
+
+-- relationship_detail -> '['                                                       ']'            : {relationshipDetail, [],   [],   [],   []}.
+-- relationship_detail -> '['                                            properties ']'            : {relationshipDetail, [],   [],   [],   '$2'}.
+-- relationship_detail -> '['                              range_literal            ']'            : {relationshipDetail, [],   [],   '$2', []}.
+-- relationship_detail -> '['                              range_literal properties ']'            : {relationshipDetail, [],   [],   '$2', '$3'}.
+-- relationship_detail -> '['           relationship_types                          ']'            : {relationshipDetail, [],   '$2', [],   []}.
+-- relationship_detail -> '['           relationship_types               properties ']'            : {relationshipDetail, [],   '$2', [],   '$3'}.
+-- relationship_detail -> '['           relationship_types range_literal            ']'            : {relationshipDetail, [],   '$2', '$3', []}.
+-- relationship_detail -> '['           relationship_types range_literal properties ']'            : {relationshipDetail, [],   '$2', '$3', '$4'}.
+-- relationship_detail -> '[' variable                                              ']'            : {relationshipDetail, '$2', [],   [],   []}.
+-- relationship_detail -> '[' variable                                   properties ']'            : {relationshipDetail, '$2', [],   [],   '$3'}.
+-- relationship_detail -> '[' variable                     range_literal            ']'            : {relationshipDetail, '$2', [],   '$3', []}.
+-- relationship_detail -> '[' variable                     range_literal properties ']'            : {relationshipDetail, '$2', [],   '$3', '$4'}.
+-- relationship_detail -> '[' variable  relationship_types                          ']'            : {relationshipDetail, '$2', '$3', [],   []}.
+-- relationship_detail -> '[' variable  relationship_types               properties ']'            : {relationshipDetail, '$2', '$3', [],   '$4'}.
+-- relationship_detail -> '[' variable  relationship_types range_literal            ']'            : {relationshipDetail, '$2', '$3', '$4', []}.
+-- relationship_detail -> '[' variable  relationship_types range_literal properties ']'            : {relationshipDetail, '$2', '$3', '$4', '$5'}.
+
+RelationshipDetail01.                            RelationshipDetail ::= "["                                                    "]" ;
+RelationshipDetail02.                            RelationshipDetail ::= "["                                         Properties "]" ;
+RelationshipDetail03.                            RelationshipDetail ::= "["                            RangeLiteral            "]" ;
+RelationshipDetail04.                            RelationshipDetail ::= "["                            RangeLiteral Properties "]" ;
+RelationshipDetail05.                            RelationshipDetail ::= "["          RelationshipTypes                         "]" ;
+RelationshipDetail06.                            RelationshipDetail ::= "["          RelationshipTypes              Properties "]" ;
+RelationshipDetail07.                            RelationshipDetail ::= "["          RelationshipTypes RangeLiteral            "]" ;
+RelationshipDetail08.                            RelationshipDetail ::= "["          RelationshipTypes RangeLiteral Properties "]" ;
+RelationshipDetail09.                            RelationshipDetail ::= "[" Variable                                           "]" ;
+RelationshipDetail10.                            RelationshipDetail ::= "[" Variable                                Properties "]" ;
+RelationshipDetail11.                            RelationshipDetail ::= "[" Variable                   RangeLiteral            "]" ;
+RelationshipDetail12.                            RelationshipDetail ::= "[" Variable                   RangeLiteral Properties "]" ;
+RelationshipDetail13.                            RelationshipDetail ::= "[" Variable RelationshipTypes                         "]" ;
+RelationshipDetail14.                            RelationshipDetail ::= "[" Variable RelationshipTypes              Properties "]" ;
+RelationshipDetail15.                            RelationshipDetail ::= "[" Variable RelationshipTypes RangeLiteral            "]" ;
+RelationshipDetail16.                            RelationshipDetail ::= "[" Variable RelationshipTypes RangeLiteral Properties "]" ;
+
+-- properties -> map_literal                                                                       : {properties, '$1'}.
+-- properties -> parameter                                                                         : {properties, '$1'}.
+
+Properties01.                                    Properties ::= MapLiteral ;
+Properties02.                                    Properties ::= Parameter  ;
+
+-- relationship_types -> ':' rel_type_name                                                         : {relationshipTypes, '$2', []}.
+-- relationship_types -> ':' rel_type_name rel_type_name_verticalbarlist                           : {relationshipTypes, '$2', '$3'}.
+
+RelationshipTypes01.                             RelationshipTypes ::= ":" RelTypeName                            ;
+RelationshipTypes02.                             RelationshipTypes ::= ":" RelTypeName RelTypeNameVerticalbarlist ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- rel_type_name_verticalbarlist ->                               '|'     rel_type_name            : [{'$2', []}].
+-- rel_type_name_verticalbarlist ->                               '|' ':' rel_type_name            : [{'$3', ":"}].
+-- rel_type_name_verticalbarlist -> rel_type_name_verticalbarlist '|'     rel_type_name            : '$1' ++ [{'$3', []}].
+-- rel_type_name_verticalbarlist -> rel_type_name_verticalbarlist '|' ':' rel_type_name            : '$1' ++ [{'$4', ":"}].
+
+RelTypeNameVerticalbarlist01.                    RelTypeNameVerticalbarlist ::=                            "|"      RelTypeName ;
+RelTypeNameVerticalbarlist02.                    RelTypeNameVerticalbarlist ::=                            "|" ":"  RelTypeName ;
+RelTypeNameVerticalbarlist03.                    RelTypeNameVerticalbarlist ::= RelTypeNameVerticalbarlist "|"      RelTypeName ;
+RelTypeNameVerticalbarlist04.                    RelTypeNameVerticalbarlist ::= RelTypeNameVerticalbarlist "|" ":"  RelTypeName ;
+-- =============================================================================
+
+-- node_labels -> node_label_list                                                                  : {nodeLabels, '$1'}.
+
+NodeLabels01.                                    NodeLabels ::= NodeLabelList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- node_label_list ->                 node_label                                                   :         ['$1'].
+-- node_label_list -> node_label_list node_label                                                   : '$1' ++ ['$2'].
+
+NodeLabelList01.                                 NodeLabelList ::= NodeLabel               ;
+NodeLabelList02.                                 NodeLabelList ::= NodeLabel NodeLabelList ;
+-- =============================================================================
+
+-- node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
+
+NodeLabel01.                                     NodeLabel ::= ":" LabelName ;
+
+-- range_literal -> '*'                                                                            : {rangeLiteral, [],   [],   []}.
+-- range_literal -> '*'                 '..'                                                       : {rangeLiteral, [],   "..", []}.
+-- range_literal -> '*'                 '..' integer_literal                                       : {rangeLiteral, [],   "..", '$3'}.
+-- range_literal -> '*' integer_literal                                                            : {rangeLiteral, '$2', [],   []}.
+-- range_literal -> '*' integer_literal '..'                                                       : {rangeLiteral, '$2', "..", []}.
+-- range_literal -> '*' integer_literal '..' integer_literal                                       : {rangeLiteral, '$2', "..", '$4'}.
+
+RangeLiteral01.                                  RangeLiteral ::= "*"                                     ;
+RangeLiteral02.                                  RangeLiteral ::= "*"                 ".."                ;
+RangeLiteral03.                                  RangeLiteral ::= "*"                 ".." IntegerLiteral ;
+RangeLiteral04.                                  RangeLiteral ::= "*"  IntegerLiteral                     ;
+RangeLiteral05.                                  RangeLiteral ::= "*"  IntegerLiteral ".."                ;
+RangeLiteral06.                                  RangeLiteral ::= "*"  IntegerLiteral ".." IntegerLiteral ;
+
+-- label_name -> schema_name                                                                       : {labelName, '$1'}.
+
+LabelName01.                                     LabelName ::= SchemaName ;
+
+-- rel_type_name -> schema_name                                                                    : {relTypeName, '$1'}.
+
+RelTypeName01.                                   RelTypeName ::= SchemaName ;
+
+-- expression -> or_expression                                                                     : {expression, '$1'}.
+
+Expression01.                                    Expression ::= OrExpression ;
+
+-- or_expression -> xor_expression                                                                 : {orExpression, '$1', []}.
+-- or_expression -> xor_expression xor_expression_addon_list                                       : {orExpression, '$1', '$2'}.
+
+OrExpression01.                                  OrExpression ::= XorExpression                        ;
+OrExpression02.                                  OrExpression ::= XorExpression XorExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- xor_expression_addon_list ->                           OR xor_expression                        :         [{"or", '$2'}].
+-- xor_expression_addon_list -> xor_expression_addon_list OR xor_expression                        : '$1' ++ [{"or", '$3'}].
+
+XorExpressionAddonList01.                        XorExpressionAddonList ::=                        "OR" XorExpression ;
+XorExpressionAddonList02.                        XorExpressionAddonList ::= XorExpressionAddonList "OR" XorExpression ;
+-- =============================================================================
+
+-- xor_expression -> and_expression                                                                : {xorExpression, '$1', []}.
+-- xor_expression -> and_expression and_expression_addon_list                                      : {xorExpression, '$1', '$2'}.
+
+XorExpression01.                                 XorExpression ::= AndExpression                        ;
+XorExpression02.                                 XorExpression ::= AndExpression AndExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- and_expression_addon_list ->                           XOR and_expression                       :         [{"xor", '$2'}].
+-- and_expression_addon_list -> and_expression_addon_list XOR and_expression                       : '$1' ++ [{"xor", '$3'}].
+
+AndExpressionAddonList01.                        AndExpressionAddonList ::=                        "XOR" AndExpression ;
+AndExpressionAddonList02.                        AndExpressionAddonList ::= AndExpressionAddonList "XOR" AndExpression ;
+-- =============================================================================
+
+-- and_expression -> not_expression                                                                : {andExpression, '$1', []}.
+-- and_expression -> not_expression not_expression_addon_list                                      : {andExpression, '$1', '$2'}.
+
+AndExpression01.                                 AndExpression ::= NotExpression                        ;
+AndExpression02.                                 AndExpression ::= NotExpression NotExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- not_expression_addon_list ->                           AND not_expression                       :         [{"and", '$2'}].
+-- not_expression_addon_list -> not_expression_addon_list AND not_expression                       : '$1' ++ [{"and", '$3'}].
+
+NotExpressionAddonList01.                        NotExpressionAddonList ::=                        "AND" NotExpression ;
+NotExpressionAddonList02.                        NotExpressionAddonList ::= NotExpressionAddonList "AND" NotExpression ;
+-- =============================================================================
+
+-- not_expression ->                comparison_expression                                          : {notExpression, '$1', []}.
+-- not_expression -> not_addon_list comparison_expression                                          : {notExpression, '$2', '$1'}.
+
+NotExpression01.                                 NotExpression ::=              ComparisonExpression ;
+NotExpression02.                                 NotExpression ::= NotAddonList ComparisonExpression ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- not_addon_list ->                NOT                                                            :         [{"not"}].
+-- not_addon_list -> not_addon_list NOT                                                            : '$1' ++ [{"not"}].
+
+NotAddonList01.                                  NotAddonList ::=              "NOT" ;
+NotAddonList02.                                  NotAddonList ::= NotAddonList "NOT" ;
+-- =============================================================================
+
+-- comparison_expression -> add_or_subtract_expression                                             : {comparisonExpression, '$1', []}.
+-- comparison_expression -> add_or_subtract_expression partial_comparison_expression_addon_list    : {comparisonExpression, '$1', '$2'}.
+
+ComparisonExpression01.                          ComparisonExpression ::= AddOrSubtractExpression                                                      ;
+ComparisonExpression02.                          ComparisonExpression ::= AddOrSubtractExpression PartialComparisonExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- partial_comparison_expression_addon_list ->                                          partial_comparison_expression
+--                                                                                                 :         ['$1'].
+-- partial_comparison_expression_addon_list -> partial_comparison_expression_addon_list partial_comparison_expression
+--                                                                                                 : '$1' ++ ['$2'].
+
+PartialComparisonExpressionAddonList01.          PartialComparisonExpressionAddonList ::=                                      PartialComparisonExpression ;
+PartialComparisonExpressionAddonList02.          PartialComparisonExpressionAddonList ::= PartialComparisonExpressionAddonList PartialComparisonExpression ;
+-- =============================================================================
+
+-- add_or_subtract_expression -> multiply_divide_modulo_expression                                 : {addOrSubtractExpression, '$1', []}.
+-- add_or_subtract_expression -> multiply_divide_modulo_expression multiply_divide_modulo_expression_addon_list
+--                                                                                                 : {addOrSubtractExpression, '$1', '$2'}.
+
+AddOrSubtractExpression01.                       AddOrSubtractExpression ::= MultiplyDivideModuloExpression                                         ;
+AddOrSubtractExpression02.                       AddOrSubtractExpression ::= MultiplyDivideModuloExpression MultiplyDivideModuloExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- multiply_divide_modulo_expression_addon_list ->                                              '+' multiply_divide_modulo_expression
+--                                                                                                 :         [{"+", '$2'}].
+-- multiply_divide_modulo_expression_addon_list ->                                              '-' multiply_divide_modulo_expression
+--                                                                                                 :         [{"-", '$2'}].
+-- multiply_divide_modulo_expression_addon_list -> multiply_divide_modulo_expression_addon_list '+' multiply_divide_modulo_expression
+--                                                                                                 : '$1' ++ [{"+", '$3'}].
+-- multiply_divide_modulo_expression_addon_list -> multiply_divide_modulo_expression_addon_list '-' multiply_divide_modulo_expression
+--                                                                                                 : '$1' ++ [{"-", '$3'}].
+
+MultiplyDivideModuloExpressionAddonList01.       MultiplyDivideModuloExpressionAddonList ::=                                         "+" MultiplyDivideModuloExpression ;
+MultiplyDivideModuloExpressionAddonList02.       MultiplyDivideModuloExpressionAddonList ::=                                         "-" MultiplyDivideModuloExpression ;
+MultiplyDivideModuloExpressionAddonList03.       MultiplyDivideModuloExpressionAddonList ::= MultiplyDivideModuloExpressionAddonList "+" MultiplyDivideModuloExpression ;
+MultiplyDivideModuloExpressionAddonList04.       MultiplyDivideModuloExpressionAddonList ::= MultiplyDivideModuloExpressionAddonList "-" MultiplyDivideModuloExpression ;
+-- =============================================================================
+
+-- multiply_divide_modulo_expression -> power_of_expression                                        : {multiplyDivideModuloExpression, '$1', []}.
+-- multiply_divide_modulo_expression -> power_of_expression power_of_expression_addon_list         : {multiplyDivideModuloExpression, '$1', '$2'}.
+
+MultiplyDivideModuloExpression01.                MultiplyDivideModuloExpression ::= PowerOfExpression                            ;
+MultiplyDivideModuloExpression02.                MultiplyDivideModuloExpression ::= PowerOfExpression PowerOfExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- power_of_expression_addon_list ->                                '*' power_of_expression        :         [{"*", '$2'}].
+-- power_of_expression_addon_list ->                                '/' power_of_expression        :         [{"/", '$2'}].
+-- power_of_expression_addon_list ->                                '%' power_of_expression        :         [{"%", '$2'}].
+-- power_of_expression_addon_list -> power_of_expression_addon_list '*' power_of_expression        : '$1' ++ [{"*", '$3'}].
+-- power_of_expression_addon_list -> power_of_expression_addon_list '/' power_of_expression        : '$1' ++ [{"/", '$3'}].
+-- power_of_expression_addon_list -> power_of_expression_addon_list '%' power_of_expression        : '$1' ++ [{"%", '$3'}].
+
+PowerOfExpressionAddonList01.                    PowerOfExpressionAddonList ::=                            "*" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList02.                    PowerOfExpressionAddonList ::=                            "/" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList03.                    PowerOfExpressionAddonList ::=                            "%" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList04.                    PowerOfExpressionAddonList ::= PowerOfExpressionAddonList "*" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList05.                    PowerOfExpressionAddonList ::= PowerOfExpressionAddonList "/" PowerOfExpressionAddonList ;
+PowerOfExpressionAddonList06.                    PowerOfExpressionAddonList ::= PowerOfExpressionAddonList "%" PowerOfExpressionAddonList ;
+-- =============================================================================
+
+-- power_of_expression -> unary_add_or_subtract_expression                                         : {powerOfExpression, '$1', []}.
+-- power_of_expression -> unary_add_or_subtract_expression unary_add_or_subtract_expression_addon_list
+--                                                                                                 : {powerOfExpression, '$1', '$2'}.
+
+PowerOfExpression01.                             PowerOfExpression ::=                              UnaryAddOrSubtractExpressionAddonList ;
+PowerOfExpression02.                             PowerOfExpression ::= UnaryAddOrSubtractExpression UnaryAddOrSubtractExpressionAddonList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- unary_add_or_subtract_expression_addon_list ->                                             '^' unary_add_or_subtract_expression
+--                                                                                                 :         [{"^", '$2'}].
+-- unary_add_or_subtract_expression_addon_list -> unary_add_or_subtract_expression_addon_list '^' unary_add_or_subtract_expression
+--                                                                                                 : '$1' ++ [{"^", '$3'}].
+
+UnaryAddOrSubtractExpressionAddonList01.         UnaryAddOrSubtractExpressionAddonList ::=                                       "^" UnaryAddOrSubtractExpression ;
+UnaryAddOrSubtractExpressionAddonList02.         UnaryAddOrSubtractExpressionAddonList ::= UnaryAddOrSubtractExpressionAddonList "^" UnaryAddOrSubtractExpression ;
+-- =============================================================================
+
+-- unary_add_or_subtract_expression ->                            string_list_null_operator_expression
+--                                                                                                 : {unaryAddOrSubtractExpression, '$1', []}.
+-- unary_add_or_subtract_expression -> unary_add_or_subtract_list string_list_null_operator_expression
+--                                                                                                 : {unaryAddOrSubtractExpression, '$2', '$1'}.
+
+UnaryAddOrSubtractExpression01.                  UnaryAddOrSubtractExpression ::=                             StringListNullOperatorExpression ;
+UnaryAddOrSubtractExpression02.                  UnaryAddOrSubtractExpression ::= UnaryAddOrSubtractAddonList StringListNullOperatorExpression ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- unary_add_or_subtract_list ->                            unary_add_or_subtract                  :         ['$1'].
+-- unary_add_or_subtract_list -> unary_add_or_subtract_list unary_add_or_subtract                  : '$1' ++ ['$2'].
+
+UnaryAddOrSubtractAddonList01.                   UnaryAddOrSubtractAddonList ::=                             UnaryAddOrSubtract ;
+UnaryAddOrSubtractAddonList02.                   UnaryAddOrSubtractAddonList ::= UnaryAddOrSubtractAddonList UnaryAddOrSubtract ;
+
+-- unary_add_or_subtract -> '+'                                                                    : {"+"}.
+-- unary_add_or_subtract -> '-'                                                                    : {"-"}.
+
+UnaryAddOrSubtract01.                            UnaryAddOrSubtract ::= "+" ;
+UnaryAddOrSubtract02.                            UnaryAddOrSubtract ::= "-" ;
+-- =============================================================================
+
+-- string_list_null_operator_expression -> property_or_labels_expression                           : {stringListNullOperatorExpression, '$1', []}.
+-- string_list_null_operator_expression -> property_or_labels_expression property_or_labels_expression_addon_list
+--                                                                                                 : {stringListNullOperatorExpression, '$1', '$2'}.
+
+StringListNullOperatorExpression01.              StringListNullOperatorExpression ::=                                     PropertyOrLabelsExpression ;
+StringListNullOperatorExpression02.              StringListNullOperatorExpression ::= PropertyOrLabelsExpressionAddonList PropertyOrLabelsExpression ;
+
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- property_or_labels_expression_addon_list ->                                          property_or_labels_expression_addon
+--                                                                                                 :         ['$1'].
+-- property_or_labels_expression_addon_list -> property_or_labels_expression_addon_list property_or_labels_expression_addon
+--                                                                                                 : '$1' ++ ['$2'].
+
+PropertyOrLabelsExpressionAddonList01.           PropertyOrLabelsExpressionAddonList ::=                                     PropertyOrLabelsExpressionAddon ;
+PropertyOrLabelsExpressionAddonList02.           PropertyOrLabelsExpressionAddonList ::= PropertyOrLabelsExpressionAddonList PropertyOrLabelsExpressionAddon ;
+
+-- property_or_labels_expression_addon -> '[' expression                 ']'                       : {"[",           '$2'}.
+-- property_or_labels_expression_addon -> '['            '..'            ']'                       : {"[",           [],   []}.
+-- property_or_labels_expression_addon -> '['            '..' expression ']'                       : {"[",           [],   '$3'}.
+-- property_or_labels_expression_addon -> '[' expression '..'            ']'                       : {"[",           '$2', []}.
+-- property_or_labels_expression_addon -> '[' expression '..' expression ']'                       : {"[",           '$2', '$4'}.
+-- property_or_labels_expression_addon -> '=~'        property_or_labels_expression                : {"=~",          '$2'}.
+-- property_or_labels_expression_addon -> IN          property_or_labels_expression                : {"in",          '$2'}.
+-- property_or_labels_expression_addon -> STARTS WITH property_or_labels_expression                : {"starts with", '$3'}.
+-- property_or_labels_expression_addon -> ENDS   WITH property_or_labels_expression                : {"ends with",   '$3'}.
+-- property_or_labels_expression_addon -> CONTAINS    property_or_labels_expression                : {"contains",    '$2'}.
+-- property_or_labels_expression_addon -> IS     NULL                                              : {"is null"}.
+-- property_or_labels_expression_addon -> IS NOT NULL                                              : {"is not null"}.
+
+PropertyOrLabelsExpressionAddon01.               PropertyOrLabelsExpressionAddon ::= "[" Expression                 "]"           ;
+PropertyOrLabelsExpressionAddon02.               PropertyOrLabelsExpressionAddon ::= "["            ".."            "]"           ;
+PropertyOrLabelsExpressionAddon03.               PropertyOrLabelsExpressionAddon ::= "["            ".." Expression "]"           ;
+PropertyOrLabelsExpressionAddon04.               PropertyOrLabelsExpressionAddon ::= "[" Expression ".."            "]"           ;
+PropertyOrLabelsExpressionAddon05.               PropertyOrLabelsExpressionAddon ::= "[" Expression ".." Expression "]"           ;
+PropertyOrLabelsExpressionAddon06.               PropertyOrLabelsExpressionAddon ::= "=~"              PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon07.               PropertyOrLabelsExpressionAddon ::= "IN"              PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon08.               PropertyOrLabelsExpressionAddon ::= "STARTS" "WITH"   PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon09.               PropertyOrLabelsExpressionAddon ::= "ENDS"   "WITH"   PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon10.               PropertyOrLabelsExpressionAddon ::= "CONTAINS"        PropertyOrLabelsExpression ;
+PropertyOrLabelsExpressionAddon11.               PropertyOrLabelsExpressionAddon ::= "IS"       "NULL"                            ;
+PropertyOrLabelsExpressionAddon12.               PropertyOrLabelsExpressionAddon ::= "IS" "NOT" "NULL"                            ;
+-- =============================================================================
+
+-- property_or_labels_expression -> atom                                                           : {propertyOrLabelsExpression, '$1', []}.
+-- property_or_labels_expression -> atom node_labels_property_lookup_list                          : {propertyOrLabelsExpression, '$1', '$2'}.
+
+PropertyOrLabelsExpression01.                    PropertyOrLabelsExpression ::= Atom                              ;
+PropertyOrLabelsExpression02.                    PropertyOrLabelsExpression ::= Atom NodeLabelsPropertyLookupList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- node_labels_property_lookup_list ->                                  property_lookup            :         ['$1'].
+-- node_labels_property_lookup_list ->                                  node_labels                :         ['$1'].
+-- node_labels_property_lookup_list -> node_labels_property_lookup_list property_lookup            : '$1' ++ ['$2'].
+-- node_labels_property_lookup_list -> node_labels_property_lookup_list node_labels                : '$1' ++ ['$2'].
+
+NodeLabelsPropertyLookupList01.                  NodeLabelsPropertyLookupList ::=                              PropertyLookup ;
+NodeLabelsPropertyLookupList02.                  NodeLabelsPropertyLookupList ::=                              NodeLabels     ;
+NodeLabelsPropertyLookupList03.                  NodeLabelsPropertyLookupList ::= NodeLabelsPropertyLookupList PropertyLookup ;
+NodeLabelsPropertyLookupList04.                  NodeLabelsPropertyLookupList ::= NodeLabelsPropertyLookupList NodeLabels     ;
+-- =============================================================================
+
+-- atom -> literal                                                                                 : {atom, '$1'}.
+-- atom -> parameter                                                                               : {atom, '$1'}.
+-- atom -> case_expression                                                                         : {atom, '$1'}.
+-- atom -> COUNT   '(' '*'               ')'                                                       : {atom, {'count',   []}}.
+-- atom -> list_comprehension                                                                      : {atom, '$1'}.
+-- atom -> pattern_comprehension                                                                   : {atom, '$1'}.
+-- atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
+-- atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
+-- atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
+-- atom -> ALL     '(' filter_expression ')'                                                       : {atom, {'all',     '$3'}}.
+-- atom -> ANY     '(' filter_expression ')'                                                       : {atom, {'any',     '$3'}}.
+-- atom -> NONE    '(' filter_expression ')'                                                       : {atom, {'none',    '$3'}}.
+-- atom -> SINGLE  '(' filter_expression ')'                                                       : {atom, {'single',  '$3'}}.
+-- atom -> relationships_pattern                                                                   : {atom, '$1'}.
+-- atom -> parenthesized_expression                                                                : {atom, '$1'}.
+-- atom -> function_invocation                                                                     : {atom, '$1'}.
+-- atom -> variable                                                                                : {atom, '$1'}.
+
+Atom01.                                          Atom ::= Literal                                           ;
+Atom02.                                          Atom ::= Parameter                                         ;
+Atom03.                                          Atom ::= CaseExpression                                    ;
+Atom04.                                          Atom ::= "COUNT" "(" "*" ")"                               ;
+Atom05.                                          Atom ::= ListComprehension                                 ;
+Atom06.                                          Atom ::= PatternComprehension                              ;
+Atom07.                                          Atom ::= "FILTER"  "(" FilterExpression                ")" ;
+Atom08.                                          Atom ::= "EXTRACT" "(" FilterExpression "|" Expression ")" ;
+Atom09.                                          Atom ::= "EXTRACT" "(" FilterExpression                ")" ;
+Atom10.                                          Atom ::= "ALL"     "(" FilterExpression                ")" ;
+Atom11.                                          Atom ::= "ANY"     "(" FilterExpression                ")" ;
+Atom12.                                          Atom ::= "NONE"    "(" FilterExpression                ")" ;
+Atom13.                                          Atom ::= "SINGLE"  "(" FilterExpression                ")" ;
+Atom14.                                          Atom ::= RelationshipsPattern                              ;
+Atom15.                                          Atom ::= ParenthesizedExpression                           ;
+Atom16.                                          Atom ::= FunctionInvocation                                ;
+Atom17.                                          Atom ::= Variable                                          ;
+
+-- literal -> number_literal                                                                       : {literal, '$1'}.
+-- literal -> STRING_LITERAL                                                                       : {literal, {stringLiteral, unwrap('$1')}}.
+-- literal -> boolean_literal                                                                      : {literal, '$1'}.
+-- literal -> NULL                                                                                 : {literal, {terminal, "null"}}.
+-- literal -> map_literal                                                                          : {literal, '$1'}.
+-- literal -> list_literal                                                                         : {literal, '$1'}.
+
+Literal01.                                       Literal ::= NumberLiteral    ;
+Literal02.                                       Literal ::= "STRING_LITERAL" ;
+Literal03.                                       Literal ::= BooleanLiteral   ;
+Literal04.                                       Literal ::= "NULL"           ;
+Literal05.                                       Literal ::= MapLiteral       ;
+Literal06.                                       Literal ::= ListLiteral      ;
+
+-- boolean_literal -> FALSE                                                                        : {booleanLiteral, {terminal, "false"}}.
+-- boolean_literal -> TRUE                                                                         : {booleanLiteral, {terminal, "true"}}.
+
+BooleanLiteral01.                                BooleanLiteral ::= "TRUE"  ;
+BooleanLiteral02.                                BooleanLiteral ::= "FALSE" ;
+
+-- list_literal -> '['                      ']'                                                    : {listLiteral, []}.
+-- list_literal -> '[' expression_commalist ']'                                                    : {listLiteral, '$2'}.
+
+ListLiteral01.                                   ListLiteral ::= "["                      "]" ;
+ListLiteral02.                                   ListLiteral ::= "["  ExpressionCommalist "]" ;
+
+-- partial_comparison_expression -> '='  add_or_subtract_expression                                : {partialComparisonExpression, '$2', "="}.
+-- partial_comparison_expression -> '<>' add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<>"}.
+-- partial_comparison_expression -> '<'  add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<"}.
+-- partial_comparison_expression -> '>'  add_or_subtract_expression                                : {partialComparisonExpression, '$2', ">"}.
+-- partial_comparison_expression -> '<=' add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<="}.
+-- partial_comparison_expression -> '>=' add_or_subtract_expression                                : {partialComparisonExpression, '$2', ">="}.
+
+PartialComparisonExpression01.                   PartialComparisonExpression ::= "="  AddOrSubtractExpression ;
+PartialComparisonExpression02.                   PartialComparisonExpression ::= "<>" AddOrSubtractExpression ;
+PartialComparisonExpression03.                   PartialComparisonExpression ::= "<"  AddOrSubtractExpression ;
+PartialComparisonExpression04.                   PartialComparisonExpression ::= ">"  AddOrSubtractExpression ;
+PartialComparisonExpression05.                   PartialComparisonExpression ::= "<=" AddOrSubtractExpression ;
+PartialComparisonExpression06.                   PartialComparisonExpression ::= ">=" AddOrSubtractExpression ;
+
+-- parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
+
+ParenthesizedExpression01.                       ParenthesizedExpression ::= "(" Expression ")" ;
+
+-- relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
+
+RelationshipsPattern01.                          RelationshipsPattern ::= NodePattern PatternElementChainList ;
+
+-- filter_expression -> id_in_coll                                                                 : {filterExpression, '$1', []}.
+-- filter_expression -> id_in_coll where                                                           : {filterExpression, '$1', '$2'}.
+
+FilterExpression01.                              FilterExpression ::= IdInColl       ;
+FilterExpression02.                              FilterExpression ::= IdInColl Where ;
+
+-- id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
+
+IdInColl01.                                      IdInColl ::= Variable "IN" Expression ;
+
+-- function_invocation -> function_name '('                               ')'                      : {functionInvocation, '$1', [],         []}.
+-- function_invocation -> function_name '('          expression_commalist ')'                      : {functionInvocation, '$1', [],         '$3'}.
+-- function_invocation -> function_name '(' DISTINCT                      ')'                      : {functionInvocation, '$1', "distinct", []}.
+-- function_invocation -> function_name '(' DISTINCT expression_commalist ')'                      : {functionInvocation, '$1', "distinct", '$4'}.
+
+FunctionInvocation01.                            FunctionInvocation ::= FunctionName "("                                ")" ;
+FunctionInvocation02.                            FunctionInvocation ::= FunctionName "("            ExpressionCommalist ")" ;
+FunctionInvocation03.                            FunctionInvocation ::= FunctionName "(" "DISTINCT"                     ")" ;
+FunctionInvocation04.                            FunctionInvocation ::= FunctionName "(" "DISTINCT" ExpressionCommalist ")" ;
+
+-- function_name -> symbolic_name                                                                  : {functionName, '$1'}.
+-- function_name -> EXISTS                                                                         : {functionName, "exists"}.
+
+FunctionName01.                                  FunctionName ::= SymbolicName ;
+FunctionName02.                                  FunctionName ::= "EXISTS"     ;
+
+-- explicit_procedure_invocation -> procedure_name '('                      ')'                    : {explicitProcedureInvocation, '$1', []}.
+-- explicit_procedure_invocation -> procedure_name '(' expression_commalist ')'                    : {explicitProcedureInvocation, '$1', '$3'}.
+
+ExplicitProcedureInvocation01.                   ExplicitProcedureInvocation ::= ProcedureName "("                     ")" ;
+ExplicitProcedureInvocation02.                   ExplicitProcedureInvocation ::= ProcedureName "(" ExpressionCommalist ")" ;
+
+-- implicit_procedure_invocation -> procedure_name                                                 : {explicitProcedureInvocation, '$1', []}.
+
+ImplicitProcedureInvocation01.                   ImplicitProcedureInvocation ::= ProcedureName ;
+
+-- procedure_result_field -> symbolic_name                                                         : {procedureResultField, '$1'}.
+
+ProcedureResultField01.                          ProcedureResultField ::= SymbolicName ;
+
+-- procedure_name ->                symbolic_name                                                  : {procedureName, [],   '$1'}.
+-- procedure_name -> namespace_list symbolic_name                                                  : {procedureName, '$1', '$2'}.
+
+ProcedureName01.                                 ProcedureName ::=               SymbolicName ;
+ProcedureName02.                                 ProcedureName ::= NamespaceList SymbolicName ;
+
+-- namespace -> symbolic_name '.'                                                                  : {namespace, '$1'}.
+
+Namespace01.                                     Namespace ::= "." SymbolicName ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- namespace_list ->                namespace                                                      :         ['$1'].
+-- namespace_list -> namespace_list namespace                                                      : '$1' ++ ['$2'].
+
+NamespaceList01.                                 NamespaceList ::=               Namespace ;
+NamespaceList02.                                 NamespaceList ::= NamespaceList Namespace ;
+-- =============================================================================
+
+-- list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.
+-- list_comprehension -> '[' filter_expression '|' expression ']'                                  : {listComprehension, '$2', '$4'}.
+
+ListComprehension01.                             ListComprehension ::= "[" FilterExpression                "]" ;
+ListComprehension02.                             ListComprehension ::= "[" FilterExpression "|" Expression "]" ;
+
+-- pattern_comprehension -> '['              relationships_pattern                  '|' expression ']'
+--                                                                                                 : {patternComprehension, [],   '$2', [],   '$4'}.
+-- pattern_comprehension -> '['              relationships_pattern WHERE expression '|' expression ']'
+--                                                                                                 : {patternComprehension, [],   '$2', '$4', '$6'}.
+-- pattern_comprehension -> '[' variable '=' relationships_pattern                  '|' expression ']'
+--                                                                                                 : {patternComprehension, '$2', '$4', [],   '$6'}.
+-- pattern_comprehension -> '[' variable '=' relationships_pattern WHERE expression '|' expression ']'
+--                                                                                                 : {patternComprehension, '$2', '$4', '$6', '$8'}.
+
+PatternComprehension01.                          PatternComprehension ::= "["              RelationshipsPattern                    "|" Expression "]" ;
+PatternComprehension02.                          PatternComprehension ::= "[" Variable "=" RelationshipsPattern                    "|" Expression "]" ;
+PatternComprehension03.                          PatternComprehension ::= "["              RelationshipsPattern "WHERE" Expression "|" Expression "]" ;
+PatternComprehension04.                          PatternComprehension ::= "[" Variable "=" RelationshipsPattern "WHERE" Expression "|" Expression "]" ;
+
+-- property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2'}.
+
+PropertyLookup01.                                PropertyLookup ::= "." PropertyKeyName ;
+
+-- case_expression -> CASE            case_alternatives_list                 END                   : {caseExpression, [],   '$2', []}.
+-- case_expression -> CASE            case_alternatives_list ELSE expression END                   : {caseExpression, [],   '$2', '$4'}.
+-- case_expression -> CASE expression case_alternatives_list                 END                   : {caseExpression, '$2', '$3', []}.
+-- case_expression -> CASE expression case_alternatives_list ELSE expression END                   : {caseExpression, '$2', '$3', '$5'}.
+
+CaseExpression01.                                CaseExpression ::= "CASE"            CaseAlternativesList                   "END" ;
+CaseExpression02.                                CaseExpression ::= "CASE"            CaseAlternativesList "ELSE" Expression "END" ;
+CaseExpression03.                                CaseExpression ::= "CASE" Expression CaseAlternativesList                   "END" ;
+CaseExpression04.                                CaseExpression ::= "CASE" Expression CaseAlternativesList "ELSE" Expression "END" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- case_alternatives_list ->                        case_alternatives                              :         ['$1'].
+-- case_alternatives_list -> case_alternatives_list case_alternatives                              : '$1' ++ ['$2'].
+
+CaseAlternativesList01.                          CaseAlternativesList ::= CaseAlternatives                      ;
+CaseAlternativesList02.                          CaseAlternativesList ::= CaseAlternatives CaseAlternativesList ;
+-- =============================================================================
+
+-- case_alternatives -> WHEN expression THEN expression                                            : {caseAlternatives, '$2', '$4'}.
+
+CaseAlternatives01.                              CaseAlternatives ::= "WHEN" Expression "THEN" Expression ;
+
+-- variable -> symbolic_name                                                                       : {variable, '$1'}.
+
+Variable01.                                      Variable ::= SymbolicName ;
+
+-- number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
+-- number_literal -> integer_literal                                                               : {numberLiteral, '$1'}.
+
+NumberLiteral01.                                 NumberLiteral ::= DoubleLiteral  ;
+NumberLiteral02.                                 NumberLiteral ::= IntegerLiteral ;
+
+-- map_literal -> '{'                                        '}'                                   : {mapLiteral, []}.
+-- map_literal -> '{' property_key_name_expression_commalist '}'                                   : {mapLiteral, '$2'}.
+
+MapLiteral01.                                    MapLiteral ::= "{"                                    "}" ;
+MapLiteral02.                                    MapLiteral ::= "{" PropertyKeyNameExpressionCommalist "}" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- property_key_name_expression -> property_key_name ':' expression                                : {'$1', '$3'}.
+
+PropertyKeyNameExpression.                       PropertyKeyNameExpression ::= PropertyKeyName ":" Expression                                        ;
+
+-- property_key_name_expression_commalist -> property_key_name_expression                          : ['$1'].
+-- property_key_name_expression_commalist -> property_key_name_expression ',' property_key_name_expression_commalist
+--                                                                                                 : ['$1' | '$3'].
+
+PropertyKeyNameExpressionCommalist01.            PropertyKeyNameExpressionCommalist ::= PropertyKeyNameExpression                                        ;
+PropertyKeyNameExpressionCommalist02.            PropertyKeyNameExpressionCommalist ::= PropertyKeyNameExpression "," PropertyKeyNameExpressionCommalist ;
+-- =============================================================================
+
+-- parameter -> '$' symbolic_name                                                                  : {parameter, '$2'}.
+-- parameter -> '$' DECIMAL_INTEGER                                                                : {parameter, unwrap('$2')}.
+
+Parameter01.                                     Parameter ::= "$" SymbolicName      ;
+Parameter02.                                     Parameter ::= "$" "DECIMAL_INTEGER" ;
+
+-- property_expression -> atom property_lookup_list                                                : {propertyExpression, '$1', '$2'}.
+
+PropertyExpression01.                            PropertyExpression ::= Atom                    ;
+PropertyExpression02.                            PropertyExpression ::= Atom PropertyLookupList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- property_lookup_list ->                      property_lookup                                    :         ['$1'].
+-- property_lookup_list -> property_lookup_list property_lookup                                    : '$1' ++ ['$2'].
+
+PropertyLookupList01.                            PropertyLookupList ::=                    PropertyLookup ;
+PropertyLookupList02.                            PropertyLookupList ::= PropertyLookupList PropertyLookup ;
+-- =============================================================================
+
+-- property_key_name -> schema_name                                                                : {propertyKeyName, '$1'}.
+
+PropertyKeyName01.                               PropertyKeyName ::= SchemaName ;
+
+-- integer_literal -> HEX_INTEGER                                                                  : {integerLiteral, unwrap('$1')}.
+-- integer_literal -> OCTAL_INTEGER                                                                : {integerLiteral, unwrap('$1')}.
+-- integer_literal -> DECIMAL_INTEGER                                                              : {integerLiteral, unwrap('$1')}.
+
+IntegerLiteral01.                                IntegerLiteral ::= "HEX_INTEGER"     ;
+IntegerLiteral02.                                IntegerLiteral ::= "OCTAL_INTEGER"   ;
+IntegerLiteral03.                                IntegerLiteral ::= "DECIMAL_INTEGER" ;
+
+-- double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, unwrap('$1')}.
+-- double_literal -> REGULAR_DECIMAL_REAL                                                          : {doubleLiteral, unwrap('$1')}.
+
+DoubleLiteral01.                                 DoubleLiteral ::= "EXPONENT_DECIMAL_REAL" ;
+DoubleLiteral02.                                 DoubleLiteral ::= "REGULAR_DECIMAL_REAL"  ;
+
+-- schema_name -> symbolic_name                                                                    : {schemaName, '$1'}.
+-- schema_name -> reserved_word                                                                    : {schemaName, '$1'}.
+
+SchemaName01.                                    SchemaName ::= SymbolicName ;
+SchemaName02.                                    SchemaName ::= ReservedWord ;
+
+-- reserved_word -> ALL                                                                            : {reservedWord, "all"}.
+-- reserved_word -> ASC                                                                            : {reservedWord, "asc"}.
+-- reserved_word -> ASCENDING                                                                      : {reservedWord, "ascending"}.
+-- reserved_word -> BY                                                                             : {reservedWord, "by"}.
+-- reserved_word -> CREATE                                                                         : {reservedWord, "create"}.
+-- reserved_word -> DELETE                                                                         : {reservedWord, "delete"}.
+-- reserved_word -> DESC                                                                           : {reservedWord, "desc"}.
+-- reserved_word -> DESCENDING                                                                     : {reservedWord, "descending"}.
+-- reserved_word -> DETACH                                                                         : {reservedWord, "detach"}.
+-- reserved_word -> EXISTS                                                                         : {reservedWord, "exists"}.
+-- reserved_word -> LIMIT                                                                          : {reservedWord, "limit"}.
+-- reserved_word -> MATCH                                                                          : {reservedWord, "all"}.
+-- reserved_word -> MERGE                                                                          : {reservedWord, "all"}.
+-- reserved_word -> ON                                                                             : {reservedWord, "on"}.
+-- reserved_word -> OPTIONAL                                                                       : {reservedWord, "optional"}.
+-- reserved_word -> ORDER                                                                          : {reservedWord, "order"}.
+-- reserved_word -> REMOVE                                                                         : {reservedWord, "remove"}.
+-- reserved_word -> RETURN                                                                         : {reservedWord, "return"}.
+-- reserved_word -> SET                                                                            : {reservedWord, "set"}.
+-- reserved_word -> SKIP                                                                           : {reservedWord, "skip"}.
+-- reserved_word -> WHERE                                                                          : {reservedWord, "where"}.
+-- reserved_word -> WITH                                                                           : {reservedWord, "with"}.
+-- reserved_word -> UNION                                                                          : {reservedWord, "union"}.
+-- reserved_word -> UNWIND                                                                         : {reservedWord, "unwind"}.
+-- reserved_word -> AND                                                                            : {reservedWord, "and"}.
+-- reserved_word -> AS                                                                             : {reservedWord, "as"}.
+-- reserved_word -> CONTAINS                                                                       : {reservedWord, "contains"}.
+-- reserved_word -> DISTINCT                                                                       : {reservedWord, "distinct"}.
+-- reserved_word -> ENDS                                                                           : {reservedWord, "ends"}.
+-- reserved_word -> IN                                                                             : {reservedWord, "in"}.
+-- reserved_word -> IS                                                                             : {reservedWord, "is"}.
+-- reserved_word -> NOT                                                                            : {reservedWord, "not"}.
+-- reserved_word -> OR                                                                             : {reservedWord, "or"}.
+-- reserved_word -> STARTS                                                                         : {reservedWord, "starts"}.
+-- reserved_word -> XOR                                                                            : {reservedWord, "xor"}.
+-- reserved_word -> FALSE                                                                          : {reservedWord, "false"}.
+-- reserved_word -> TRUE                                                                           : {reservedWord, "true"}.
+-- reserved_word -> NULL                                                                           : {reservedWord, "null"}.
+-- reserved_word -> CONSTRAINT                                                                     : {reservedWord, "constraint"}.
+-- reserved_word -> DO                                                                             : {reservedWord, "do"}.
+-- reserved_word -> FOR                                                                            : {reservedWord, "for"}.
+-- reserved_word -> REQUIRE                                                                        : {reservedWord, "require"}.
+-- reserved_word -> UNIQUE                                                                         : {reservedWord, "unique"}.
+-- reserved_word -> CASE                                                                           : {reservedWord, "case"}.
+-- reserved_word -> WHEN                                                                           : {reservedWord, "when"}.
+-- reserved_word -> THEN                                                                           : {reservedWord, "then"}.
+-- reserved_word -> ELSE                                                                           : {reservedWord, "else"}.
+-- reserved_word -> END                                                                            : {reservedWord, "end"}.
+-- reserved_word -> MANDATORY                                                                      : {reservedWord, "mandatory"}.
+-- reserved_word -> SCALAR                                                                         : {reservedWord, "scalar"}.
+-- reserved_word -> OF                                                                             : {reservedWord, "of"}.
+-- reserved_word -> ADD                                                                            : {reservedWord, "add"}.
+-- reserved_word -> DROP                                                                           : {reservedWord, "drop"}.
+
+ReservedWord01.                                  ReservedWord ::= "ALL"        ;
+ReservedWord02.                                  ReservedWord ::= "ASC"        ;
+ReservedWord03.                                  ReservedWord ::= "ASCENDING"  ;
+ReservedWord04.                                  ReservedWord ::= "BY"         ;
+ReservedWord05.                                  ReservedWord ::= "CREATE"     ;
+ReservedWord06.                                  ReservedWord ::= "DELETE"     ;
+ReservedWord07.                                  ReservedWord ::= "DESC"       ;
+ReservedWord08.                                  ReservedWord ::= "DESCENDING" ;
+ReservedWord09.                                  ReservedWord ::= "DETACH"     ;
+ReservedWord10.                                  ReservedWord ::= "EXISTS"     ;
+ReservedWord11.                                  ReservedWord ::= "LIMIT"      ;
+ReservedWord12.                                  ReservedWord ::= "MATCH"      ;
+ReservedWord13.                                  ReservedWord ::= "MERGE"      ;
+ReservedWord14.                                  ReservedWord ::= "ON"         ;
+ReservedWord15.                                  ReservedWord ::= "OPTIONAL"   ;
+ReservedWord16.                                  ReservedWord ::= "ORDER"      ;
+ReservedWord17.                                  ReservedWord ::= "REMOVE"     ;
+ReservedWord18.                                  ReservedWord ::= "RETURN"     ;
+ReservedWord19.                                  ReservedWord ::= "SET"        ;
+ReservedWord20.                                  ReservedWord ::= "SKIP"       ;
+ReservedWord21.                                  ReservedWord ::= "WHERE"      ;
+ReservedWord22.                                  ReservedWord ::= "WITH"       ;
+ReservedWord23.                                  ReservedWord ::= "UNION"      ;
+ReservedWord24.                                  ReservedWord ::= "UNWIND"     ;
+ReservedWord25.                                  ReservedWord ::= "AND"        ;
+ReservedWord26.                                  ReservedWord ::= "AS"         ;
+ReservedWord27.                                  ReservedWord ::= "CONTAINS"   ;
+ReservedWord28.                                  ReservedWord ::= "DISTINCT"   ;
+ReservedWord29.                                  ReservedWord ::= "ENDS"       ;
+ReservedWord30.                                  ReservedWord ::= "IN"         ;
+ReservedWord31.                                  ReservedWord ::= "IS"         ;
+ReservedWord32.                                  ReservedWord ::= "NOT"        ;
+ReservedWord33.                                  ReservedWord ::= "OR"         ;
+ReservedWord34.                                  ReservedWord ::= "STARTS"     ;
+ReservedWord35.                                  ReservedWord ::= "XOR"        ;
+ReservedWord36.                                  ReservedWord ::= "FALSE"      ;
+ReservedWord37.                                  ReservedWord ::= "TRUE"       ;
+ReservedWord38.                                  ReservedWord ::= "NULL"       ;
+ReservedWord39.                                  ReservedWord ::= "CONSTRAINT" ;
+ReservedWord40.                                  ReservedWord ::= "DO"         ;
+ReservedWord41.                                  ReservedWord ::= "FOR"        ;
+ReservedWord42.                                  ReservedWord ::= "REQUIRE"    ;
+ReservedWord43.                                  ReservedWord ::= "UNIQUE"     ;
+ReservedWord44.                                  ReservedWord ::= "CASE"       ;
+ReservedWord45.                                  ReservedWord ::= "WHEN"       ;
+ReservedWord46.                                  ReservedWord ::= "THEN"       ;
+ReservedWord47.                                  ReservedWord ::= "ELSE"       ;
+ReservedWord48.                                  ReservedWord ::= "END"        ;
+ReservedWord49.                                  ReservedWord ::= "MANDATORY"  ;
+ReservedWord50.                                  ReservedWord ::= "SCALAR"     ;
+ReservedWord51.                                  ReservedWord ::= "OF"         ;
+ReservedWord52.                                  ReservedWord ::= "ADD"        ;
+ReservedWord53.                                  ReservedWord ::= "DROP"       ;
+
+-- symbolic_name -> ESCAPED_SYMBOLIC_NAME                                                          : {symbolicName, unwrap('$1')}.
+-- symbolic_name -> UNESCAPED_SYMBOLIC_NAME                                                        : {symbolicName, unwrap('$1')}.
+-- symbolic_name -> HEX_LETTER                                                                     : {symbolicName, unwrap('$1')}.
+-- symbolic_name -> COUNT                                                                          : {symbolicName, "count"}.
+-- symbolic_name -> FILTER                                                                         : {symbolicName, "filter"}.
+-- symbolic_name -> EXTRACT                                                                        : {symbolicName, "extract"}.
+-- symbolic_name -> ANY                                                                            : {symbolicName, "any"}.
+-- symbolic_name -> NONE                                                                           : {symbolicName, "none"}.
+-- symbolic_name -> SINGLE                                                                         : {symbolicName, "single"}.
+
+SymbolicName01.                                  SymbolicName ::= "UNESCAPED_SYMBOLIC_NAME" ;
+SymbolicName02.                                  SymbolicName ::= "ESCAPED_SYMBOLIC_NAME"   ;
+SymbolicName03.                                  SymbolicName ::= "HEX_LETTER"              ;
+SymbolicName04.                                  SymbolicName ::= "COUNT"                   ;
+SymbolicName05.                                  SymbolicName ::= "FILTER"                  ;
+SymbolicName06.                                  SymbolicName ::= "EXTRACT"                 ;
+SymbolicName07.                                  SymbolicName ::= "ANY"                     ;
+SymbolicName08.                                  SymbolicName ::= "NONE"                    ;
+SymbolicName09.                                  SymbolicName ::= "SINGLE"                  ;
+
+-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+-- LBNF specifica
+-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+entrypoints Cypher ;

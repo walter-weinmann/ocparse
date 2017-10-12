@@ -1,0 +1,818 @@
+/* =============================================================================
+cypher -> statement                                                                             : {cypher, '$1', []}.
+cypher -> statement ';'                                                                         : {cypher, '$1', ";"}.
+============================================================================= */
+
+cypher ::= statement ';'?
+
+/* =============================================================================
+statement -> query                                                                              : {statement, '$1'}.
+
+query -> regular_query                                                                          : {query, '$1'}.
+query -> stand_alone_call                                                                       : {query, '$1'}.
+
+regular_query -> single_query                                                                   : {regularQuery, '$1', []}.
+regular_query -> single_query union_list                                                        : {regularQuery, '$1', '$2'}.
+============================================================================= */
+
+statement ::= query
+
+query ::= regularQuery
+        | standaloneCall
+
+regularQuery ::= singleQuery union*
+
+/* =============================================================================
+union -> UNION     single_query                                                                 : {union, [],    '$2'}.
+union -> UNION ALL single_query                                                                 : {union, "all", '$3'}.
+
+single_query -> single_part_query                                                               : {singleQuery, '$1'}.
+single_query -> multi_part_query                                                                : {singleQuery, '$1'}.
+
+single_part_query -> read_only_end                                                              : {singlePartQuery, '$1'}.
+single_part_query -> read_update_end                                                            : {singlePartQuery, '$1'}.
+single_part_query -> updating_end                                                               : {singlePartQuery, '$1'}.
+
+read_only_end ->           return                                                               : {readOnlyEnd, {readPart, []}, '$1'}.
+read_only_end -> read_part return                                                               : {readOnlyEnd, '$1',           '$2'}.
+
+read_update_end -> reading_clause_list updating_clause_list                                     : {readUpdateEnd, '$1', '$2', []}.
+read_update_end -> reading_clause_list updating_clause_list return                              : {readUpdateEnd, '$1', '$2', '$3'}.
+============================================================================= */
+
+union ::= 'UNION' 'ALL'? singleQuery
+
+singleQuery ::= singlePartQuery
+              | multiPartQuery
+
+singlePartQuery ::= readOnlyEnd
+                  | readUpdateEnd
+                  | updatingEnd
+
+readOnlyEnd ::= readPart? return
+
+readUpdateEnd ::= readingClause+ updatingClause+ return?
+
+/* =============================================================================
+updating_end -> updating_start_clause                                                           : {updatingEnd, '$1', [],   []}.
+updating_end -> updating_start_clause                      return                               : {updatingEnd, '$1', [],   '$2'}.
+updating_end -> updating_start_clause updating_clause_list                                      : {updatingEnd, '$1', '$2', []}.
+updating_end -> updating_start_clause updating_clause_list return                               : {updatingEnd, '$1', '$2', '$3'}.
+
+multi_part_query ->                                     with                                   single_part_query
+                                                                                                : {multiPartQuery, {readPart, []}, [],                 '$1', [],   '$2'}.
+multi_part_query ->                                     with read_part_updating_part_with_list single_part_query
+                                                                                                : {multiPartQuery, {readPart, []}, [],                 '$1', '$2', '$3'}.
+multi_part_query -> read_part                           with                                   single_part_query
+                                                                                                : {multiPartQuery, '$1',           [],                 '$2', [],   '$3'}.
+multi_part_query -> read_part                           with read_part_updating_part_with_list single_part_query
+                                                                                                : {multiPartQuery, '$1',           [],                 '$2', '$3', '$4'}.
+multi_part_query -> updating_start_clause               with                                   single_part_query
+                                                                                                : {multiPartQuery, '$1',           {updatingPart, []}, '$2', [],   '$3'}.
+multi_part_query -> updating_start_clause               with read_part_updating_part_with_list single_part_query
+                                                                                                : {multiPartQuery, '$1',           {updatingPart, []}, '$2', '$3', '$4'}.
+multi_part_query -> updating_start_clause updating_part with                                   single_part_query
+                                                                                                : {multiPartQuery, '$1',           '$2',               '$3', [],   '$4'}.
+multi_part_query -> updating_start_clause updating_part with read_part_updating_part_with_list single_part_query
+                                                                                                : {multiPartQuery, '$1',           '$2',               '$3', '$4', '$5'}.
+============================================================================= */
+
+updatingEnd ::= updatingStartClause updatingClause* return?
+
+multiPartQuery ::= ( readPart | ( updatingStartClause updatingPart? ) )? with ( readPart updatingPart with )* singlePartQuery
+
+/* =============================================================================
+read_part -> reading_clause_list                                                                : {readPart, '$1'}.
+
+updating_part -> updating_clause_list                                                           : {updatingPart, '$1'}.
+
+updating_start_clause -> create                                                                 : {updatingStartClause, '$1'}.
+updating_start_clause -> merge                                                                  : {updatingStartClause, '$1'}.
+
+updating_clause -> create                                                                       : {updatingClause, '$1'}.
+updating_clause -> merge                                                                        : {updatingClause, '$1'}.
+updating_clause -> delete                                                                       : {updatingClause, '$1'}.
+updating_clause -> set                                                                          : {updatingClause, '$1'}.
+updating_clause -> remove                                                                       : {updatingClause, '$1'}.
+
+reading_clause -> match                                                                         : {readingClause, '$1'}.
+reading_clause -> unwind                                                                        : {readingClause, '$1'}.
+reading_clause -> in_query_call                                                                 : {readingClause, '$1'}.
+
+match ->          MATCH pattern                                                                 : {match, [],         '$2', []}.
+match ->          MATCH pattern where                                                           : {match, [],         '$2', '$3'}.
+match -> OPTIONAL MATCH pattern                                                                 : {match, "optional", '$3', []}.
+match -> OPTIONAL MATCH pattern where                                                           : {match, "optional", '$3', '$4'}.
+
+unwind -> UNWIND expression AS variable                                                         : {unwind, '$2', '$4'}.
+
+merge -> MERGE pattern_part                                                                     : {merge, '$2', []}.
+merge -> MERGE pattern_part merge_action_list                                                   : {merge, '$2', '$3'}.
+============================================================================= */
+
+readPart ::= readingClause+
+
+updatingPart ::= updatingClause+
+
+updatingStartClause ::= create
+                       | merge
+
+updatingClause ::= create
+                 | merge
+                 | delete
+                 | set
+                 | remove
+
+readingClause ::= match
+                | unwind
+                | inQueryCall
+
+match ::= 'OPTIONAL'? 'MATCH' pattern where?
+
+unwind ::= 'UNWIND' expression 'AS' variable
+
+merge ::= 'MERGE' patternPart mergeAction*
+
+/* =============================================================================
+merge_action -> ON MATCH  set                                                                   : {mergeAction, "match",  '$3'}.
+merge_action -> ON CREATE set                                                                   : {mergeAction, "create", '$3'}.
+
+create -> CREATE pattern                                                                        : {create, '$2'}.
+
+set -> SET set_item_commalist                                                                   : {set, '$2'}.
+============================================================================= */
+
+mergeAction ::= 'ON' ( 'MATCH' | 'CREATE' ) set
+
+create ::= 'CREATE' pattern
+
+set ::= 'SET' setItem ( ',' setItem )*
+
+/* =============================================================================
+set_item -> property_expression '='  expression                                                 : {setItem, '$1', "=",  '$3'}.
+set_item -> variable            '='  expression                                                 : {setItem, '$1', "=",  '$3'}.
+set_item -> variable            '+=' expression                                                 : {setItem, '$1', "+=", '$3'}.
+set_item -> variable                 node_labels                                                : {setItem, '$1', [],   '$2'}.
+
+delete ->        DELETE expression_commalist                                                    : {delete, [],       '$2'}.
+delete -> DETACH DELETE expression_commalist                                                    : {delete, "detach", '$3'}.
+============================================================================= */
+
+setItem ::= ( ( (property_expression '=' ) | ( variable ('=' | '+=') ) ) expression )
+          | ( variable nodeLabels )
+
+delete ::= 'DETACH'? 'DELETE' expression ( ',' expression )*
+
+/* =============================================================================
+remove -> REMOVE remove_item_commalist                                                          : {remove, '$2'}.
+============================================================================= */
+
+remove ::= 'REMOVE' removeItem ( ',' removeItem )*
+
+/* =============================================================================
+remove_item -> variable            node_labels                                                  : {removeItem, '$1', '$2'}.
+remove_item -> property_expression                                                              : {removeItem, '$1'}.
+
+in_query_call -> CALL explicit_procedure_invocation                                             : {inQueryCall, '$2', []}.
+in_query_call -> CALL explicit_procedure_invocation YIELD yield_items                           : {inQueryCall, '$2', '$4'}.
+
+stand_alone_call -> CALL explicit_procedure_invocation                                          : {standaloneCall, '$2', []}.
+stand_alone_call -> CALL explicit_procedure_invocation YIELD yield_items                        : {standaloneCall, '$2', '$4'}.
+stand_alone_call -> CALL implicit_procedure_invocation                                          : {standaloneCall, '$2', []}.
+stand_alone_call -> CALL implicit_procedure_invocation YIELD yield_items                        : {standaloneCall, '$2', '$4'}.
+
+yield_items -> yield_item_commalist                                                             : {yieldItems, '$1'}.
+yield_items -> '-'                                                                              : {yieldItems, "-"}.
+============================================================================= */
+
+removeItem ::= ( variable nodeLabels )
+              | propertyExpression
+
+inQueryCall ::= CALL explicitProcedureInvocation ( YIELD yieldItems )
+
+standaloneCall ::= CALL ( explicitProcedureInvocation | implicitProcedureInvocation ) ( YIELD yieldItems )?
+
+yieldItems ::= yieldItem ( ',' yieldItem )*
+
+/* =============================================================================
+yield_item ->                           variable                                                : {yieldItem, [],   '$1'}.
+yield_item -> procedure_result_field AS variable                                                : {yieldItem, '$1', '$3'}.
+
+with -> WITH          return_body                                                               : {with, [],         '$2', []}.
+with -> WITH          return_body where                                                         : {with, [],         '$2', '$3'}.
+with -> WITH DISTINCT return_body                                                               : {with, "distinct", '$3', []}.
+with -> WITH DISTINCT return_body where                                                         : {with, "distinct", '$3', '$4'}.
+
+return -> RETURN          return_body                                                           : {return, [],         '$2'}.
+return -> RETURN DISTINCT return_body                                                           : {return, "distinct", '$3'}.
+
+return_body -> return_items                                                                     : {returnBody, '$1', [],   [],   []}.
+return_body -> return_items            limit                                                    : {returnBody, '$1', [],   [],   '$2'}.
+return_body -> return_items       skip                                                          : {returnBody, '$1', [],   '$2', []}.
+return_body -> return_items       skip limit                                                    : {returnBody, '$1', [],   '$2', '$3'}.
+return_body -> return_items order                                                               : {returnBody, '$1', '$2', [],   []}.
+return_body -> return_items order      limit                                                    : {returnBody, '$1', '$2', [],   '$3'}.
+return_body -> return_items order skip                                                          : {returnBody, '$1', '$2', '$3', []}.
+return_body -> return_items order skip limit                                                    : {returnBody, '$1', '$2', '$3', '$4'}.
+
+return_items -> '*'                                                                             : {returnItems, "*", [],  []}.
+return_items -> '*' ',' return_item_commalist                                                   : {returnItems, "*", ",", '$3'}.
+return_items ->         return_item_commalist                                                   : {returnItems, [],  [],  '$1'}.
+============================================================================= */
+
+yieldItem ::= ( procedureResultField AS )? variable
+
+with ::= 'WITH' 'DISTINCT'? returnBody where?
+
+return ::= 'RETURN' 'DISTINCT'? returnBody
+
+returnBody ::= returnItems order? skip? limit?
+
+returnItems ::= '*'
+              | ( '*' ',' returnItem ( ',' returnItem )* )
+              | ( returnItem ( ',' returnItem )* )
+
+/* =============================================================================
+return_item -> expression AS variable                                                           : {returnItem, '$1', '$3'}.
+return_item -> expression                                                                       : {returnItem, '$1', []}.
+
+order -> ORDER BY sort_item_commalist                                                           : {order, '$3'}.
+============================================================================= */
+
+returnItem ::= expression ( 'AS' variable )?
+
+order ::= 'ORDER' 'BY' sortItem ( ',' sortItem )*
+
+/* =============================================================================
+skip -> SKIP expression                                                                         : {skip, '$2'}.
+
+limit -> LIMIT expression                                                                       : {limit, '$2'}.
+
+sort_item -> expression                                                                         : {sortItem, '$1', []}.
+sort_item -> expression ASCENDING                                                               : {sortItem, '$1', "ascending"}.
+sort_item -> expression ASC                                                                     : {sortItem, '$1', "asc"}.
+sort_item -> expression DESCENDING                                                              : {sortItem, '$1', "descending"}.
+sort_item -> expression DESC                                                                    : {sortItem, '$1', "desc"}.
+
+where -> WHERE expression                                                                       : {where, '$2'}.
+
+pattern -> pattern_part_commalist                                                               : {pattern, '$1'}.
+============================================================================= */
+
+skip ::= 'SKIP' expression
+
+limit ::= 'LIMIT' expression
+
+sortItem ::= expression ( 'DESCENDING' | 'DESC' | 'ASCENDING' | 'ASC' )?
+
+where ::= 'WHERE' expression
+
+pattern ::= patternPart ( ',' patternPart )*
+
+/* =============================================================================
+pattern_part -> variable '=' anonymous_pattern_part                                             : {patternPart, '$1', '$3'}.
+pattern_part ->              anonymous_pattern_part                                             : {patternPart, [],   '$1'}.
+
+anonymous_pattern_part -> pattern_element                                                       : {anonymousPatternPart, '$1'}.
+
+pattern_element -> node_pattern                                                                 : {patternElement, '$1', []}.
+pattern_element -> node_pattern pattern_element_chain_list                                      : {patternElement, '$1', '$2'}.
+pattern_element -> '(' pattern_element ')'                                                      : {patternElement, '$2', "("}.
+============================================================================= */
+
+patternPart ::= ( variable '=' )? anonymousPatternPart
+
+anonymousPatternPart ::= patternElement
+
+patternElement ::= ( nodePattern patternElementChain* )
+                 | ( '(' patternElement ')' )
+
+/* =============================================================================
+node_pattern -> '('                                 ')'                                         : {nodePattern, [],   [],   []}.
+node_pattern -> '('                      properties ')'                                         : {nodePattern, [],   [],   '$2'}.
+node_pattern -> '('          node_labels            ')'                                         : {nodePattern, [],   '$2', []}.
+node_pattern -> '('          node_labels properties ')'                                         : {nodePattern, [],   '$2', '$3'}.
+node_pattern -> '(' variable                        ')'                                         : {nodePattern, '$2', [],   []}.
+node_pattern -> '(' variable             properties ')'                                         : {nodePattern, '$2', [],   '$3'}.
+node_pattern -> '(' variable node_labels            ')'                                         : {nodePattern, '$2', '$3', []}.
+node_pattern -> '(' variable node_labels properties ')'                                         : {nodePattern, '$2', '$3', '$4'}.
+
+pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
+
+relationship_pattern -> '<' '-'                     '-'                                         : {relationshipPattern, "<--", [],   []}.
+relationship_pattern -> '<' '-'                     '-' '>'                                     : {relationshipPattern, "<-->",[],   []}.
+relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
+relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
+relationship_pattern ->     '-'                     '-'                                         : {relationshipPattern, "--",  [],   []}.
+relationship_pattern ->     '-'                     '-' '>'                                     : {relationshipPattern, "-->", [],   []}.
+relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
+relationship_pattern ->     '-' relationship_detail '-' '>'                                     : {relationshipPattern, "-",   '$2', "->"}.
+
+relationship_detail -> '['                                                       ']'            : {relationshipDetail, [],   [],   [],   []}.
+relationship_detail -> '['                                            properties ']'            : {relationshipDetail, [],   [],   [],   '$2'}.
+relationship_detail -> '['                              range_literal            ']'            : {relationshipDetail, [],   [],   '$2', []}.
+relationship_detail -> '['                              range_literal properties ']'            : {relationshipDetail, [],   [],   '$2', '$3'}.
+relationship_detail -> '['           relationship_types                          ']'            : {relationshipDetail, [],   '$2', [],   []}.
+relationship_detail -> '['           relationship_types               properties ']'            : {relationshipDetail, [],   '$2', [],   '$3'}.
+relationship_detail -> '['           relationship_types range_literal            ']'            : {relationshipDetail, [],   '$2', '$3', []}.
+relationship_detail -> '['           relationship_types range_literal properties ']'            : {relationshipDetail, [],   '$2', '$3', '$4'}.
+relationship_detail -> '[' variable                                              ']'            : {relationshipDetail, '$2', [],   [],   []}.
+relationship_detail -> '[' variable                                   properties ']'            : {relationshipDetail, '$2', [],   [],   '$3'}.
+relationship_detail -> '[' variable                     range_literal            ']'            : {relationshipDetail, '$2', [],   '$3', []}.
+relationship_detail -> '[' variable                     range_literal properties ']'            : {relationshipDetail, '$2', [],   '$3', '$4'}.
+relationship_detail -> '[' variable  relationship_types                          ']'            : {relationshipDetail, '$2', '$3', [],   []}.
+relationship_detail -> '[' variable  relationship_types               properties ']'            : {relationshipDetail, '$2', '$3', [],   '$4'}.
+relationship_detail -> '[' variable  relationship_types range_literal            ']'            : {relationshipDetail, '$2', '$3', '$4', []}.
+relationship_detail -> '[' variable  relationship_types range_literal properties ']'            : {relationshipDetail, '$2', '$3', '$4', '$5'}.
+
+properties -> map_literal                                                                       : {properties, '$1'}.
+properties -> parameter                                                                         : {properties, '$1'}.
+
+relationship_types -> ':' rel_type_name                                                         : {relationshipTypes, '$2', []}.
+relationship_types -> ':' rel_type_name rel_type_name_verticalbarlist                           : {relationshipTypes, '$2', '$3'}.
+============================================================================= */
+
+nodePattern ::= '(' variable? nodeLabels? properties? ')'
+
+patternElementChain ::= relationshipPattern nodePattern
+
+relationshipPattern ::= '<'? '-' relationshipDetail? '-' '>'?
+
+relationshipDetail ::= '[' variable? relationshipTypes? rangeLiteral? properties? ']'
+
+properties ::= mapLiteral
+             | parameter
+
+relationshipTypes ::= ':' relTypeName ( '|' ':'? relTypeName )*
+
+/* =============================================================================
+node_labels -> node_label_list                                                                  : {nodeLabels, '$1'}.
+============================================================================= */
+
+nodeLabels ::= nodeLabel+
+
+/* =============================================================================
+node_label -> ':' label_name                                                                    : {nodeLabel, '$2'}.
+
+range_literal -> '*'                                                                            : {rangeLiteral, [],   [],   []}.
+range_literal -> '*'                 '..'                                                       : {rangeLiteral, [],   "..", []}.
+range_literal -> '*'                 '..' integer_literal                                       : {rangeLiteral, [],   "..", '$3'}.
+range_literal -> '*' integer_literal                                                            : {rangeLiteral, '$2', [],   []}.
+range_literal -> '*' integer_literal '..'                                                       : {rangeLiteral, '$2', "..", []}.
+range_literal -> '*' integer_literal '..' integer_literal                                       : {rangeLiteral, '$2', "..", '$4'}.
+
+label_name -> schema_name                                                                       : {labelName, '$1'}.
+
+rel_type_name -> schema_name                                                                    : {relTypeName, '$1'}.
+
+expression -> or_expression                                                                     : {expression, '$1'}.
+
+or_expression -> xor_expression                                                                 : {orExpression, '$1', []}.
+or_expression -> xor_expression xor_expression_addon_list                                       : {orExpression, '$1', '$2'}.
+============================================================================= */
+
+nodeLabel ::= ':' labelName
+
+rangeLiteral ::= '*' integerLiteral? ( '..' integerLiteral? )?
+
+labelName ::= schemaName
+
+relTypeName ::= schemaName
+
+expression ::= orExpression
+
+orExpression ::= xorExpression ( 'OR' xorExpression )*
+
+/* =============================================================================
+xor_expression -> and_expression                                                                : {xorExpression, '$1', []}.
+xor_expression -> and_expression and_expression_addon_list                                      : {xorExpression, '$1', '$2'}.
+============================================================================= */
+
+xorExpression ::= andExpression ( 'XOR' andExpression )*
+
+/* =============================================================================
+and_expression -> not_expression                                                                : {andExpression, '$1', []}.
+and_expression -> not_expression not_expression_addon_list                                      : {andExpression, '$1', '$2'}.
+============================================================================= */
+
+andExpression ::= notExpression ( 'AND' notExpression )*
+
+/* =============================================================================
+not_expression ->                comparison_expression                                          : {notExpression, '$1', []}.
+not_expression -> not_addon_list comparison_expression                                          : {notExpression, '$2', '$1'}.
+============================================================================= */
+
+notExpression ::= ( 'NOT' )* comparisonExpression
+
+/* =============================================================================
+comparison_expression -> add_or_subtract_expression                                             : {comparisonExpression, '$1', []}.
+comparison_expression -> add_or_subtract_expression partial_comparison_expression_addon_list    : {comparisonExpression, '$1', '$2'}.
+============================================================================= */
+
+comparisonExpression ::= addOrSubtractExpression ( partialComparisonExpression )*
+
+/* =============================================================================
+add_or_subtract_expression -> multiply_divide_modulo_expression                                 : {addOrSubtractExpression, '$1', []}.
+add_or_subtract_expression -> multiply_divide_modulo_expression multiply_divide_modulo_expression_addon_list
+                                                                                                : {addOrSubtractExpression, '$1', '$2'}.
+============================================================================= */
+
+addOrSubtractExpression ::= multiplyDivideModuloExpression ( ( '+' | '-' ) multiplyDivideModuloExpression )*
+
+/* =============================================================================
+multiply_divide_modulo_expression -> power_of_expression                                        : {multiplyDivideModuloExpression, '$1', []}.
+multiply_divide_modulo_expression -> power_of_expression power_of_expression_addon_list         : {multiplyDivideModuloExpression, '$1', '$2'}.
+============================================================================= */
+
+multiplyDivideModuloExpression ::= powerOfExpression ( ( '*' | '/' | '%' ) powerOfExpression )*
+
+/* =============================================================================
+power_of_expression -> unary_add_or_subtract_expression                                         : {powerOfExpression, '$1', []}.
+power_of_expression -> unary_add_or_subtract_expression unary_add_or_subtract_expression_addon_list
+                                                                                                : {powerOfExpression, '$1', '$2'}.
+============================================================================= */
+
+powerOfExpression ::= unaryAddOrSubtractExpression ( '^' unaryAddOrSubtractExpression )*
+
+/* =============================================================================
+unary_add_or_subtract_expression ->                            string_list_null_operator_expression
+                                                                                                : {unaryAddOrSubtractExpression, '$1', []}.
+unary_add_or_subtract_expression -> unary_add_or_subtract_list string_list_null_operator_expression
+                                                                                                : {unaryAddOrSubtractExpression, '$2', '$1'}.
+============================================================================= */
+
+unaryAddOrSubtractExpression ::= ( '+' | '-' )* stringListNullOperatorExpression
+
+/* =============================================================================
+string_list_null_operator_expression -> property_or_labels_expression                           : {stringListNullOperatorExpression, '$1', []}.
+string_list_null_operator_expression -> property_or_labels_expression property_or_labels_expression_addon_list
+                                                                                                : {stringListNullOperatorExpression, '$1', '$2'}.
+============================================================================= */
+
+stringListNullOperatorExpression ::= propertyOrLabelsExpression ( ( '[' expression  ( '..' expression? )? ']' )
+                            | ( '[' ( expression?  '..' )? expression ']' )
+                            | ( ( '=~' | 'IN' | ( ( 'STARTS' | 'ENDS' ) 'WITH' )  ) propertyOrLabelsExpression )
+                            | ( 'IS' 'NOT'? 'NULL' ) )*
+
+/* =============================================================================
+property_or_labels_expression -> atom                                                           : {propertyOrLabelsExpression, '$1', []}.
+property_or_labels_expression -> atom node_labels_property_lookup_list                          : {propertyOrLabelsExpression, '$1', '$2'}.
+============================================================================= */
+
+propertyOrLabelsExpression ::= atom ( propertyLookup | nodeLabels )*
+
+/* =============================================================================
+atom -> literal                                                                                 : {atom, '$1'}.
+atom -> parameter                                                                               : {atom, '$1'}.
+atom -> case_expression                                                                         : {atom, '$1'}.
+atom -> COUNT   '(' '*'               ')'                                                       : {atom, {'count',   []}}.
+atom -> list_comprehension                                                                      : {atom, '$1'}.
+atom -> pattern_comprehension                                                                   : {atom, '$1'}.
+atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
+atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
+atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
+atom -> ALL     '(' filter_expression ')'                                                       : {atom, {'all',     '$3'}}.
+atom -> ANY     '(' filter_expression ')'                                                       : {atom, {'any',     '$3'}}.
+atom -> NONE    '(' filter_expression ')'                                                       : {atom, {'none',    '$3'}}.
+atom -> SINGLE  '(' filter_expression ')'                                                       : {atom, {'single',  '$3'}}.
+atom -> relationships_pattern                                                                   : {atom, '$1'}.
+atom -> parenthesized_expression                                                                : {atom, '$1'}.
+atom -> function_invocation                                                                     : {atom, '$1'}.
+atom -> variable                                                                                : {atom, '$1'}.
+
+literal -> number_literal                                                                       : {literal, '$1'}.
+literal -> STRING_LITERAL                                                                       : {literal, {stringLiteral, unwrap('$1')}}.
+literal -> boolean_literal                                                                      : {literal, '$1'}.
+literal -> NULL                                                                                 : {literal, {terminal, "null"}}.
+literal -> map_literal                                                                          : {literal, '$1'}.
+literal -> list_literal                                                                         : {literal, '$1'}.
+
+boolean_literal -> FALSE                                                                        : {booleanLiteral, {terminal, "false"}}.
+boolean_literal -> TRUE                                                                         : {booleanLiteral, {terminal, "true"}}.
+
+list_literal -> '['                      ']'                                                    : {listLiteral, []}.
+list_literal -> '[' expression_commalist ']'                                                    : {listLiteral, '$2'}.
+
+partial_comparison_expression -> '='  add_or_subtract_expression                                : {partialComparisonExpression, '$2', "="}.
+partial_comparison_expression -> '<>' add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<>"}.
+partial_comparison_expression -> '<'  add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<"}.
+partial_comparison_expression -> '>'  add_or_subtract_expression                                : {partialComparisonExpression, '$2', ">"}.
+partial_comparison_expression -> '<=' add_or_subtract_expression                                : {partialComparisonExpression, '$2', "<="}.
+partial_comparison_expression -> '>=' add_or_subtract_expression                                : {partialComparisonExpression, '$2', ">="}.
+
+parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
+
+relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
+
+filter_expression -> id_in_coll                                                                 : {filterExpression, '$1', []}.
+filter_expression -> id_in_coll where                                                           : {filterExpression, '$1', '$2'}.
+
+id_in_coll -> variable IN expression                                                            : {idInColl, '$1', '$3'}.
+
+function_invocation -> function_name '('                               ')'                      : {functionInvocation, '$1', [],         []}.
+function_invocation -> function_name '('          expression_commalist ')'                      : {functionInvocation, '$1', [],         '$3'}.
+function_invocation -> function_name '(' DISTINCT                      ')'                      : {functionInvocation, '$1', "distinct", []}.
+function_invocation -> function_name '(' DISTINCT expression_commalist ')'                      : {functionInvocation, '$1', "distinct", '$4'}.
+============================================================================= */
+
+atom ::= literal
+       | parameter
+       | caseExpression
+       | ( 'COUNT' '(' '*' ')' )
+       | listComprehension
+       | patternComprehension
+       | ( ( 'FILTER' | 'ALL' | 'ANY' | 'NONE' | 'SINGLE' ) '(' filterExpression ')' )
+       | ( 'EXTRACT' '(' filterExpression ( '|' expression )? ')' )
+       | relationshipsPattern
+       | parenthesizedExpression
+       | functionInvocation
+       | variable
+
+literal ::= numberLiteral
+          | STRING_LITERAL
+          | booleanLiteral
+          | 'NULL'
+          | mapLiteral
+          | listLiteral
+
+booleanLiteral ::= 'FALSE'
+                 | 'TRUE'
+
+listLiteral ::= '[' ( expression ( ',' expression )* )? ']'
+
+partialComparisonExpression ::= ( '=' | '<>' | '<' | '>' | '<=' | '>=' ) addOrSubtractExpression
+
+relationshipsPattern ::= nodePattern patternElementChain+
+
+filterExpression ::= idInColl where?
+
+idInColl ::= variable 'IN' expression
+
+functionInvocation ::= functionName '(' 'DISTINCT'? ( expression ( ',' expression )* )? ')'
+
+/* =============================================================================
+function_name -> symbolic_name                                                                  : {functionName, '$1'}.
+function_name -> EXISTS                                                                         : {functionName, "exists"}.
+
+explicit_procedure_invocation -> procedure_name '('                      ')'                    : {explicitProcedureInvocation, '$1', []}.
+explicit_procedure_invocation -> procedure_name '(' expression_commalist ')'                    : {explicitProcedureInvocation, '$1', '$3'}.
+
+implicit_procedure_invocation -> procedure_name                                                 : {explicitProcedureInvocation, '$1', []}.
+
+procedure_result_field -> symbolic_name                                                         : {procedureResultField, '$1'}.
+
+procedure_name ->           symbolic_name                                                       : {procedureName, [],   '$1'}.
+procedure_name -> namespace symbolic_name                                                       : {procedureName, '$1', '$2'}.
+
+namespace -> symbolic_name '.'                                                                  : {namespace, '$1'}.
+
+namespace_list ->                namespace                                                      :         ['$1'].
+namespace_list -> namespace_list namespace                                                      : '$1' ++ ['$2'].
+
+list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.
+list_comprehension -> '[' filter_expression '|' expression ']'                                  : {listComprehension, '$2', '$4'}.
+
+pattern_comprehension -> '['              relationships_pattern                  '|' expression ']'
+                                                                                                : {patternComprehension, [],   '$2', [],   '$4'}.
+pattern_comprehension -> '['              relationships_pattern WHERE expression '|' expression ']'
+                                                                                                : {patternComprehension, [],   '$2', '$4', '$6'}.
+pattern_comprehension -> '[' variable '=' relationships_pattern                  '|' expression ']'
+                                                                                                : {patternComprehension, '$2', '$4', [],   '$6'}.
+pattern_comprehension -> '[' variable '=' relationships_pattern WHERE expression '|' expression ']'
+                                                                                                : {patternComprehension, '$2', '$4', '$6', '$8'}.
+
+property_lookup -> '.' property_key_name                                                        : {propertyLookup, '$2'}.
+
+case_expression -> CASE            case_alternatives_list                 END                   : {caseExpression, [],   '$2', []}.
+case_expression -> CASE            case_alternatives_list ELSE expression END                   : {caseExpression, [],   '$2', '$4'}.
+case_expression -> CASE expression case_alternatives_list                 END                   : {caseExpression, '$2', '$3', []}.
+case_expression -> CASE expression case_alternatives_list ELSE expression END                   : {caseExpression, '$2', '$3', '$5'}.
+============================================================================= */
+
+functionName ::= symbolicName | EXISTS
+
+explicitProcedureInvocation ::= procedureName '(' ( expression ( ',' expression )* )? ')'
+
+implicitProcedureInvocation ::= procedureName
+
+procedureResultField ::= symbolicName
+
+procedureName ::= namespace? symbolicName
+
+namespace ::= ( '.' symbolicName )+
+
+listComprehension ::= '[' filterExpression ( '|' expression )? ']'
+
+patternComprehension ::= '[' ( variable '=' )? relationshipsPattern ( WHERE expression )? '|' expression ']'
+
+propertyLookup ::= '.' propertyKeyName
+
+caseExpression ::= CASE expression? caseAlternatives+ ( ELSE expression )?
+
+/* =============================================================================
+case_alternatives -> WHEN expression THEN expression                                            : {caseAlternatives, '$2', '$4'}.
+
+variable -> symbolic_name                                                                       : {variable, '$1'}.
+
+number_literal -> double_literal                                                                : {numberLiteral, '$1'}.
+number_literal -> integer_literal                                                               : {numberLiteral, '$1'}.
+
+map_literal -> '{'                                        '}'                                   : {mapLiteral, []}.
+map_literal -> '{' property_key_name_expression_commalist '}'                                   : {mapLiteral, '$2'}.
+============================================================================= */
+
+caseAlternatives ::= WHEN expression THEN expression
+
+variable ::= symbolicName
+
+numberLiteral ::= doubleLiteral
+                | integerLiteral
+
+mapLiteral ::= '{' ( propertyKeyName ':' expression ( ',' propertyKeyName ':' expression )* )? '}'
+
+/* =============================================================================
+parameter -> '$' symbolic_name                                                                  : {parameter, '$2'}.
+parameter -> '$' DECIMAL_INTEGER                                                                : {parameter, unwrap('$2')}.
+
+property_expression -> atom property_lookup_list                                                : {propertyExpression, '$1', '$2'}.
+============================================================================= */
+
+parameter ::= '$' ( symbolicName | DECIMAL_INTEGER )
+
+propertyExpression ::= atom propertyLookup+
+
+/* =============================================================================
+property_key_name -> schema_name                                                                : {propertyKeyName, '$1'}.
+
+integer_literal -> HEX_INTEGER                                                                  : {integerLiteral, unwrap('$1')}.
+integer_literal -> OCTAL_INTEGER                                                                : {integerLiteral, unwrap('$1')}.
+integer_literal -> DECIMAL_INTEGER                                                              : {integerLiteral, unwrap('$1')}.
+
+double_literal -> EXPONENT_DECIMAL_REAL                                                         : {doubleLiteral, unwrap('$1')}.
+double_literal -> REGULAR_DECIMAL_REAL                                                          : {doubleLiteral, unwrap('$1')}.
+
+schema_name -> symbolic_name                                                                    : {schemaName, '$1'}.
+schema_name -> reserved_word                                                                    : {schemaName, '$1'}.
+
+reserved_word -> ALL                                                                            : {reservedWord, "all"}.
+reserved_word -> ASC                                                                            : {reservedWord, "asc"}.
+reserved_word -> ASCENDING                                                                      : {reservedWord, "ascending"}.
+reserved_word -> BY                                                                             : {reservedWord, "by"}.
+reserved_word -> CREATE                                                                         : {reservedWord, "create"}.
+reserved_word -> DELETE                                                                         : {reservedWord, "delete"}.
+reserved_word -> DESC                                                                           : {reservedWord, "desc"}.
+reserved_word -> DESCENDING                                                                     : {reservedWord, "descending"}.
+reserved_word -> DETACH                                                                         : {reservedWord, "detach"}.
+reserved_word -> EXISTS                                                                         : {reservedWord, "exists"}.
+reserved_word -> LIMIT                                                                          : {reservedWord, "limit"}.
+reserved_word -> MATCH                                                                          : {reservedWord, "all"}.
+reserved_word -> MERGE                                                                          : {reservedWord, "all"}.
+reserved_word -> ON                                                                             : {reservedWord, "on"}.
+reserved_word -> OPTIONAL                                                                       : {reservedWord, "optional"}.
+reserved_word -> ORDER                                                                          : {reservedWord, "order"}.
+reserved_word -> REMOVE                                                                         : {reservedWord, "remove"}.
+reserved_word -> RETURN                                                                         : {reservedWord, "return"}.
+reserved_word -> SET                                                                            : {reservedWord, "set"}.
+reserved_word -> SKIP                                                                           : {reservedWord, "skip"}.
+reserved_word -> WHERE                                                                          : {reservedWord, "where"}.
+reserved_word -> WITH                                                                           : {reservedWord, "with"}.
+reserved_word -> UNION                                                                          : {reservedWord, "union"}.
+reserved_word -> UNWIND                                                                         : {reservedWord, "unwind"}.
+reserved_word -> AND                                                                            : {reservedWord, "and"}.
+reserved_word -> AS                                                                             : {reservedWord, "as"}.
+reserved_word -> CONTAINS                                                                       : {reservedWord, "contains"}.
+reserved_word -> DISTINCT                                                                       : {reservedWord, "distinct"}.
+reserved_word -> ENDS                                                                           : {reservedWord, "ends"}.
+reserved_word -> IN                                                                             : {reservedWord, "in"}.
+reserved_word -> IS                                                                             : {reservedWord, "is"}.
+reserved_word -> NOT                                                                            : {reservedWord, "not"}.
+reserved_word -> OR                                                                             : {reservedWord, "or"}.
+reserved_word -> STARTS                                                                         : {reservedWord, "starts"}.
+reserved_word -> XOR                                                                            : {reservedWord, "xor"}.
+reserved_word -> FALSE                                                                          : {reservedWord, "false"}.
+reserved_word -> TRUE                                                                           : {reservedWord, "true"}.
+reserved_word -> NULL                                                                           : {reservedWord, "null"}.
+reserved_word -> CONSTRAINT                                                                     : {reservedWord, "constraint"}.
+reserved_word -> DO                                                                             : {reservedWord, "do"}.
+reserved_word -> FOR                                                                            : {reservedWord, "for"}.
+reserved_word -> REQUIRE                                                                        : {reservedWord, "require"}.
+reserved_word -> UNIQUE                                                                         : {reservedWord, "unique"}.
+reserved_word -> CASE                                                                           : {reservedWord, "case"}.
+reserved_word -> WHEN                                                                           : {reservedWord, "when"}.
+reserved_word -> THEN                                                                           : {reservedWord, "then"}.
+reserved_word -> ELSE                                                                           : {reservedWord, "else"}.
+reserved_word -> END                                                                            : {reservedWord, "end"}.
+reserved_word -> MANDATORY                                                                      : {reservedWord, "mandatory"}.
+reserved_word -> SCALAR                                                                         : {reservedWord, "scalar"}.
+reserved_word -> OF                                                                             : {reservedWord, "of"}.
+reserved_word -> ADD                                                                            : {reservedWord, "add"}.
+reserved_word -> DROP                                                                           : {reservedWord, "drop"}.
+
+symbolic_name -> ESCAPED_SYMBOLIC_NAME                                                          : {symbolicName, unwrap('$1')}.
+symbolic_name -> UNESCAPED_SYMBOLIC_NAME                                                        : {symbolicName, unwrap('$1')}.
+symbolic_name -> HEX_LETTER                                                                     : {symbolicName, unwrap('$1')}.
+symbolic_name -> ANY                                                                            : {symbolicName, "any"}.
+symbolic_name -> COUNT                                                                          : {symbolicName, "count"}.
+symbolic_name -> EXTRACT                                                                        : {symbolicName, "extract"}.
+symbolic_name -> FILTER                                                                         : {symbolicName, "filter"}.
+symbolic_name -> NONE                                                                           : {symbolicName, "none"}.
+symbolic_name -> SINGLE                                                                         : {symbolicName, "single"}.
+============================================================================= */
+
+propertyKeyName ::= schemaName
+
+integerLiteral ::= DECIMAL_INTEGER
+                 | HEX_INTEGER
+                 | OCTAL_INTEGER
+
+doubleLiteral ::= EXPONENT_DECIMAL_REAL
+                | REGULAR_DECIMAL_REAL
+
+schemaName ::= symbolicName
+
+reservedWord ::= ALL
+               | ASC
+               | ASCENDING
+               | BY
+               | CREATE
+               | DELETE
+               | DESC
+               | DESCENDING
+               | DETACH
+               | EXISTS
+               | LIMIT
+               | MATCH
+               | MERGE
+               | ON
+               | OPTIONAL
+               | ORDER
+               | REMOVE
+               | RETURN
+               | SET
+               | SKIP
+               | WHERE
+               | WITH
+               | UNION
+               | UNWIND
+               | AND
+               | AS
+               | CONTAINS
+               | DISTINCT
+               | ENDS
+               | IN
+               | IS
+               | NOT
+               | OR
+               | STARTS
+               | XOR
+               | FALSE
+               | TRUE
+               | NULL
+               | CONSTRAINT
+               | DO
+               | FOR
+               | REQUIRE
+               | UNIQUE
+               | CASE
+               | WHEN
+               | THEN
+               | ELSE
+               | END
+               | MANDATORY
+               | SCALAR
+               | OF
+               | ADD
+               | DROP
+
+symbolicName ::= ESCAPED_SYMBOLIC_NAME
+               | UNESCAPED_SYMBOLIC_NAME
+               | HEX_LETTER
+               | COUNT
+               | FILTER
+               | EXTRACT
+               | ANY
+               | NONE
+               | SINGLe
+
+/* ========================================================================== */
+
+DECIMAL_INTEGER ::= '0' | ( [1-9] [0-9]* )
+
+ESCAPED_SYMBOLIC_NAME ::= '`' ( [^`.]* )* '`'
+
+EXPONENT_DECIMAL_REAL ::= ( [0-9]+ | [0-9]+ '.' [0-9]+| '.' [0-9]+) ( 'e' | 'E' ) '-'? [0-9]+
+
+HEX_INTEGER ::= '0x' ( [0-9] | [A-F] )+
+
+HEX_LETTER ::= [A-F]
+
+OCTAL_INTEGER ::= '0' [0-7]+
+
+REGULAR_DECIMAL_REAL ::= [0-9]* '.' [0-9]+
+
+STRING_LITERAL ::= ( "'" [^'.]* "'" )
+                 | ( '"' [^".]* '"' )
+
+UNESCAPED_SYMBOLIC_NAME ::= [A-Za-z_@#\$] [A-Za-z0-9_@#\$]*
+
+/* ========================================================================== */
