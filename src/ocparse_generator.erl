@@ -32,17 +32,12 @@
     cypher,
     merge,
     multiPartQuery,
-    query,
     readOnlyEnd,
     readUpdateEnd,
     regularQuery,
     return,
-    singlePartQuery,
-    singleQuery,
     standaloneCall,
-    statement,
-    updatingEnd,
-    updatingStartClause
+    updatingEnd
 ]).
 -define(ALL_CLAUSE_CT_RELIABILITY_DETAILED, [
     special
@@ -71,9 +66,8 @@
 
 -define(LEFT_ARROW_HEAD, "<").
 
--define(MAX_BASIC_RULE, 200).
-% -define(MAX_BASIC_RULE, 250).
--define(MAX_CYPHER, ?MAX_BASIC_RULE * 8).
+-define(MAX_BASIC_RULE, 250).
+-define(MAX_CYPHER, ?MAX_BASIC_RULE * 10).
 
 -define(PATH_CT, "test").
 -define(PATH_EUNIT, "test").
