@@ -91,6 +91,9 @@ Erlang code.
 
 -export([reserved_keywords/0]).
 
+-define(NODEBUG, true).
+-include_lib("eunit/include/eunit.hrl").
+
 -define(TOKEN_PATTERNS, [
     {"^(?i)(ADD)$",              'ADD'},
     {"^(?i)(ALL)$",              'ALL'},
