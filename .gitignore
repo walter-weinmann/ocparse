@@ -1,6 +1,6 @@
-*.log
 _build
 erl_crash.dump
+*.log
 rebar.lock
 rebar3.crashdump
 src/oclexer.erl
