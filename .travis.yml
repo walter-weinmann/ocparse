@@ -6,8 +6,8 @@ otp_release:
   - 20.1
   - 19.3
   - 18.3
-  - 17.5
 script:
   - ./rebar3 compile
   - ./rebar3 eunit
   - ./rebar3 ct
+  - ./rebar3 geas
