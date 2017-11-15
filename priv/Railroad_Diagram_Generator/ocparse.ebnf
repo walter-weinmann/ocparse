@@ -89,8 +89,7 @@ updating_part -> updating_clause_list                                           
 updating_start_clause -> create                                                                 : {updatingStartClause, '$1'}.
 updating_start_clause -> merge                                                                  : {updatingStartClause, '$1'}.
 
-updating_clause -> create                                                                       : {updatingClause, '$1'}.
-updating_clause -> merge                                                                        : {updatingClause, '$1'}.
+updating_clause -> updating_start_clause                                                        : {updatingClause, '$1'}.
 updating_clause -> delete                                                                       : {updatingClause, '$1'}.
 updating_clause -> set                                                                          : {updatingClause, '$1'}.
 updating_clause -> remove                                                                       : {updatingClause, '$1'}.
@@ -115,10 +114,9 @@ readPart ::= readingClause+
 updatingPart ::= updatingClause+
 
 updatingStartClause ::= create
-                       | merge
+                      | merge
 
-updatingClause ::= create
-                 | merge
+updatingClause ::= updatingStartClause
                  | delete
                  | set
                  | remove
@@ -299,14 +297,14 @@ node_pattern -> '(' variable node_labels properties ')'                         
 
 pattern_element_chain -> relationship_pattern node_pattern                                      : {patternElementChain, '$1', '$2'}.
 
-relationship_pattern -> '<' '-'                     '-'                                         : {relationshipPattern, "<--", [],   []}.
-relationship_pattern -> '<' '-'                     '-' '>'                                     : {relationshipPattern, "<-->",[],   []}.
-relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
-relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
 relationship_pattern ->     '-'                     '-'                                         : {relationshipPattern, "--",  [],   []}.
 relationship_pattern ->     '-'                     '-' '>'                                     : {relationshipPattern, "-->", [],   []}.
 relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
 relationship_pattern ->     '-' relationship_detail '-' '>'                                     : {relationshipPattern, "-",   '$2', "->"}.
+relationship_pattern -> '<' '-'                     '-'                                         : {relationshipPattern, "<--", [],   []}.
+relationship_pattern -> '<' '-'                     '-' '>'                                     : {relationshipPattern, "<-->",[],   []}.
+relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
+relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
 
 relationship_detail -> '['                                                       ']'            : {relationshipDetail, [],   [],   [],   []}.
 relationship_detail -> '['                                            properties ']'            : {relationshipDetail, [],   [],   [],   '$2'}.
@@ -469,8 +467,8 @@ atom -> COUNT   '(' '*'               ')'                                       
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> pattern_comprehension                                                                   : {atom, '$1'}.
 atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
+atom -> EXTRACT '(' filter_expression                ')'                                        : {atom, {'extract', '$3', []}}.
 atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
-atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
 atom -> ALL     '(' filter_expression ')'                                                       : {atom, {'all',     '$3'}}.
 atom -> ANY     '(' filter_expression ')'                                                       : {atom, {'any',     '$3'}}.
 atom -> NONE    '(' filter_expression ')'                                                       : {atom, {'none',    '$3'}}.
@@ -564,11 +562,22 @@ procedure_result_field -> symbolic_name                                         
 procedure_name ->           symbolic_name                                                       : {procedureName, [],   '$1'}.
 procedure_name -> namespace symbolic_name                                                       : {procedureName, '$1', '$2'}.
 
-namespace -> symbolic_name '.'                                                                  : {namespace, '$1'}.
+namespace -> namespace_list                                                                     : {namespace, '$1'}.
+============================================================================= */
 
-namespace_list ->                namespace                                                      :         ['$1'].
-namespace_list -> namespace_list namespace                                                      : '$1' ++ ['$2'].
+functionName ::= symbolicName | EXISTS
 
+explicitProcedureInvocation ::= procedureName '(' ( expression ( ',' expression )* )? ')'
+
+implicitProcedureInvocation ::= procedureName
+
+procedureResultField ::= symbolicName
+
+procedureName ::= namespace? symbolicName
+
+namespace ::= ( '.' symbolicName )+
+
+/* =============================================================================
 list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.
 list_comprehension -> '[' filter_expression '|' expression ']'                                  : {listComprehension, '$2', '$4'}.
 
@@ -588,18 +597,6 @@ case_expression -> CASE            case_alternatives_list ELSE expression END   
 case_expression -> CASE expression case_alternatives_list                 END                   : {caseExpression, '$2', '$3', []}.
 case_expression -> CASE expression case_alternatives_list ELSE expression END                   : {caseExpression, '$2', '$3', '$5'}.
 ============================================================================= */
-
-functionName ::= symbolicName | EXISTS
-
-explicitProcedureInvocation ::= procedureName '(' ( expression ( ',' expression )* )? ')'
-
-implicitProcedureInvocation ::= procedureName
-
-procedureResultField ::= symbolicName
-
-procedureName ::= namespace? symbolicName
-
-namespace ::= ( '.' symbolicName )+
 
 listComprehension ::= '[' filterExpression ( '|' expression )? ']'
 
@@ -711,10 +708,10 @@ reserved_word -> DROP                                                           
 symbolic_name -> ESCAPED_SYMBOLIC_NAME                                                          : {symbolicName, unwrap('$1')}.
 symbolic_name -> UNESCAPED_SYMBOLIC_NAME                                                        : {symbolicName, unwrap('$1')}.
 symbolic_name -> HEX_LETTER                                                                     : {symbolicName, unwrap('$1')}.
-symbolic_name -> ANY                                                                            : {symbolicName, "any"}.
 symbolic_name -> COUNT                                                                          : {symbolicName, "count"}.
-symbolic_name -> EXTRACT                                                                        : {symbolicName, "extract"}.
 symbolic_name -> FILTER                                                                         : {symbolicName, "filter"}.
+symbolic_name -> EXTRACT                                                                        : {symbolicName, "extract"}.
+symbolic_name -> ANY                                                                            : {symbolicName, "any"}.
 symbolic_name -> NONE                                                                           : {symbolicName, "none"}.
 symbolic_name -> SINGLE                                                                         : {symbolicName, "single"}.
 ============================================================================= */
@@ -792,7 +789,7 @@ symbolicName ::= ESCAPED_SYMBOLIC_NAME
                | EXTRACT
                | ANY
                | NONE
-               | SINGLe
+               | SINGLE
 
 /* ========================================================================== */
 

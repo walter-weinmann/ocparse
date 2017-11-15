@@ -176,8 +176,6 @@ ReadPart01.                                      ReadPart ::= ReadingClauseList 
 
 -- updating_part -> updating_clause_list                                                           : {updatingPart, '$1'}.
 
--- updating_part -> updating_clause_list                                                           : {updatingPart, '$1'}.
-
 UpdatingPart01.                                  UpdatingPart ::= UpdatingClauseList ;
 
 -- updating_start_clause -> create                                                                 : {updatingStartClause, '$1'}.
@@ -186,17 +184,15 @@ UpdatingPart01.                                  UpdatingPart ::= UpdatingClause
 UpdatingStartClause01.                           UpdatingStartClause ::= Create ;
 UpdatingStartClause02.                           UpdatingStartClause ::= Merge  ;
 
--- updating_clause -> create                                                                       : {updatingClause, '$1'}.
--- updating_clause -> merge                                                                        : {updatingClause, '$1'}.
+-- updating_clause -> updating_start_clause                                                        : {updatingClause, '$1'}.
 -- updating_clause -> delete                                                                       : {updatingClause, '$1'}.
 -- updating_clause -> set                                                                          : {updatingClause, '$1'}.
 -- updating_clause -> remove                                                                       : {updatingClause, '$1'}.
 
-UpdatingClause01.                                UpdatingClause ::= Create ;
-UpdatingClause02.                                UpdatingClause ::= Merge  ;
-UpdatingClause03.                                UpdatingClause ::= Delete ;
-UpdatingClause04.                                UpdatingClause ::= Set    ;
-UpdatingClause05.                                UpdatingClause ::= Remove ;
+UpdatingClause01.                                UpdatingClause ::= UpdatingStartClause ;
+UpdatingClause02.                                UpdatingClause ::= Delete ;
+UpdatingClause03.                                UpdatingClause ::= Set    ;
+UpdatingClause04.                                UpdatingClause ::= Remove ;
 
 -- reading_clause -> match                                                                         : {readingClause, '$1'}.
 -- reading_clause -> unwind                                                                        : {readingClause, '$1'}.
@@ -873,8 +869,8 @@ NodeLabelsPropertyLookupList04.                  NodeLabelsPropertyLookupList ::
 -- atom -> list_comprehension                                                                      : {atom, '$1'}.
 -- atom -> pattern_comprehension                                                                   : {atom, '$1'}.
 -- atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
+-- atom -> EXTRACT '(' filter_expression                ')'                                        : {atom, {'extract', '$3', []}}.
 -- atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
--- atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
 -- atom -> ALL     '(' filter_expression ')'                                                       : {atom, {'all',     '$3'}}.
 -- atom -> ANY     '(' filter_expression ')'                                                       : {atom, {'any',     '$3'}}.
 -- atom -> NONE    '(' filter_expression ')'                                                       : {atom, {'none',    '$3'}}.
@@ -891,8 +887,8 @@ Atom04.                                          Atom ::= "COUNT" "(" "*" ")"   
 Atom05.                                          Atom ::= ListComprehension                                 ;
 Atom06.                                          Atom ::= PatternComprehension                              ;
 Atom07.                                          Atom ::= "FILTER"  "(" FilterExpression                ")" ;
-Atom08.                                          Atom ::= "EXTRACT" "(" FilterExpression "|" Expression ")" ;
-Atom09.                                          Atom ::= "EXTRACT" "(" FilterExpression                ")" ;
+Atom08.                                          Atom ::= "EXTRACT" "(" FilterExpression                ")" ;
+Atom09.                                          Atom ::= "EXTRACT" "(" FilterExpression "|" Expression ")" ;
 Atom10.                                          Atom ::= "ALL"     "(" FilterExpression                ")" ;
 Atom11.                                          Atom ::= "ANY"     "(" FilterExpression                ")" ;
 Atom12.                                          Atom ::= "NONE"    "(" FilterExpression                ")" ;
@@ -964,11 +960,19 @@ IdInColl01.                                      IdInColl ::= Variable "IN" Expr
 -- function_invocation -> function_name '('          expression_commalist ')'                      : {functionInvocation, '$1', [],         '$3'}.
 -- function_invocation -> function_name '(' DISTINCT                      ')'                      : {functionInvocation, '$1', "distinct", []}.
 -- function_invocation -> function_name '(' DISTINCT expression_commalist ')'                      : {functionInvocation, '$1', "distinct", '$4'}.
+-- function_invocation -> COUNT         '('                               ')'                      : {functionInvocation, {functionName, {symbolicName, "count"}}, [],         []}.
+-- function_invocation -> COUNT         '('          expression_commalist ')'                      : {functionInvocation, {functionName, {symbolicName, "count"}}, [],         '$3'}.
+-- function_invocation -> COUNT         '(' DISTINCT                      ')'                      : {functionInvocation, {functionName, {symbolicName, "count"}}, "distinct", []}.
+-- function_invocation -> COUNT         '(' DISTINCT expression_commalist ')'                      : {functionInvocation, {functionName, {symbolicName, "count"}}, "distinct", '$4'}.
 
 FunctionInvocation01.                            FunctionInvocation ::= FunctionName "("                                ")" ;
 FunctionInvocation02.                            FunctionInvocation ::= FunctionName "("            ExpressionCommalist ")" ;
 FunctionInvocation03.                            FunctionInvocation ::= FunctionName "(" "DISTINCT"                     ")" ;
 FunctionInvocation04.                            FunctionInvocation ::= FunctionName "(" "DISTINCT" ExpressionCommalist ")" ;
+FunctionInvocation05.                            FunctionInvocation ::= "COUNT"      "("                                ")" ;
+FunctionInvocation06.                            FunctionInvocation ::= "COUNT"      "("            ExpressionCommalist ")" ;
+FunctionInvocation07.                            FunctionInvocation ::= "COUNT"      "(" "DISTINCT"                     ")" ;
+FunctionInvocation08.                            FunctionInvocation ::= "COUNT"      "(" "DISTINCT" ExpressionCommalist ")" ;
 
 -- function_name -> symbolic_name                                                                  : {functionName, '$1'}.
 -- function_name -> EXISTS                                                                         : {functionName, "exists"}.
@@ -990,24 +994,24 @@ ImplicitProcedureInvocation01.                   ImplicitProcedureInvocation ::=
 
 ProcedureResultField01.                          ProcedureResultField ::= SymbolicName ;
 
--- procedure_name ->                symbolic_name                                                  : {procedureName, [],   '$1'}.
--- procedure_name -> namespace_list symbolic_name                                                  : {procedureName, '$1', '$2'}.
+-- procedure_name ->           symbolic_name                                                       : {procedureName, [],   '$1'}.
+-- procedure_name -> namespace symbolic_name                                                       : {procedureName, '$1', '$2'}.
 
-ProcedureName01.                                 ProcedureName ::=               SymbolicName ;
-ProcedureName02.                                 ProcedureName ::= NamespaceList SymbolicName ;
+ProcedureName01.                                 ProcedureName ::=           SymbolicName ;
+ProcedureName02.                                 ProcedureName ::= Namespace SymbolicName ;
 
--- namespace -> symbolic_name '.'                                                                  : {namespace, '$1'}.
+-- namespace -> namespace_list                                                                     : {namespace, '$1'}.
 
-Namespace01.                                     Namespace ::= "." SymbolicName ;
+Namespace01.                                     Namespace ::= NamespaceList ;
 
 -- =============================================================================
 -- Helper definitions.
 -- -----------------------------------------------------------------------------
--- namespace_list ->                namespace                                                      :         ['$1'].
--- namespace_list -> namespace_list namespace                                                      : '$1' ++ ['$2'].
+-- namespace_list ->                symbolic_name '.'                                              :         ['$1'].
+-- namespace_list -> namespace_list symbolic_name '.'                                              : '$1' ++ ['$2'].
 
-NamespaceList01.                                 NamespaceList ::=               Namespace ;
-NamespaceList02.                                 NamespaceList ::= NamespaceList Namespace ;
+NamespaceList01.                                 NamespaceList ::=               SymbolicName "." ;
+NamespaceList02.                                 NamespaceList ::= NamespaceList SymbolicName "." ;
 -- =============================================================================
 
 -- list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.

@@ -10,4 +10,4 @@ script:
   - ./rebar3 compile
   - ./rebar3 eunit
   - ./rebar3 ct
-  - ./rebar3 geas
+  - ./rebar3 as test geas

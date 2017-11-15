@@ -302,17 +302,6 @@ cypher -> statement ';'                                                         
 %% =============================================================================
 %% Helper definitions - test purposes.
 %% -----------------------------------------------------------------------------
-% cypher -> create                                                                                : '$1'.
-% cypher -> delete                                                                                : '$1'.
-% cypher -> in_query_call                                                                         : '$1'.
-% cypher -> match                                                                                 : '$1'.
-% cypher -> merge                                                                                 : '$1'.
-% cypher -> remove                                                                                : '$1'.
-% cypher -> set                                                                                   : '$1'.
-% cypher -> unwind                                                                                : '$1'.
-
-% cypher -> expression                                                                            : '$1'.
-
 % cypher -> atom                                                                                  : '$1'.
 %% =============================================================================
 
@@ -716,14 +705,14 @@ pattern_element_chain -> relationship_pattern node_pattern                      
 %%                     | (Dash, [SP], [RelationshipDetail], [SP], Dash)
 %%                     ;
 
-relationship_pattern -> '<' '-'                     '-'                                         : {relationshipPattern, "<--", [],   []}.
-relationship_pattern -> '<' '-'                     '-' '>'                                     : {relationshipPattern, "<-->",[],   []}.
-relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
-relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
 relationship_pattern ->     '-'                     '-'                                         : {relationshipPattern, "--",  [],   []}.
 relationship_pattern ->     '-'                     '-' '>'                                     : {relationshipPattern, "-->", [],   []}.
 relationship_pattern ->     '-' relationship_detail '-'                                         : {relationshipPattern, "-",   '$2', "-"}.
 relationship_pattern ->     '-' relationship_detail '-' '>'                                     : {relationshipPattern, "-",   '$2', "->"}.
+relationship_pattern -> '<' '-'                     '-'                                         : {relationshipPattern, "<--", [],   []}.
+relationship_pattern -> '<' '-'                     '-' '>'                                     : {relationshipPattern, "<-->",[],   []}.
+relationship_pattern -> '<' '-' relationship_detail '-'                                         : {relationshipPattern, "<-",  '$3', "-"}.
+relationship_pattern -> '<' '-' relationship_detail '-' '>'                                     : {relationshipPattern, "<-",  '$3', "->"}.
 
 %% RelationshipDetail = '[', [SP], [Variable, [SP]], [RelationshipTypes, [SP]], [RangeLiteral], [Properties, [SP]], ']' ;
 
@@ -1006,8 +995,8 @@ atom -> COUNT   '(' '*'               ')'                                       
 atom -> list_comprehension                                                                      : {atom, '$1'}.
 atom -> pattern_comprehension                                                                   : {atom, '$1'}.
 atom -> FILTER  '(' filter_expression ')'                                                       : {atom, {'filter',  '$3'}}.
+atom -> EXTRACT '(' filter_expression                ')'                                        : {atom, {'extract', '$3', []}}.
 atom -> EXTRACT '(' filter_expression '|' expression ')'                                        : {atom, {'extract', '$3', '$5'}}.
-atom -> EXTRACT '(' filter_expression ')'                                                       : {atom, {'extract', '$3', []}}.
 atom -> ALL     '(' filter_expression ')'                                                       : {atom, {'all',     '$3'}}.
 atom -> ANY     '(' filter_expression ')'                                                       : {atom, {'any',     '$3'}}.
 atom -> NONE    '(' filter_expression ')'                                                       : {atom, {'none',    '$3'}}.
@@ -1114,18 +1103,18 @@ procedure_result_field -> symbolic_name                                         
 
 %% ProcedureName = Namespace, SymbolicName ;
 
-procedure_name ->                symbolic_name                                                  : {procedureName, [],   '$1'}.
-procedure_name -> namespace_list symbolic_name                                                  : {procedureName, '$1', '$2'}.
+procedure_name ->           symbolic_name                                                       : {procedureName, [],   '$1'}.
+procedure_name -> namespace symbolic_name                                                       : {procedureName, '$1', '$2'}.
 
 %% Namespace = { SymbolicName, '.' } ;
 
-namespace -> symbolic_name '.'                                                                  : {namespace, '$1'}.
+namespace -> namespace_list                                                                     : {namespace, '$1'}.
 
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-namespace_list ->                namespace                                                      :         ['$1'].
-namespace_list -> namespace_list namespace                                                      : '$1' ++ ['$2'].
+namespace_list ->                symbolic_name '.'                                              :         ['$1'].
+namespace_list -> namespace_list symbolic_name '.'                                              : '$1' ++ ['$2'].
 %% =============================================================================
 
 %% ListComprehension = '[', [SP], FilterExpression, [[SP], '|', [SP], Expression], [SP], ']' ;
