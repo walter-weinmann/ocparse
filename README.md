@@ -226,7 +226,7 @@ The output of the parse tree in the Erlang shell is shortened (cause not known).
 
 The documentation for **ocparse** is available here: [Wiki](https://github.com/walter-weinmann/ocparse/wiki).
 
-## 3. Known issues
+## 3. Known issues of grammar support
 
 ### Comment
 
@@ -236,9 +236,9 @@ The number of block comments (`/* ... */`) is limted to one per line.
 
 `ParenthesizedExpression` is not supported due to a conflict with `NodePattern`.
 
-### RelationshipDetail
+### Properties / Literal
 
-The empty `RelationshipDetail` `[]` is not supported.
+The rule `Properties` has a higher precedence than the rule `Literal`.
 
 ### SymbolicName
 
@@ -259,11 +259,62 @@ An exception is the use of the token `COUNT` as `FunctionName`.
 
 Unicode is not supported with `Dash`, `LeftArrowHead`, `RightArrowHerad` or `UnescapedSymbolicName`. Hence `Dash` is limited to the hyphen (`-`), `LeftArrowHead` is limited to '`<`' and `RightArrowHead` is limited to '`>`'.
 
-## 4. Acknowledgement
+## 4. Limitations of the test data generator
+
+No test data is generated for the following rules:
+
+### FunctionInvocation
+
+`
+FunctionInvocation = FunctionName, [SP], '(', [SP], (D,I,S,T,I,N,C,T), ')' ;
+`
+
+### MultiPartQuery
+
+Instead of
+
+`
+MultiPartQuery = (ReadPart | (UpdatingStartClause, [SP], UpdatingPart)), With, [SP], { ReadPart, UpdatingPart, With, [SP] }, SinglePartQuery ;
+`
+
+it is only used
+
+`
+MultiPartQuery = (ReadPart | (UpdatingStartClause, [SP], UpdatingPart)), With, [SP], { ReadPart,               With, [SP] }, SinglePartQuery ;
+`
+
+### ParenthesizedExpression
+
+`
+ParenthesizedExpression = '(', [SP], Expression, [SP], ')' ;
+`
+
+### SchemaName
+
+`
+SchemaName = ...
+           | ReservedWord
+           ;
+`
+
+### SymbolicName
+
+`
+SymbolicName = ...
+             | (C,O,U,N,T)
+             | (F,I,L,T,E,R)
+             | (E,X,T,R,A,C,T)
+             | (A,N,Y)
+             | (N,O,N,E)
+             | (S,I,N,G,L,E)
+             ;
+`
+
+## 5. Acknowledgement
 
 This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH/sqlparse) project of the company [K2 Informatics GmbH](http://www.k2informatics.ch).
 
-## 5. Contributing
+## 6. Contributing
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

@@ -26,9 +26,8 @@ rem ----------------------------------------------------------------------------
     SETLOCAL enableDelayedExpansion
     ECHO !DATE!_!TIME!
     CALL rebar3 compile
-    erl -noshell -pa _build\default\lib\ocparse\ebin -s ocparse_generator generate -s init stop
-    dir code_templates
-    del /Q code_templates
+rem erl -noshell -pa _build\default\lib\ocparse\ebin +hms 67108864 -s ocparse_generator generate -s init stop
+    erl -noshell -pa _build\default\lib\ocparse\ebin +hms 100663296 -s ocparse_generator generate -s init stop
     ECHO !DATE!_!TIME!
 
 )
