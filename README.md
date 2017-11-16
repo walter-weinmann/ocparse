@@ -261,6 +261,8 @@ Unicode is not supported with `Dash`, `LeftArrowHead`, `RightArrowHerad` or `Une
 
 ## 4. Limitations of the test data generator
 
+In the scripts `test\gen_test.bat` and `test\gen_test_and_run.bat`, the heap size has been changed to speed up test data generation. If necessary, you are welcome to make suitable adjustments for your purposes.
+
 No test data is generated for the following rules:
 
 ### FunctionInvocation

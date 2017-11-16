@@ -894,7 +894,8 @@ Atom11.                                          Atom ::= "ANY"     "(" FilterEx
 Atom12.                                          Atom ::= "NONE"    "(" FilterExpression                ")" ;
 Atom13.                                          Atom ::= "SINGLE"  "(" FilterExpression                ")" ;
 Atom14.                                          Atom ::= RelationshipsPattern                              ;
-Atom15.                                          Atom ::= ParenthesizedExpression                           ;
+-- wwe
+-- Atom15.                                          Atom ::= ParenthesizedExpression                           ;
 Atom16.                                          Atom ::= FunctionInvocation                                ;
 Atom17.                                          Atom ::= Variable                                          ;
 
@@ -940,7 +941,8 @@ PartialComparisonExpression06.                   PartialComparisonExpression ::=
 
 -- parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
 
-ParenthesizedExpression01.                       ParenthesizedExpression ::= "(" Expression ")" ;
+-- wwe
+-- ParenthesizedExpression01.                       ParenthesizedExpression ::= "(" Expression ")" ;
 
 -- relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
 
@@ -1128,7 +1130,8 @@ DoubleLiteral02.                                 DoubleLiteral ::= "REGULAR_DECI
 -- schema_name -> reserved_word                                                                    : {schemaName, '$1'}.
 
 SchemaName01.                                    SchemaName ::= SymbolicName ;
-SchemaName02.                                    SchemaName ::= ReservedWord ;
+-- wwe
+-- SchemaName02.                                    SchemaName ::= ReservedWord ;
 
 -- reserved_word -> ALL                                                                            : {reservedWord, "all"}.
 -- reserved_word -> ASC                                                                            : {reservedWord, "asc"}.
