@@ -3281,6 +3281,13 @@ create_code(special = Rule) ->
         %% ---------------------------------------------------------------------
         "Merge variable_1 = (variable_2) On Create Set variable_3 = Exists (Distinct variable_4)",
         %% ---------------------------------------------------------------------
+        %% Problem: list_comprehension (id_in_coll)
+        %% ---------------------------------------------------------------------
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [variable_4 In variable_5                        ]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [variable_4 In variable_5            | variable_6]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [variable_4 In variable_5 Where True             ]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [variable_4 In variable_5 Where True | variable_6]",
+        %% ---------------------------------------------------------------------
         %% Problem: pattern_comprehension
         %% ---------------------------------------------------------------------
         "Merge variable_1 = (variable_2) On Create Set variable_3 = [              (variable_5) - - (variable_6)            | False]",
