@@ -3270,6 +3270,13 @@ create_code(special = Rule) ->
         %% sort_item -> expression
         "Match (a) With * Order by 5 Return a",
         %% ---------------------------------------------------------------------
+        %% Problem: case_expression
+        %% ---------------------------------------------------------------------
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = Case            When variable_5 Then variable_6                 End",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = Case            When variable_5 Then variable_6 Else variable_7 End",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = Case variable_4 When variable_5 Then variable_6                 End",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = Case variable_4 When variable_5 Then variable_6 Else variable_7 End",
+        %% ---------------------------------------------------------------------
         %% Problem: function_name EXISTS
         %% ---------------------------------------------------------------------
         "Merge variable_1 = (variable_2) On Create Set variable_3 = Exists (Distinct variable_4)",

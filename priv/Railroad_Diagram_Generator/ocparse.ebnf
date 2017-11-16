@@ -522,7 +522,9 @@ atom ::= literal
        | ( ( 'FILTER' | 'ALL' | 'ANY' | 'NONE' | 'SINGLE' ) '(' filterExpression ')' )
        | ( 'EXTRACT' '(' filterExpression ( '|' expression )? ')' )
        | relationshipsPattern
+/* wwe
        | parenthesizedExpression
+*/
        | functionInvocation
        | variable
 
@@ -539,6 +541,10 @@ booleanLiteral ::= 'FALSE'
 listLiteral ::= '[' ( expression ( ',' expression )* )? ']'
 
 partialComparisonExpression ::= ( '=' | '<>' | '<' | '>' | '<=' | '>=' ) addOrSubtractExpression
+
+/* wwe
+parenthesizedExpression ::= '(' expression ')'
+*/
 
 relationshipsPattern ::= nodePattern patternElementChain+
 
@@ -726,6 +732,9 @@ doubleLiteral ::= EXPONENT_DECIMAL_REAL
                 | REGULAR_DECIMAL_REAL
 
 schemaName ::= symbolicName
+/* wwe
+             | reservedWord
+*/
 
 reservedWord ::= ALL
                | ASC
