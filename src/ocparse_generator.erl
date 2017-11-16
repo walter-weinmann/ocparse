@@ -183,8 +183,8 @@
 
 -define(GENERATE_COMPACTED, true).                         % true: compacted / false: detailed.
 -define(GENERATE_CT, true).
--define(GENERATE_EUNIT, false).
--define(GENERATE_PERFORMANCE, false).
+-define(GENERATE_EUNIT, true).
+-define(GENERATE_PERFORMANCE, true).
 
 -define(LEFT_ARROW_HEAD, "<").
 
@@ -4165,17 +4165,6 @@ create_code(propertyOrLabelsExpression = Rule, Max) ->
 %%                                  | (SP, (S,T,A,R,T,S), SP, (W,I,T,H))
 %%                                  | (SP, (E,N,D,S), SP, (W,I,T,H))
 %%                                  | (SP, (C,O,N,T,A,I,N,S))), [SP], PropertyOrLabelsExpression)
-%%                                  | (SP, (I,S), SP, (N,U,L,L))
-%%                                  | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
-%% -----------------------------------------------------------------------------
-%% wwe ???
-%% StringListNullOperatorExpression = PropertyOrLabelsExpression, { ([SP], '[', Expression, ']')
-%%                                  | ([SP], '[', [Expression], '..', [Expression], ']')
-%%                                  | ((([SP], '=~')
-%%                                  | (SP, (I,N))
-%%                                  | (SP, (S,T,A,R,T,S), SP, (W,I,T,H))
-%%                                  | (SP, (E,N,D,S), SP, (W,I,T,H))
-%%                                  | (SP, (C,O,N,T,A,I,N,S))), SP, PropertyOrLabelsExpression)
 %%                                  | (SP, (I,S), SP, (N,U,L,L))
 %%                                  | (SP, (I,S), SP, (N,O,T), SP, (N,U,L,L)) } ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
