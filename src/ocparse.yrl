@@ -280,15 +280,7 @@ Endsymbol
 %% Operator precedences.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Left        100 '('.
-
-% Left        200 '+' '-'.
-% Left        210 '*' '/' '%'.
-
 Nonassoc    500 properties.                                                                     % atom vs. properties / literal vs. properties
-
-% Nonassoc    600 cypher.                                                                         % testing
-% Nonassoc    600 in_query_call.                                                                  % testing
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
@@ -302,7 +294,7 @@ cypher -> statement ';'                                                         
 %% =============================================================================
 %% Helper definitions - test purposes.
 %% -----------------------------------------------------------------------------
-% cypher -> atom                                                                                  : '$1'.
+% cypher -> explicit_procedure_invocation                                                         : '$1'.
 %% =============================================================================
 
 %% Statement = Query ;
@@ -1108,14 +1100,8 @@ procedure_name -> namespace symbolic_name                                       
 
 %% Namespace = { SymbolicName, '.' } ;
 
-namespace -> namespace_list                                                                     : {namespace, '$1'}.
-
-%% =============================================================================
-%% Helper definitions.
-%% -----------------------------------------------------------------------------
-namespace_list ->                symbolic_name '.'                                              :         ['$1'].
-namespace_list -> namespace_list symbolic_name '.'                                              : '$1' ++ ['$2'].
-%% =============================================================================
+namespace ->           symbolic_name '.'                                                        :         ['$1'].
+namespace -> namespace symbolic_name '.'                                                        : '$1' ++ ['$2'].
 
 %% ListComprehension = '[', [SP], FilterExpression, [[SP], '|', [SP], Expression], [SP], ']' ;
 

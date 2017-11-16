@@ -1000,19 +1000,11 @@ ProcedureResultField01.                          ProcedureResultField ::= Symbol
 ProcedureName01.                                 ProcedureName ::=           SymbolicName ;
 ProcedureName02.                                 ProcedureName ::= Namespace SymbolicName ;
 
--- namespace -> namespace_list                                                                     : {namespace, '$1'}.
+-- namespace ->           symbolic_name '.'                                                        :         ['$1'].
+-- namespace -> namespace symbolic_name '.'                                                        : '$1' ++ ['$2'].
 
-Namespace01.                                     Namespace ::= NamespaceList ;
-
--- =============================================================================
--- Helper definitions.
--- -----------------------------------------------------------------------------
--- namespace_list ->                symbolic_name '.'                                              :         ['$1'].
--- namespace_list -> namespace_list symbolic_name '.'                                              : '$1' ++ ['$2'].
-
-NamespaceList01.                                 NamespaceList ::=               SymbolicName "." ;
-NamespaceList02.                                 NamespaceList ::= NamespaceList SymbolicName "." ;
--- =============================================================================
+Namespace01.                                     Namespace ::=           SymbolicName "." ;
+Namespace02.                                     Namespace ::= Namespace SymbolicName "." ;
 
 -- list_comprehension -> '[' filter_expression                ']'                                  : {listComprehension, '$2', []}.
 -- list_comprehension -> '[' filter_expression '|' expression ']'                                  : {listComprehension, '$2', '$4'}.

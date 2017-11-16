@@ -42,30 +42,20 @@
 ]).
 -define(ALL_CLAUSE_RELIABILITY_DETAILED, [
 %%%% Level 01 ..........................
-%%    atomCount,
-%%    booleanLiteral,
 %%    decimalInteger,
 %%    escapedSymbolicName,
 %%    exponentDecimalReal,
-%%    functionNameExists,
 %%    hexInteger,
 %%    hexLetter,
-%%    listLiteralEmpty,
-%%    literalNull,
-%%    mapLiteralEmpty,
 %%    octalInteger,
+%%    propertyKeyName,
 %%    regularDecimalReal,
-%%    relationshipDetailEmpty,
-%%    relationshipPatternEmpty,
+%%    relTypeName,
 %%    reservedWord,
-%%    stringLiteral,
-%%    symbolicNameConstant,
+%%    symbolicName,
 %%    unescapedSymbolicName,
-%%    yieldItemsConstant,
 %%%% Level 02 ..........................
-%%    namespace,
 %%    nodeLabel,
-%%    parameter,
 %%    procedureName,
 %%    propertyLookup,
 %%    rangeLiteral,
@@ -79,16 +69,27 @@
 %%%% Level 05 ..........................
 %%    remove,
 %%%% Level 11 ..........................
+%%    addOrSubtractExpression,
+%%    andExpression,
+%%    comparisonExpression,
+%%    expressionCommalist,
+%%    multiplyDivideModuloExpression,
+%%    notExpression,
+%%    orExpression,
+%%    partialComparisonExpression,
+%%    powerOfExpression,
+%%    propertyOrLabelsExpression,
+%%    stringListNullOperatorExpression,
+%%    unaryAddOrSubtractExpression,
+%%    xorExpression,
+%%%% ...................................
 %%    expression,
 %%%% Level 12 ..........................
 %%    caseAlternatives,
 %%    delete,
 %%    explicitProcedureInvocation,
-%%    functionInvocation,
 %%    idInColl,
 %%    limit,
-%%    listLiteral,
-%%    mapLiteral,
 %%    nodePattern,
 %%    propertyExpression,
 %%    relationshipDetail,
@@ -99,7 +100,6 @@
 %%    where,
 %%%% Level 13 ..........................
 %%    caseAlternativesList,
-%%    filterExpression,
 %%    inQueryCall,
 %%    order,
 %%    relationshipPattern,
@@ -107,8 +107,6 @@
 %%    setItem,
 %%    standaloneCall,
 %%%% Level 14 ..........................
-%%    caseExpression,
-%%    listComprehension,
 %%    patternElementChain,
 %%    patternElementChainList,
 %%    returnBody,
@@ -116,11 +114,9 @@
 %%%% Level 15 ..........................
 %%    mergeAction,
 %%    patternElement,
-%%    relationshipsPattern,
 %%    return,
 %%    with,
 %%%% Level 16 ..........................
-%%    patternComprehension,
 %%    patternPart,
 %%%% Level 17 ..........................
 %%    merge,
@@ -144,6 +140,25 @@
 %%%% Level 23 ..........................
 %%    cypher,
 %%%% Level 24 ..........................
+%%    caseExpression,
+%%    filterExpression,
+%%    functionInvocation,
+%%    listComprehension,
+%%%% ...................................
+%%    booleanLiteral,
+%%    listLiteral,
+%%    mapLiteral,
+%%    numberLiteral,
+%%    stringLiteral,
+%%%% ...................................
+%%    literal,
+%%    parameter,
+%% wwe
+%%    parenthesizedExpression,
+%%    patternComprehension,
+%%    relationshipsPattern,
+%%    variable,
+%%%% ...................................
 %%    atom,
 %% Level 25 ..........................
     special
@@ -168,13 +183,13 @@
 
 -define(GENERATE_COMPACTED, true).                         % true: compacted / false: detailed.
 -define(GENERATE_CT, true).
--define(GENERATE_EUNIT, true).
--define(GENERATE_PERFORMANCE, true).
+-define(GENERATE_EUNIT, false).
+-define(GENERATE_PERFORMANCE, false).
 
 -define(LEFT_ARROW_HEAD, "<").
 
-% -define(MAX_BASIC_RULE, 250).
--define(MAX_BASIC_RULE, 50).
+%-define(MAX_BASIC_RULE, 250).
+-define(MAX_BASIC_RULE, 100).
 -define(MAX_CYPHER, ?MAX_BASIC_RULE * 10).
 
 -define(PATH_CT, "test").
@@ -194,10 +209,10 @@
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 generate() ->
-    file:delete(?CODE_TEMPLATES),
-
-    dets:open_file(?CODE_TEMPLATES, [
-        {auto_save, 0}
+    ets:new(?CODE_TEMPLATES, [
+        named_table,
+        private,
+        ordered_set
     ]),
 
     create_code(),
@@ -213,9 +228,11 @@ generate() ->
             end,
             case ?GENERATE_COMPACTED of
                 true ->
-                    ok = file_create_ct_all("reliability", "compacted", ?ALL_CLAUSE_RELIABILITY);
+                    ok = file_create_ct_all("reliability", "compacted", ?ALL_CLAUSE_RELIABILITY),
+                    ok = file_create_ct_all("reliability", "compacted", ?ALL_CLAUSE_RELIABILITY_DETAILED);
                 _ ->
-                    ok = file_create_ct_all("reliability", "detailed_", ?ALL_CLAUSE_RELIABILITY)
+                    ok = file_create_ct_all("reliability", "detailed_", ?ALL_CLAUSE_RELIABILITY),
+                    ok = file_create_ct_all("reliability", "detailed_", ?ALL_CLAUSE_RELIABILITY_DETAILED)
             end;
         _ -> ok
     end,
@@ -224,11 +241,10 @@ generate() ->
 
     case ?GENERATE_EUNIT of
         true ->
-            ok = file_create_eunit_all("reliability", ?ALL_CLAUSE_RELIABILITY);
+            ok = file_create_eunit_all("reliability", ?ALL_CLAUSE_RELIABILITY),
+            ok = file_create_eunit_all("reliability", ?ALL_CLAUSE_RELIABILITY_DETAILED);
         _ -> ok
-    end,
-
-    dets:close(?CODE_TEMPLATES).
+    end.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Creating code base.
@@ -476,7 +492,8 @@ create_code() ->
     create_code(reservedWord),
     create_code(special),
     create_code(stringLiteral),
-    create_code(symbolicNameConstant),
+%% wwe
+%%    create_code(symbolicNameConstant),
     create_code(unescapedSymbolicName),
     create_code(yieldItemsConstant),
 
@@ -489,6 +506,8 @@ create_code() ->
 %% NodeLabel = ':', [SP], LabelName ;
 %%
 %% Parameter = '$', (SymbolicName | DecimalInteger) ;
+%%
+%% ==> properties                          == Properties = ... Parameter
 %%
 %% ProcedureName = Namespace, SymbolicName ;
 %%
@@ -660,9 +679,9 @@ create_code() ->
 
 create_code(atom = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    [{filterExpression, FilterExpression}] = ets:lookup(?CODE_TEMPLATES, filterExpression),
     FilterExpression_Length = length(FilterExpression),
 
     Code = [
@@ -749,7 +768,7 @@ create_code(booleanLiteral = Rule) ->
 
 create_code(caseAlternatives = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
@@ -776,7 +795,7 @@ create_code(caseAlternatives = Rule) ->
 
 create_code(caseAlternativesList = Rule) ->
     ?CREATE_CODE_START,
-    [{caseAlternatives, CaseAlternatives}] = dets:lookup(?CODE_TEMPLATES, caseAlternatives),
+    [{caseAlternatives, CaseAlternatives}] = ets:lookup(?CODE_TEMPLATES, caseAlternatives),
     CaseAlternatives_Length = length(CaseAlternatives),
 
     Code = [
@@ -814,9 +833,9 @@ create_code(caseAlternativesList = Rule) ->
 
 create_code(caseExpression = Rule) ->
     ?CREATE_CODE_START,
-    [{caseAlternativesList, CaseAlternativesList}] = dets:lookup(?CODE_TEMPLATES, caseAlternativesList),
+    [{caseAlternativesList, CaseAlternativesList}] = ets:lookup(?CODE_TEMPLATES, caseAlternativesList),
     CaseAlternativesList_Length = length(CaseAlternativesList),
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
@@ -856,7 +875,7 @@ create_code(caseExpression = Rule) ->
 
 create_code(create = Rule) ->
     ?CREATE_CODE_START,
-    [{pattern, Pattern}] = dets:lookup(?CODE_TEMPLATES, pattern),
+    [{pattern, Pattern}] = ets:lookup(?CODE_TEMPLATES, pattern),
     Pattern_Length = length(Pattern),
 
     Code = [
@@ -878,7 +897,7 @@ create_code(create = Rule) ->
 
 create_code(cypher = Rule) ->
     ?CREATE_CODE_START,
-    [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
+    [{statement, Statement}] = ets:lookup(?CODE_TEMPLATES, statement),
     Statement_Length = length(Statement),
 
     Code = [
@@ -930,7 +949,7 @@ create_code(decimalInteger = Rule) ->
 
 create_code(delete = Rule) ->
     ?CREATE_CODE_START,
-    [{expressionCommalist, ExpressionCommalist}] = dets:lookup(?CODE_TEMPLATES, expressionCommalist),
+    [{expressionCommalist, ExpressionCommalist}] = ets:lookup(?CODE_TEMPLATES, expressionCommalist),
     ExpressionCommalist_Length = length(ExpressionCommalist),
 
     Code = [
@@ -982,14 +1001,14 @@ create_code(escapedSymbolicName = Rule) ->
         "``"
     ],
     store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(functionName, Code, ?MAX_BASIC_RULE, false),
-    store_code(labelName, Code, ?MAX_BASIC_RULE, false),
-    store_code(procedureResultField, Code, ?MAX_BASIC_RULE, false),
-    store_code(propertyKeyName, Code, ?MAX_BASIC_RULE, false),
-    store_code(relTypeName, Code, ?MAX_BASIC_RULE, false),
-    store_code(schemaName, Code, ?MAX_BASIC_RULE, false),
+    store_code(functionName, [re:replace(SN, "_SYMB_NAME_", "_FUNCTION_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(labelName, [re:replace(SN, "_SYMB_NAME_", "_LABEL_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(procedureResultField, [re:replace(SN, "_SYMB_NAME_", "_PROCEDURE_RESULT_FIELD_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(propertyKeyName, [re:replace(SN, "_SYMB_NAME_", "_PROPERTY_KEY_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(relTypeName, [re:replace(SN, "_SYMB_NAME_", "_REL_TYPE_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(schemaName, [re:replace(SN, "_SYMB_NAME_", "_SCHEMA_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
     store_code(symbolicName, Code, ?MAX_BASIC_RULE, false),
-    store_code(variable, Code, ?MAX_BASIC_RULE, false),
+    store_code(variable, [re:replace(SN, "_SYMB_NAME_", "_VARIABLE_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -998,9 +1017,9 @@ create_code(escapedSymbolicName = Rule) ->
 
 create_code(explicitProcedureInvocation = Rule) ->
     ?CREATE_CODE_START,
-    [{expressionCommalist, ExpressionCommalist}] = dets:lookup(?CODE_TEMPLATES, expressionCommalist),
+    [{expressionCommalist, ExpressionCommalist}] = ets:lookup(?CODE_TEMPLATES, expressionCommalist),
     ExpressionCommalist_Length = length(ExpressionCommalist),
-    [{procedureName, ProcedureName}] = dets:lookup(?CODE_TEMPLATES, procedureName),
+    [{procedureName, ProcedureName}] = ets:lookup(?CODE_TEMPLATES, procedureName),
     ProcedureName_Length = length(ProcedureName),
 
     Code = [
@@ -1081,9 +1100,9 @@ create_code(exponentDecimalReal = Rule) ->
 
 create_code(filterExpression = Rule) ->
     ?CREATE_CODE_START,
-    [{idInColl, IdInColl}] = dets:lookup(?CODE_TEMPLATES, idInColl),
+    [{idInColl, IdInColl}] = ets:lookup(?CODE_TEMPLATES, idInColl),
     IdInColl_Length = length(IdInColl),
-    [{where, Where}] = dets:lookup(?CODE_TEMPLATES, where),
+    [{where, Where}] = ets:lookup(?CODE_TEMPLATES, where),
     Where_Length = length(Where),
 
     Code = [
@@ -1103,9 +1122,9 @@ create_code(filterExpression = Rule) ->
 
 create_code(functionInvocation = Rule) ->
     ?CREATE_CODE_START,
-    [{expressionCommalist, ExpressionCommalist}] = dets:lookup(?CODE_TEMPLATES, expressionCommalist),
+    [{expressionCommalist, ExpressionCommalist}] = ets:lookup(?CODE_TEMPLATES, expressionCommalist),
     ExpressionCommalist_Length = length(ExpressionCommalist),
-    [{functionName, FunctionName}] = dets:lookup(?CODE_TEMPLATES, functionName),
+    [{functionName, FunctionName}] = ets:lookup(?CODE_TEMPLATES, functionName),
     FunctionName_Length = length(FunctionName),
 
     Code =
@@ -1116,7 +1135,8 @@ create_code(functionInvocation = Rule) ->
                 "(",
                 ?SP_OPT,
                 case rand:uniform(4) rem 4 of
-                    1 -> "Distinct";
+%% wwe
+%%                    1 -> "Distinct";
                     2 -> lists:append(
                         [
                             "Distinct",
@@ -1206,9 +1226,9 @@ create_code(hexLetter = Rule) ->
 
 create_code(idInColl = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -1223,14 +1243,6 @@ create_code(idInColl = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     store_code(filterExpression, Code, ?MAX_BASIC_RULE, false),
-    store_code(functionName, Code, ?MAX_BASIC_RULE, false),
-    store_code(labelName, Code, ?MAX_BASIC_RULE, false),
-    store_code(procedureResultField, Code, ?MAX_BASIC_RULE, false),
-    store_code(propertyKeyName, Code, ?MAX_BASIC_RULE, false),
-    store_code(relTypeName, Code, ?MAX_BASIC_RULE, false),
-    store_code(schemaName, Code, ?MAX_BASIC_RULE, false),
-    store_code(symbolicName, Code, ?MAX_BASIC_RULE, false),
-    store_code(variable, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1242,9 +1254,9 @@ create_code(idInColl = Rule) ->
 
 create_code(inQueryCall = Rule) ->
     ?CREATE_CODE_START,
-    [{explicitProcedureInvocation, ExplicitProcedureInvocation}] = dets:lookup(?CODE_TEMPLATES, explicitProcedureInvocation),
+    [{explicitProcedureInvocation, ExplicitProcedureInvocation}] = ets:lookup(?CODE_TEMPLATES, explicitProcedureInvocation),
     ExplicitProcedureInvocation_Length = length(ExplicitProcedureInvocation),
-    [{yieldItems, YieldItems}] = dets:lookup(?CODE_TEMPLATES, yieldItems),
+    [{yieldItems, YieldItems}] = ets:lookup(?CODE_TEMPLATES, yieldItems),
     YieldItems_Length = length(YieldItems),
 
     Code = [
@@ -1267,6 +1279,7 @@ create_code(inQueryCall = Rule) ->
         || _ <- lists:seq(1, ?MAX_BASIC_RULE * 2)
     ],
     store_code(Rule, Code, ?MAX_BASIC_RULE, false),
+    store_code(readingClause, Code, ?MAX_CYPHER, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1275,7 +1288,7 @@ create_code(inQueryCall = Rule) ->
 
 create_code(limit = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
@@ -1295,9 +1308,9 @@ create_code(limit = Rule) ->
 
 create_code(listComprehension = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{filterExpression, FilterExpression}] = dets:lookup(?CODE_TEMPLATES, filterExpression),
+    [{filterExpression, FilterExpression}] = ets:lookup(?CODE_TEMPLATES, filterExpression),
     FilterExpression_Length = length(FilterExpression),
 
     Code = [
@@ -1327,7 +1340,7 @@ create_code(listComprehension = Rule) ->
 
 create_code(listLiteral = Rule) ->
     ?CREATE_CODE_START,
-    [{expressionCommalist, ExpressionCommalist}] = dets:lookup(?CODE_TEMPLATES, expressionCommalist),
+    [{expressionCommalist, ExpressionCommalist}] = ets:lookup(?CODE_TEMPLATES, expressionCommalist),
     ExpressionCommalist_Length = length(ExpressionCommalist),
 
     Code = [
@@ -1384,9 +1397,9 @@ create_code(literalNull) ->
 create_code(mapLiteral = Rule) ->
     ?CREATE_CODE_START,
 
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{propertyKeyName, PropertyKeyName}] = dets:lookup(?CODE_TEMPLATES, propertyKeyName),
+    [{propertyKeyName, PropertyKeyName}] = ets:lookup(?CODE_TEMPLATES, propertyKeyName),
     PropertyKeyName_Length = length(PropertyKeyName),
 
     Code = [
@@ -1469,9 +1482,9 @@ create_code(mapLiteralEmpty) ->
 
 create_code(match = Rule) ->
     ?CREATE_CODE_START,
-    [{pattern, Pattern}] = dets:lookup(?CODE_TEMPLATES, pattern),
+    [{pattern, Pattern}] = ets:lookup(?CODE_TEMPLATES, pattern),
     Pattern_Length = length(Pattern),
-    [{where, Where}] = dets:lookup(?CODE_TEMPLATES, where),
+    [{where, Where}] = ets:lookup(?CODE_TEMPLATES, where),
     Where_Length = length(Where),
 
     Code = [
@@ -1524,9 +1537,9 @@ create_code(match = Rule) ->
 
 create_code(merge = Rule) ->
     ?CREATE_CODE_START,
-    [{mergeAction, MergeAction}] = dets:lookup(?CODE_TEMPLATES, mergeAction),
+    [{mergeAction, MergeAction}] = ets:lookup(?CODE_TEMPLATES, mergeAction),
     MergeAction_Length = length(MergeAction),
-    [{patternPart, PatternPart}] = dets:lookup(?CODE_TEMPLATES, patternPart),
+    [{patternPart, PatternPart}] = ets:lookup(?CODE_TEMPLATES, patternPart),
     PatternPart_Length = length(PatternPart),
 
     Code = [
@@ -1561,7 +1574,7 @@ create_code(merge = Rule) ->
 
 create_code(mergeAction = Rule) ->
     ?CREATE_CODE_START,
-    [{set, Set}] = dets:lookup(?CODE_TEMPLATES, set),
+    [{set, Set}] = ets:lookup(?CODE_TEMPLATES, set),
     Set_Length = length(Set),
 
     Code = [
@@ -1597,23 +1610,23 @@ create_code(mergeAction = Rule) ->
 
 create_code(multiPartQuery = Rule) ->
     ?CREATE_CODE_START,
-    [{readPart, ReadPart}] = dets:lookup(?CODE_TEMPLATES, readPart),
+    [{readPart, ReadPart}] = ets:lookup(?CODE_TEMPLATES, readPart),
     ReadPart_Length = length(ReadPart),
-    [{readPartUpdatingPartWithList, ReadPartUpdatingPartWithList}] = dets:lookup(?CODE_TEMPLATES, readPartUpdatingPartWithList),
+    [{readPartUpdatingPartWithList, ReadPartUpdatingPartWithList}] = ets:lookup(?CODE_TEMPLATES, readPartUpdatingPartWithList),
     ReadPartUpdatingPartWithList_Length = length(ReadPartUpdatingPartWithList),
-    [{singlePartQuery, SinglePartQuery}] = dets:lookup(?CODE_TEMPLATES, singlePartQuery),
+    [{singlePartQuery, SinglePartQuery}] = ets:lookup(?CODE_TEMPLATES, singlePartQuery),
     SinglePartQuery_Length = length(SinglePartQuery),
-    [{updatingPart, UpdatingPart}] = dets:lookup(?CODE_TEMPLATES, updatingPart),
+    [{updatingPart, UpdatingPart}] = ets:lookup(?CODE_TEMPLATES, updatingPart),
     UpdatingPart_Length = length(UpdatingPart),
-    [{updatingStartClause, UpdatingStartClause}] = dets:lookup(?CODE_TEMPLATES, updatingStartClause),
+    [{updatingStartClause, UpdatingStartClause}] = ets:lookup(?CODE_TEMPLATES, updatingStartClause),
     UpdatingStartClause_Length = length(UpdatingStartClause),
-    [{with, With}] = dets:lookup(?CODE_TEMPLATES, with),
+    [{with, With}] = ets:lookup(?CODE_TEMPLATES, with),
     With_Length = length(With),
 
     Code = [
         lists:append([
             case rand:uniform(2) rem 2 of
-                1 -> case rand:uniform(20) rem 20 of
+                1 -> case rand:uniform(10) rem 10 of
                          1 -> [];
                          _ ->
                              lists:nth(rand:uniform(ReadPart_Length), ReadPart)
@@ -1622,7 +1635,7 @@ create_code(multiPartQuery = Rule) ->
                     [
                         lists:nth(rand:uniform(UpdatingStartClause_Length), UpdatingStartClause),
                         ?SP,
-                        case rand:uniform(20) rem 20 of
+                        case rand:uniform(10) rem 10 of
                             1 -> [];
                             _ ->
                                 lists:nth(rand:uniform(UpdatingPart_Length), UpdatingPart)
@@ -1631,7 +1644,7 @@ create_code(multiPartQuery = Rule) ->
             end,
             ?SP,
             lists:nth(rand:uniform(With_Length), With),
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ ->
                     ?SP ++ lists:nth(rand:uniform(ReadPartUpdatingPartWithList_Length), ReadPartUpdatingPartWithList)
@@ -1650,7 +1663,7 @@ create_code(multiPartQuery = Rule) ->
 
 create_code(namespace = Rule) ->
     ?CREATE_CODE_START,
-    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+    [{symbolicName, SymbolicName}] = ets:lookup(?CODE_TEMPLATES, symbolicName),
 
     Namespace = [re:replace(SN, "_SYMB_NAME_", "_NAMESPACE_", [{return, list}]) ++ "." || SN <- SymbolicName],
     Namespace_Length = length(Namespace),
@@ -1679,7 +1692,7 @@ create_code(namespace = Rule) ->
 
 create_code(nodeLabel = Rule) ->
     ?CREATE_CODE_START,
-    [{labelName, LabelName}] = dets:lookup(?CODE_TEMPLATES, labelName),
+    [{labelName, LabelName}] = ets:lookup(?CODE_TEMPLATES, labelName),
 
     Code = [
         lists:append([":", ?SP_OPT, LN]) || LN <- LabelName
@@ -1693,7 +1706,7 @@ create_code(nodeLabel = Rule) ->
 
 create_code(nodeLabels = Rule) ->
     ?CREATE_CODE_START,
-    [{nodeLabel, NodeLabel}] = dets:lookup(?CODE_TEMPLATES, nodeLabel),
+    [{nodeLabel, NodeLabel}] = ets:lookup(?CODE_TEMPLATES, nodeLabel),
     NodeLabel_Length = length(NodeLabel),
 
     Code = [
@@ -1722,11 +1735,11 @@ create_code(nodeLabels = Rule) ->
 
 create_code(nodePattern = Rule) ->
     ?CREATE_CODE_START,
-    [{nodeLabels, NodeLabels}] = dets:lookup(?CODE_TEMPLATES, nodeLabels),
+    [{nodeLabels, NodeLabels}] = ets:lookup(?CODE_TEMPLATES, nodeLabels),
     NodeLabels_Length = length(NodeLabels),
-    [{properties, Properties}] = dets:lookup(?CODE_TEMPLATES, properties),
+    [{properties, Properties}] = ets:lookup(?CODE_TEMPLATES, properties),
     Properties_Length = length(Properties),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -1790,7 +1803,7 @@ create_code(octalInteger = Rule) ->
 
 create_code(order = Rule) ->
     ?CREATE_CODE_START,
-    [{sortItem, SortItem}] = dets:lookup(?CODE_TEMPLATES, sortItem),
+    [{sortItem, SortItem}] = ets:lookup(?CODE_TEMPLATES, sortItem),
     SortItem_Length = length(SortItem),
 
     Code = [
@@ -1830,14 +1843,18 @@ create_code(order = Rule) ->
 
 create_code(parameter = Rule) ->
     ?CREATE_CODE_START,
-    [{decimalInteger, DecimalInteger}] = dets:lookup(?CODE_TEMPLATES, decimalInteger),
-    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+    [{decimalInteger, DecimalInteger}] = ets:lookup(?CODE_TEMPLATES, decimalInteger),
+    [{symbolicName, SymbolicName}] = ets:lookup(?CODE_TEMPLATES, symbolicName),
 
     Code = lists:append(
         ["$" ++ re:replace(SN, "_SYMB_NAME_", "_PARAMETER_", [{return, list}]) || SN <- SymbolicName],
         ["$" ++ DI || DI <- DecimalInteger]
     ),
     store_code(Rule, Code, ?MAX_BASIC_RULE, false),
+    store_code(atom, Code, ?MAX_BASIC_RULE, false),
+    store_code(literal, Code, ?MAX_BASIC_RULE, false),
+    store_code(properties, Code, ?MAX_BASIC_RULE, false),
+    store_code(propertyOrLabelsExpression, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1846,7 +1863,7 @@ create_code(parameter = Rule) ->
 
 create_code(pattern = Rule) ->
     ?CREATE_CODE_START,
-    [{patternPart, PatternPart}] = dets:lookup(?CODE_TEMPLATES, patternPart),
+    [{patternPart, PatternPart}] = ets:lookup(?CODE_TEMPLATES, patternPart),
     PatternPart_Length = length(PatternPart),
 
     Code = [
@@ -1900,11 +1917,11 @@ create_code(pattern = Rule) ->
 
 create_code(patternComprehension = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{relationshipsPattern, RelationshipsPattern}] = dets:lookup(?CODE_TEMPLATES, relationshipsPattern),
+    [{relationshipsPattern, RelationshipsPattern}] = ets:lookup(?CODE_TEMPLATES, relationshipsPattern),
     RelationshipsPattern_Length = length(RelationshipsPattern),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -1950,9 +1967,9 @@ create_code(patternComprehension = Rule) ->
 
 create_code(patternElement = Rule) ->
     ?CREATE_CODE_START,
-    [{nodePattern, NodePattern}] = dets:lookup(?CODE_TEMPLATES, nodePattern),
+    [{nodePattern, NodePattern}] = ets:lookup(?CODE_TEMPLATES, nodePattern),
     NodePattern_Length = length(NodePattern),
-    [{patternElementChainList, PatternElementChainList}] = dets:lookup(?CODE_TEMPLATES, patternElementChainList),
+    [{patternElementChainList, PatternElementChainList}] = ets:lookup(?CODE_TEMPLATES, patternElementChainList),
     PatternElementChainList_Length = length(PatternElementChainList),
 
     Code = [
@@ -1992,9 +2009,9 @@ create_code(patternElement = Rule) ->
 
 create_code(patternElementChain = Rule) ->
     ?CREATE_CODE_START,
-    [{nodePattern, NodePattern}] = dets:lookup(?CODE_TEMPLATES, nodePattern),
+    [{nodePattern, NodePattern}] = ets:lookup(?CODE_TEMPLATES, nodePattern),
     NodePattern_Length = length(NodePattern),
-    [{relationshipPattern, RelationshipPattern}] = dets:lookup(?CODE_TEMPLATES, relationshipPattern),
+    [{relationshipPattern, RelationshipPattern}] = ets:lookup(?CODE_TEMPLATES, relationshipPattern),
     RelationshipPattern_Length = length(RelationshipPattern),
 
     Code = [
@@ -2014,7 +2031,7 @@ create_code(patternElementChain = Rule) ->
 
 create_code(patternElementChainList = Rule) ->
     ?CREATE_CODE_START,
-    [{patternElementChain, PatternElementChain}] = dets:lookup(?CODE_TEMPLATES, patternElementChain),
+    [{patternElementChain, PatternElementChain}] = ets:lookup(?CODE_TEMPLATES, patternElementChain),
     PatternElementChain_Length = length(PatternElementChain),
 
     Code = [
@@ -2050,9 +2067,9 @@ create_code(patternElementChainList = Rule) ->
 
 create_code(patternPart = Rule) ->
     ?CREATE_CODE_START,
-    [{anonymousPatternPart, AnonymousPatternPart}] = dets:lookup(?CODE_TEMPLATES, anonymousPatternPart),
+    [{anonymousPatternPart, AnonymousPatternPart}] = ets:lookup(?CODE_TEMPLATES, anonymousPatternPart),
     AnonymousPatternPart_Length = length(AnonymousPatternPart),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -2078,9 +2095,9 @@ create_code(patternPart = Rule) ->
 
 create_code(procedureName = Rule) ->
     ?CREATE_CODE_START,
-    [{namespace, Namespace}] = dets:lookup(?CODE_TEMPLATES, namespace),
+    [{namespace, Namespace}] = ets:lookup(?CODE_TEMPLATES, namespace),
     Namespace_Length = length(Namespace),
-    [{symbolicName, SymbolicName}] = dets:lookup(?CODE_TEMPLATES, symbolicName),
+    [{symbolicName, SymbolicName}] = ets:lookup(?CODE_TEMPLATES, symbolicName),
 
     ProcedureName = [re:replace(SN, "_SYMB_NAME_", "_PROC_NAME_", [{return, list}]) || SN <- SymbolicName],
     ProcedureName_Length = length(ProcedureName),
@@ -2104,9 +2121,9 @@ create_code(procedureName = Rule) ->
 
 create_code(propertyExpression = Rule) ->
     ?CREATE_CODE_START,
-    [{atom, Atom}] = dets:lookup(?CODE_TEMPLATES, atom),
+    [{atom, Atom}] = ets:lookup(?CODE_TEMPLATES, atom),
     Atom_Length = length(Atom),
-    [{propertyLookup, PropertyLookup}] = dets:lookup(?CODE_TEMPLATES, propertyLookup),
+    [{propertyLookup, PropertyLookup}] = ets:lookup(?CODE_TEMPLATES, propertyLookup),
     PropertyLookup_Length = length(PropertyLookup),
 
     Code = [
@@ -2143,7 +2160,7 @@ create_code(propertyExpression = Rule) ->
 
 create_code(propertyLookup = Rule) ->
     ?CREATE_CODE_START,
-    [{propertyKeyName, PropertyKeyName}] = dets:lookup(?CODE_TEMPLATES, propertyKeyName),
+    [{propertyKeyName, PropertyKeyName}] = ets:lookup(?CODE_TEMPLATES, propertyKeyName),
 
     Code = [
         lists:append([".", ?SP_OPT, PK]) || PK <- PropertyKeyName
@@ -2157,7 +2174,7 @@ create_code(propertyLookup = Rule) ->
 
 create_code(rangeLiteral = Rule) ->
     ?CREATE_CODE_START,
-    [{integerLiteral, IntegerLiteral}] = dets:lookup(?CODE_TEMPLATES, integerLiteral),
+    [{integerLiteral, IntegerLiteral}] = ets:lookup(?CODE_TEMPLATES, integerLiteral),
     IntegerLiteral_Length = length(IntegerLiteral),
 
     Code = lists:append(
@@ -2199,9 +2216,9 @@ create_code(rangeLiteral = Rule) ->
 
 create_code(readOnlyEnd = Rule) ->
     ?CREATE_CODE_START,
-    [{readPart, ReadPart}] = dets:lookup(?CODE_TEMPLATES, readPart),
+    [{readPart, ReadPart}] = ets:lookup(?CODE_TEMPLATES, readPart),
     ReadPart_Length = length(ReadPart),
-    [{return, Return}] = dets:lookup(?CODE_TEMPLATES, return),
+    [{return, Return}] = ets:lookup(?CODE_TEMPLATES, return),
     Return_Length = length(Return),
 
     Code = [
@@ -2226,7 +2243,7 @@ create_code(readOnlyEnd = Rule) ->
 
 create_code(readPart = Rule) ->
     ?CREATE_CODE_START,
-    [{readingClause, ReadingClause}] = dets:lookup(?CODE_TEMPLATES, readingClause),
+    [{readingClause, ReadingClause}] = ets:lookup(?CODE_TEMPLATES, readingClause),
     ReadingClause_Length = length(ReadingClause),
 
     Code = [
@@ -2261,23 +2278,23 @@ create_code(readPart = Rule) ->
 
 create_code(readPartUpdatingPartWithList = Rule) ->
     ?CREATE_CODE_START,
-    [{readPart, ReadPart}] = dets:lookup(?CODE_TEMPLATES, readPart),
+    [{readPart, ReadPart}] = ets:lookup(?CODE_TEMPLATES, readPart),
     ReadPart_Length = length(ReadPart),
 %% wwe ???
-%%    [{updatingPart, UpdatingPart}] = dets:lookup(?CODE_TEMPLATES, updatingPart),
+%%    [{updatingPart, UpdatingPart}] = ets:lookup(?CODE_TEMPLATES, updatingPart),
 %%    UpdatingPart_Length = length(UpdatingPart),
-    [{with, With}] = dets:lookup(?CODE_TEMPLATES, with),
+    [{with, With}] = ets:lookup(?CODE_TEMPLATES, with),
     With_Length = length(With),
 
     ReadPartUpdatingPartWith = [
         lists:append([
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ ->
                     lists:nth(rand:uniform(ReadPart_Length), ReadPart)
             end,
 %% wwe ???
-%%            case rand:uniform(20) rem 20 of
+%%            case rand:uniform(10) rem 10 of
 %%                1 -> [];
 %%                _ ->
 %%                    ?SP ++
@@ -2321,11 +2338,11 @@ create_code(readPartUpdatingPartWithList = Rule) ->
 
 create_code(readUpdateEnd = Rule) ->
     ?CREATE_CODE_START,
-    [{readPart, ReadPart}] = dets:lookup(?CODE_TEMPLATES, readPart),
+    [{readPart, ReadPart}] = ets:lookup(?CODE_TEMPLATES, readPart),
     ReadPart_Length = length(ReadPart),
-    [{return, Return}] = dets:lookup(?CODE_TEMPLATES, return),
+    [{return, Return}] = ets:lookup(?CODE_TEMPLATES, return),
     Return_Length = length(Return),
-    [{updatingPart, UpdatingPart}] = dets:lookup(?CODE_TEMPLATES, updatingPart),
+    [{updatingPart, UpdatingPart}] = ets:lookup(?CODE_TEMPLATES, updatingPart),
     UpdatingPart_Length = length(UpdatingPart),
 
     Code = [
@@ -2381,9 +2398,9 @@ create_code(regularDecimalReal = Rule) ->
 
 create_code(regularQuery = Rule) ->
     ?CREATE_CODE_START,
-    [{singleQuery, SingleQuery}] = dets:lookup(?CODE_TEMPLATES, singleQuery),
+    [{singleQuery, SingleQuery}] = ets:lookup(?CODE_TEMPLATES, singleQuery),
     SingleQuery_Length = length(SingleQuery),
-    [{union, Union}] = dets:lookup(?CODE_TEMPLATES, union),
+    [{union, Union}] = ets:lookup(?CODE_TEMPLATES, union),
     Union_Length = length(Union),
 
     Code = [
@@ -2421,13 +2438,13 @@ create_code(regularQuery = Rule) ->
 
 create_code(relationshipDetail = Rule) ->
     ?CREATE_CODE_START,
-    [{properties, Properties}] = dets:lookup(?CODE_TEMPLATES, properties),
+    [{properties, Properties}] = ets:lookup(?CODE_TEMPLATES, properties),
     Properties_Length = length(Properties),
-    [{rangeLiteral, RangeLiteral}] = dets:lookup(?CODE_TEMPLATES, rangeLiteral),
+    [{rangeLiteral, RangeLiteral}] = ets:lookup(?CODE_TEMPLATES, rangeLiteral),
     RangeLiteral_Length = length(RangeLiteral),
-    [{relationshipTypes, RelationshipTypes}] = dets:lookup(?CODE_TEMPLATES, relationshipTypes),
+    [{relationshipTypes, RelationshipTypes}] = ets:lookup(?CODE_TEMPLATES, relationshipTypes),
     RelationshipTypes_Length = length(RelationshipTypes),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -2482,7 +2499,7 @@ create_code(relationshipDetailEmpty) ->
 
 create_code(relationshipPattern = Rule) ->
     ?CREATE_CODE_START,
-    [{relationshipDetail, RelationshipDetail}] = dets:lookup(?CODE_TEMPLATES, relationshipDetail),
+    [{relationshipDetail, RelationshipDetail}] = ets:lookup(?CODE_TEMPLATES, relationshipDetail),
     RelationshipDetail_Length = length(RelationshipDetail),
 
     Code = [
@@ -2557,9 +2574,9 @@ create_code(relationshipPatternEmpty) ->
 
 create_code(relationshipsPattern = Rule) ->
     ?CREATE_CODE_START,
-    [{nodePattern, NodePattern}] = dets:lookup(?CODE_TEMPLATES, nodePattern),
+    [{nodePattern, NodePattern}] = ets:lookup(?CODE_TEMPLATES, nodePattern),
     NodePattern_Length = length(NodePattern),
-    [{patternElementChainList, PatternElementChainList}] = dets:lookup(?CODE_TEMPLATES, patternElementChainList),
+    [{patternElementChainList, PatternElementChainList}] = ets:lookup(?CODE_TEMPLATES, patternElementChainList),
     PatternElementChainList_Length = length(PatternElementChainList),
 
     Code = [
@@ -2579,7 +2596,7 @@ create_code(relationshipsPattern = Rule) ->
 
 create_code(relationshipTypes = Rule) ->
     ?CREATE_CODE_START,
-    [{relTypeName, RelTypeName}] = dets:lookup(?CODE_TEMPLATES, relTypeName),
+    [{relTypeName, RelTypeName}] = ets:lookup(?CODE_TEMPLATES, relTypeName),
     RelTypeName_Length = length(RelTypeName),
 
     Code = [
@@ -2630,7 +2647,7 @@ create_code(relationshipTypes = Rule) ->
 
 create_code(remove = Rule) ->
     ?CREATE_CODE_START,
-    [{removeItem, RemoveItem}] = dets:lookup(?CODE_TEMPLATES, removeItem),
+    [{removeItem, RemoveItem}] = ets:lookup(?CODE_TEMPLATES, removeItem),
     RemoveItem_Length = length(RemoveItem),
 
     Code = [
@@ -2673,9 +2690,9 @@ create_code(remove = Rule) ->
 
 create_code(removeItem = Rule) ->
     ?CREATE_CODE_START,
-    [{nodeLabels, NodeLabels}] = dets:lookup(?CODE_TEMPLATES, nodeLabels),
+    [{nodeLabels, NodeLabels}] = ets:lookup(?CODE_TEMPLATES, nodeLabels),
     NodeLabels_Length = length(NodeLabels),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -2801,10 +2818,11 @@ create_code(reservedWord = Rule) ->
         "xoR"
     ],
     store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(labelName, Code, ?MAX_BASIC_RULE, false),
-    store_code(propertyKeyName, Code, ?MAX_BASIC_RULE, false),
-    store_code(relTypeName, Code, ?MAX_BASIC_RULE, false),
-    store_code(schemaName, Code, ?MAX_BASIC_RULE, false),
+%% wwe
+%%    store_code(labelName, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(propertyKeyName, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(relTypeName, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(schemaName, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2813,7 +2831,7 @@ create_code(reservedWord = Rule) ->
 
 create_code(return = Rule) ->
     ?CREATE_CODE_START,
-    [{returnBody, ReturnBody}] = dets:lookup(?CODE_TEMPLATES, returnBody),
+    [{returnBody, ReturnBody}] = ets:lookup(?CODE_TEMPLATES, returnBody),
     ReturnBody_Length = length(ReturnBody),
 
     Code = [
@@ -2837,13 +2855,13 @@ create_code(return = Rule) ->
 
 create_code(returnBody = Rule) ->
     ?CREATE_CODE_START,
-    [{limit, Limit}] = dets:lookup(?CODE_TEMPLATES, limit),
+    [{limit, Limit}] = ets:lookup(?CODE_TEMPLATES, limit),
     Limit_Length = length(Limit),
-    [{order, Order}] = dets:lookup(?CODE_TEMPLATES, order),
+    [{order, Order}] = ets:lookup(?CODE_TEMPLATES, order),
     Order_Length = length(Order),
-    [{returnItems, ReturnItems}] = dets:lookup(?CODE_TEMPLATES, returnItems),
+    [{returnItems, ReturnItems}] = ets:lookup(?CODE_TEMPLATES, returnItems),
     ReturnItems_Length = length(ReturnItems),
-    [{skip, Skip}] = dets:lookup(?CODE_TEMPLATES, skip),
+    [{skip, Skip}] = ets:lookup(?CODE_TEMPLATES, skip),
     Skip_Length = length(Skip),
 
     Code = [
@@ -2896,9 +2914,9 @@ create_code(returnBody = Rule) ->
 
 create_code(returnItem = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -2925,7 +2943,7 @@ create_code(returnItem = Rule) ->
 
 create_code(returnItems = Rule) ->
     ?CREATE_CODE_START,
-    [{returnItem, ReturnItem}] = dets:lookup(?CODE_TEMPLATES, returnItem),
+    [{returnItem, ReturnItem}] = ets:lookup(?CODE_TEMPLATES, returnItem),
     ReturnItem_Length = length(ReturnItem),
 
     Code = lists:append(
@@ -2991,7 +3009,7 @@ create_code(returnItems = Rule) ->
 
 create_code(set = Rule) ->
     ?CREATE_CODE_START,
-    [{setItem, SetItem}] = dets:lookup(?CODE_TEMPLATES, setItem),
+    [{setItem, SetItem}] = ets:lookup(?CODE_TEMPLATES, setItem),
     SetItem_Length = length(SetItem),
 
     Code = [
@@ -3025,13 +3043,13 @@ create_code(set = Rule) ->
 
 create_code(setItem = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{nodeLabels, NodeLabels}] = dets:lookup(?CODE_TEMPLATES, nodeLabels),
+    [{nodeLabels, NodeLabels}] = ets:lookup(?CODE_TEMPLATES, nodeLabels),
     NodeLabels_Length = length(NodeLabels),
-    [{propertyExpression, PropertyExpression}] = dets:lookup(?CODE_TEMPLATES, propertyExpression),
+    [{propertyExpression, PropertyExpression}] = ets:lookup(?CODE_TEMPLATES, propertyExpression),
     PropertyExpression_Length = length(PropertyExpression),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -3078,7 +3096,7 @@ create_code(setItem = Rule) ->
 
 create_code(skip = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
@@ -3101,7 +3119,7 @@ create_code(skip = Rule) ->
 
 create_code(sortItem = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
@@ -3250,7 +3268,46 @@ create_code(special = Rule) ->
         %% return_body -> return_items order
         %% order -> ORDER BY sort_item_commalist
         %% sort_item -> expression
-        "Match (a) With * Order by 5 Return a"
+        "Match (a) With * Order by 5 Return a",
+        %% ---------------------------------------------------------------------
+        %% Problem: function_name EXISTS
+        %% ---------------------------------------------------------------------
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = Exists (Distinct variable_4)",
+        %% ---------------------------------------------------------------------
+        %% Problem: pattern_comprehension
+        %% ---------------------------------------------------------------------
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [              (variable_5) - - (variable_6)            | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [              (variable_5) - - (variable_6) Where True | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ variable_4 = (variable_5) - - (variable_6)            | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ variable_4 = (variable_5) - - (variable_6) Where True | False]",
+        %% ---------------------------------------------------------------------
+        %% Problem: range_literal
+        %% ---------------------------------------------------------------------
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ *     ] - (variable_6) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ * ..  ] - (variable_6) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ * ..5 ] - (variable_6) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ *1    ] - (variable_6) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ *1..  ] - (variable_6) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ *1..5 ] - (variable_6) | False]",
+        %% ---------------------------------------------------------------------
+        %% Problem: relationship_detail
+        %% ---------------------------------------------------------------------
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [                                               ] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [                                   $parameter_1] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [                             * ..5             ] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [                             * ..5 $parameter_1] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [            :rel_type_name_1                   ] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [            :rel_type_name_1       $parameter_1] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [            :rel_type_name_1 * ..5             ] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [            :rel_type_name_1 * ..5 $parameter_1] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ variable_6                                    ] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ variable_6                        $parameter_1] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ variable_6                  * ..5             ] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ variable_6                  * ..5 $parameter_1] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ variable_6 :rel_type_name_1                   ] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ variable_6 :rel_type_name_1       $parameter_1] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ variable_6 :rel_type_name_1 * ..5             ] - (variable_7) | False]",
+        "Merge variable_1 = (variable_2) On Create Set variable_3 = [ (variable_5) - [ variable_6 :rel_type_name_1 * ..5 $parameter_1] - (variable_7) | False]"
     ],
     store_code(Rule, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
@@ -3261,11 +3318,11 @@ create_code(special = Rule) ->
 
 create_code(standaloneCall = Rule) ->
     ?CREATE_CODE_START,
-    [{explicitProcedureInvocation, ExplicitProcedureInvocation}] = dets:lookup(?CODE_TEMPLATES, explicitProcedureInvocation),
+    [{explicitProcedureInvocation, ExplicitProcedureInvocation}] = ets:lookup(?CODE_TEMPLATES, explicitProcedureInvocation),
     ExplicitProcedureInvocation_Length = length(ExplicitProcedureInvocation),
-    [{implicitProcedureInvocation, ImplicitProcedureInvocation}] = dets:lookup(?CODE_TEMPLATES, implicitProcedureInvocation),
+    [{implicitProcedureInvocation, ImplicitProcedureInvocation}] = ets:lookup(?CODE_TEMPLATES, implicitProcedureInvocation),
     ImplicitProcedureInvocation_Length = length(ImplicitProcedureInvocation),
-    [{yieldItems, YieldItems}] = dets:lookup(?CODE_TEMPLATES, yieldItems),
+    [{yieldItems, YieldItems}] = ets:lookup(?CODE_TEMPLATES, yieldItems),
     YieldItems_Length = length(YieldItems),
 
     Code = [
@@ -3324,39 +3381,40 @@ create_code(stringLiteral = Rule) ->
     store_code(propertyOrLabelsExpression, Code, ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% SymbolicName = ...
-%%              | (C,O,U,N,T)
-%%              | (F,I,L,T,E,R)
-%%              | (E,X,T,R,A,C,T)
-%%              | (A,N,Y)
-%%              | (A,L,L)
-%%              | (N,O,N,E)
-%%              | (S,I,N,G,L,E)
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_code(symbolicNameConstant) ->
-    Rule = symbolicName,
-
-    ?CREATE_CODE_START,
-
-    Code = [
-        "Any",
-        "Count",
-        "Extract",
-        "Filter",
-        "None",
-        "Single"
-    ],
-    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(functionName, Code, ?MAX_BASIC_RULE, false),
-    store_code(labelName, Code, ?MAX_BASIC_RULE, false),
-    store_code(procedureResultField, Code, ?MAX_BASIC_RULE, false),
-    store_code(propertyKeyName, Code, ?MAX_BASIC_RULE, false),
-    store_code(relTypeName, Code, ?MAX_BASIC_RULE, false),
-    store_code(schemaName, Code, ?MAX_BASIC_RULE, false),
-    store_code(variable, Code, ?MAX_BASIC_RULE, false),
-    ?CREATE_CODE_END;
+%% wwe
+%%%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% SymbolicName = ...
+%%%%              | (C,O,U,N,T)
+%%%%              | (F,I,L,T,E,R)
+%%%%              | (E,X,T,R,A,C,T)
+%%%%              | (A,N,Y)
+%%%%              | (A,L,L)
+%%%%              | (N,O,N,E)
+%%%%              | (S,I,N,G,L,E)
+%%%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%create_code(symbolicNameConstant) ->
+%%    Rule = symbolicName,
+%%
+%%    ?CREATE_CODE_START,
+%%
+%%    Code = [
+%%        "Any",
+%%        "Count",
+%%        "Extract",
+%%        "Filter",
+%%        "None",
+%%        "Single"
+%%    ],
+%%    store_code(Rule, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(functionName, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(labelName, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(procedureResultField, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(propertyKeyName, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(relTypeName, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(schemaName, Code, ?MAX_BASIC_RULE, false),
+%%    store_code(variable, Code, ?MAX_BASIC_RULE, false),
+%%    ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% UnescapedSymbolicName = IdentifierStart, { IdentifierPart } ;
@@ -3383,14 +3441,14 @@ create_code(unescapedSymbolicName = Rule) ->
         "#usng_SYMB_NAME_usn"
     ],
     store_code(Rule, Code, ?MAX_BASIC_RULE, false),
-    store_code(functionName, Code, ?MAX_BASIC_RULE, false),
-    store_code(labelName, Code, ?MAX_BASIC_RULE, false),
-    store_code(procedureResultField, Code, ?MAX_BASIC_RULE, false),
-    store_code(propertyKeyName, Code, ?MAX_BASIC_RULE, false),
-    store_code(relTypeName, Code, ?MAX_BASIC_RULE, false),
-    store_code(schemaName, Code, ?MAX_BASIC_RULE, false),
+    store_code(functionName, [re:replace(SN, "_SYMB_NAME_", "_FUNCTION_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(labelName, [re:replace(SN, "_SYMB_NAME_", "_LABEL_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(procedureResultField, [re:replace(SN, "_SYMB_NAME_", "_PROCEDURE_RESULT_FIELD_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(propertyKeyName, [re:replace(SN, "_SYMB_NAME_", "_PROPERTY_KEY_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(relTypeName, [re:replace(SN, "_SYMB_NAME_", "_REL_TYPE_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
+    store_code(schemaName, [re:replace(SN, "_SYMB_NAME_", "_SCHEMA_NAME_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
     store_code(symbolicName, Code, ?MAX_BASIC_RULE, false),
-    store_code(variable, Code, ?MAX_BASIC_RULE, false),
+    store_code(variable, [re:replace(SN, "_SYMB_NAME_", "_VARIABLE_", [{return, list}]) || SN <- Code], ?MAX_BASIC_RULE, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3404,7 +3462,7 @@ create_code(unescapedSymbolicName = Rule) ->
 
 create_code(union = Rule) ->
     ?CREATE_CODE_START,
-    [{singleQuery, SingleQuery}] = dets:lookup(?CODE_TEMPLATES, singleQuery),
+    [{singleQuery, SingleQuery}] = ets:lookup(?CODE_TEMPLATES, singleQuery),
 
     Code = [
         lists:append([
@@ -3430,9 +3488,9 @@ create_code(union = Rule) ->
 
 create_code(unwind = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -3457,11 +3515,11 @@ create_code(unwind = Rule) ->
 
 create_code(updatingEnd = Rule) ->
     ?CREATE_CODE_START,
-    [{return, Return}] = dets:lookup(?CODE_TEMPLATES, return),
+    [{return, Return}] = ets:lookup(?CODE_TEMPLATES, return),
     Return_Length = length(Return),
-    [{updatingPart, UpdatingPart}] = dets:lookup(?CODE_TEMPLATES, updatingPart),
+    [{updatingPart, UpdatingPart}] = ets:lookup(?CODE_TEMPLATES, updatingPart),
     UpdatingPart_Length = length(UpdatingPart),
-    [{updatingStartClause, UpdatingStartClause}] = dets:lookup(?CODE_TEMPLATES, updatingStartClause),
+    [{updatingStartClause, UpdatingStartClause}] = ets:lookup(?CODE_TEMPLATES, updatingStartClause),
     UpdatingStartClause_Length = length(UpdatingStartClause),
 
     Code = [
@@ -3493,7 +3551,7 @@ create_code(updatingEnd = Rule) ->
 
 create_code(updatingPart = Rule) ->
     ?CREATE_CODE_START,
-    [{updatingClause, UpdatingClause}] = dets:lookup(?CODE_TEMPLATES, updatingClause),
+    [{updatingClause, UpdatingClause}] = ets:lookup(?CODE_TEMPLATES, updatingClause),
     UpdatingClause_Length = length(UpdatingClause),
 
     Code = [
@@ -3528,7 +3586,7 @@ create_code(updatingPart = Rule) ->
 
 create_code(where = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
@@ -3548,9 +3606,9 @@ create_code(where = Rule) ->
 
 create_code(with = Rule) ->
     ?CREATE_CODE_START,
-    [{returnBody, ReturnBody}] = dets:lookup(?CODE_TEMPLATES, returnBody),
+    [{returnBody, ReturnBody}] = ets:lookup(?CODE_TEMPLATES, returnBody),
     ReturnBody_Length = length(ReturnBody),
-    [{where, Where}] = dets:lookup(?CODE_TEMPLATES, where),
+    [{where, Where}] = ets:lookup(?CODE_TEMPLATES, where),
     Where_Length = length(Where),
 
     Code = [
@@ -3578,9 +3636,9 @@ create_code(with = Rule) ->
 
 create_code(yieldItem = Rule) ->
     ?CREATE_CODE_START,
-    [{procedureResultField, ProcedureResultField}] = dets:lookup(?CODE_TEMPLATES, procedureResultField),
+    [{procedureResultField, ProcedureResultField}] = ets:lookup(?CODE_TEMPLATES, procedureResultField),
     ProcedureResultField_Length = length(ProcedureResultField),
-    [{variable, Variable}] = dets:lookup(?CODE_TEMPLATES, variable),
+    [{variable, Variable}] = ets:lookup(?CODE_TEMPLATES, variable),
     Variable_Length = length(Variable),
 
     Code = [
@@ -3607,7 +3665,7 @@ create_code(yieldItem = Rule) ->
 
 create_code(yieldItems = Rule) ->
     ?CREATE_CODE_START,
-    [{yieldItem, YieldItem}] = dets:lookup(?CODE_TEMPLATES, yieldItem),
+    [{yieldItem, YieldItem}] = ets:lookup(?CODE_TEMPLATES, yieldItem),
     YieldItem_Length = length(YieldItem),
 
     Code = [
@@ -3657,12 +3715,12 @@ create_code(yieldItemsConstant) ->
 
 create_code(addOrSubtractExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{multiplyDivideModuloExpression, MultiplyDivideModuloExpression}] = dets:lookup(?CODE_TEMPLATES, multiplyDivideModuloExpression),
+    [{multiplyDivideModuloExpression, MultiplyDivideModuloExpression}] = ets:lookup(?CODE_TEMPLATES, multiplyDivideModuloExpression),
     MultiplyDivideModuloExpression_Length = length(MultiplyDivideModuloExpression),
 
     Code = [
             lists:nth(rand:uniform(MultiplyDivideModuloExpression_Length), MultiplyDivideModuloExpression) ++
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(5) rem 5 of
                          1 -> lists:append(
@@ -3710,12 +3768,12 @@ create_code(addOrSubtractExpression = Rule, Max) ->
 
 create_code(andExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{notExpression, NotExpression}] = dets:lookup(?CODE_TEMPLATES, notExpression),
+    [{notExpression, NotExpression}] = ets:lookup(?CODE_TEMPLATES, notExpression),
     NotExpression_Length = length(NotExpression),
 
     Code = [
             lists:nth(rand:uniform(NotExpression_Length), NotExpression) ++
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(5) rem 5 of
                          1 -> lists:append(
@@ -3751,14 +3809,14 @@ create_code(andExpression = Rule, Max) ->
 
 create_code(comparisonExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{addOrSubtractExpression, AddOrSubtractExpression}] = dets:lookup(?CODE_TEMPLATES, addOrSubtractExpression),
+    [{addOrSubtractExpression, AddOrSubtractExpression}] = ets:lookup(?CODE_TEMPLATES, addOrSubtractExpression),
     AddOrSubtractExpression_Length = length(AddOrSubtractExpression),
-    [{partialComparisonExpression, PartialComparisonExpression}] = dets:lookup(?CODE_TEMPLATES, partialComparisonExpression),
+    [{partialComparisonExpression, PartialComparisonExpression}] = ets:lookup(?CODE_TEMPLATES, partialComparisonExpression),
     PartialComparisonExpression_Length = length(PartialComparisonExpression),
 
     Code = [
             lists:nth(rand:uniform(AddOrSubtractExpression_Length), AddOrSubtractExpression) ++
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(5) rem 5 of
                          1 -> lists:append(
@@ -3788,7 +3846,7 @@ create_code(comparisonExpression = Rule, Max) ->
 
 create_code(expressionCommalist = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
@@ -3826,12 +3884,12 @@ create_code(expressionCommalist = Rule, Max) ->
 
 create_code(multiplyDivideModuloExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{powerOfExpression, PowerOfExpression}] = dets:lookup(?CODE_TEMPLATES, powerOfExpression),
+    [{powerOfExpression, PowerOfExpression}] = ets:lookup(?CODE_TEMPLATES, powerOfExpression),
     PowerOfExpression_Length = length(PowerOfExpression),
 
     Code = [
             lists:nth(rand:uniform(PowerOfExpression_Length), PowerOfExpression) ++
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(5) rem 5 of
                          1 -> lists:append(
@@ -3888,11 +3946,11 @@ create_code(multiplyDivideModuloExpression = Rule, Max) ->
 
 create_code(notExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{comparisonExpression, ComparisonExpression}] = dets:lookup(?CODE_TEMPLATES, comparisonExpression),
+    [{comparisonExpression, ComparisonExpression}] = ets:lookup(?CODE_TEMPLATES, comparisonExpression),
     ComparisonExpression_Length = length(ComparisonExpression),
 
     Code = [
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(5) rem 5 of
                          1 -> lists:append(["Not", ?SP, "Not", ?SP]);
@@ -3915,12 +3973,12 @@ create_code(notExpression = Rule, Max) ->
 
 create_code(orExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{xorExpression, XorExpression}] = dets:lookup(?CODE_TEMPLATES, xorExpression),
+    [{xorExpression, XorExpression}] = ets:lookup(?CODE_TEMPLATES, xorExpression),
     XorExpression_Length = length(XorExpression),
 
     Code = [
             lists:nth(rand:uniform(XorExpression_Length), XorExpression) ++
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(5) rem 5 of
                          1 -> lists:append(
@@ -3956,7 +4014,7 @@ create_code(orExpression = Rule, Max) ->
 %% wwe
 %%create_code(parenthesizedExpression = Rule, Max) ->
 %%    ?CREATE_CODE_START,
-%%    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+%%    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
 %%    Expression_Length = length(Expression),
 %%
 %%    Code = [
@@ -3984,7 +4042,7 @@ create_code(orExpression = Rule, Max) ->
 
 create_code(partialComparisonExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{addOrSubtractExpression, AddOrSubtractExpression}] = dets:lookup(?CODE_TEMPLATES, addOrSubtractExpression),
+    [{addOrSubtractExpression, AddOrSubtractExpression}] = ets:lookup(?CODE_TEMPLATES, addOrSubtractExpression),
     AddOrSubtractExpression_Length = length(AddOrSubtractExpression),
 
     Code = [
@@ -4011,12 +4069,12 @@ create_code(partialComparisonExpression = Rule, Max) ->
 
 create_code(powerOfExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{unaryAddOrSubtractExpression, UnaryAddOrSubtractExpression}] = dets:lookup(?CODE_TEMPLATES, unaryAddOrSubtractExpression),
+    [{unaryAddOrSubtractExpression, UnaryAddOrSubtractExpression}] = ets:lookup(?CODE_TEMPLATES, unaryAddOrSubtractExpression),
     UnaryAddOrSubtractExpression_Length = length(UnaryAddOrSubtractExpression),
 
     Code = [
             lists:nth(rand:uniform(UnaryAddOrSubtractExpression_Length), UnaryAddOrSubtractExpression) ++
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(5) rem 5 of
                          1 -> lists:append(
@@ -4058,11 +4116,11 @@ create_code(powerOfExpression = Rule, Max) ->
 
 create_code(propertyOrLabelsExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{atom, Atom}] = dets:lookup(?CODE_TEMPLATES, atom),
+    [{atom, Atom}] = ets:lookup(?CODE_TEMPLATES, atom),
     Atom_Length = length(Atom),
-    [{nodeLabels, NodeLabels}] = dets:lookup(?CODE_TEMPLATES, nodeLabels),
+    [{nodeLabels, NodeLabels}] = ets:lookup(?CODE_TEMPLATES, nodeLabels),
     NodeLabels_Length = length(NodeLabels),
-    [{propertyLookup, PropertyLookup}] = dets:lookup(?CODE_TEMPLATES, propertyLookup),
+    [{propertyLookup, PropertyLookup}] = ets:lookup(?CODE_TEMPLATES, propertyLookup),
     PropertyLookup_Length = length(PropertyLookup),
 
     Code = [
@@ -4124,9 +4182,9 @@ create_code(propertyOrLabelsExpression = Rule, Max) ->
 
 create_code(stringListNullOperatorExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{propertyOrLabelsExpression, PropertyOrLabelsExpression}] = dets:lookup(?CODE_TEMPLATES, propertyOrLabelsExpression),
+    [{propertyOrLabelsExpression, PropertyOrLabelsExpression}] = ets:lookup(?CODE_TEMPLATES, propertyOrLabelsExpression),
     PropertyOrLabelsExpression_Length = length(PropertyOrLabelsExpression),
 
     Code = [
@@ -4229,11 +4287,11 @@ create_code(stringListNullOperatorExpression = Rule, Max) ->
 
 create_code(unaryAddOrSubtractExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{stringListNullOperatorExpression, StringListNullOperatorExpression}] = dets:lookup(?CODE_TEMPLATES, stringListNullOperatorExpression),
+    [{stringListNullOperatorExpression, StringListNullOperatorExpression}] = ets:lookup(?CODE_TEMPLATES, stringListNullOperatorExpression),
     StringListNullOperatorExpression_Length = length(StringListNullOperatorExpression),
 
     Code = [
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(6) rem 6 of
                          1 -> lists:append(["+", ?SP, "+", ?SP]);
@@ -4265,12 +4323,12 @@ create_code(unaryAddOrSubtractExpression = Rule, Max) ->
 
 create_code(xorExpression = Rule, Max) ->
     ?CREATE_CODE_START,
-    [{andExpression, AndExpression}] = dets:lookup(?CODE_TEMPLATES, andExpression),
+    [{andExpression, AndExpression}] = ets:lookup(?CODE_TEMPLATES, andExpression),
     AndExpression_Length = length(AndExpression),
 
     Code = [
             lists:nth(rand:uniform(AndExpression_Length), AndExpression) ++
-            case rand:uniform(20) rem 20 of
+            case rand:uniform(10) rem 10 of
                 1 -> [];
                 _ -> case rand:uniform(5) rem 5 of
                          1 -> lists:append(
@@ -4363,8 +4421,10 @@ create_code_layer(_Version) ->
 %%
 %% MapLiteral = '{', [SP], [PropertyKeyName, [SP], ':', [SP], Expression, [SP], { ',', [SP], PropertyKeyName, [SP], ':', [SP], Expression, [SP] }], '}' ;
 %%
+%% ==> atom                                == Atom = Literal ...
 %% ==> literal                             == Literal = ... MapLiteral ...
 %% ==> properties                          == Properties = MapLiteral ...
+%% ==> propertyOrLabelsExpression          == PropertyOrLabelsExpression = Atom ...
 %%
 %% NodePattern = '(', [SP], [Variable, [SP]], [NodeLabels, [SP]], [Properties, [SP]], ')' ;
 %%
@@ -4702,7 +4762,7 @@ file_create_ct_all(Type, CompactedDetailed, [Rule | Rules]) ->
     file_create_ct_all(Type, CompactedDetailed, Rules).
 
 file_create_ct(Type, CompactedDetailed, Rule) ->
-    [{Rule, Code}] = dets:lookup(?CODE_TEMPLATES, Rule),
+    [{Rule, Code}] = ets:lookup(?CODE_TEMPLATES, Rule),
 
     CodeLength = length(Code),
     RuleString = atom_to_list(Rule),
@@ -4846,7 +4906,7 @@ file_create_eunit_all(Type, [Rule | Rules]) ->
     file_create_eunit_all(Type, Rules).
 
 file_create_eunit(Type, Rule) ->
-    [{Rule, Code}] = dets:lookup(?CODE_TEMPLATES, Rule),
+    [{Rule, Code}] = ets:lookup(?CODE_TEMPLATES, Rule),
 
     RuleStrimg = atom_to_list(Rule),
 
@@ -4884,12 +4944,23 @@ file_write_eunit(Type, File, [H | T]) ->
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 store_code(Rule, Code, Max, Strict) ->
-%   erlang:display(io:format("store Code         ===> ~12.. B rule: ~s ", [length(Code), atom_to_list(Rule)])),
+    Logging = false,
+
+    case Logging of
+        true ->
+            {total_heap_size, MSize} = erlang:process_info(whereis(code_server), total_heap_size),
+            erlang:display(io:format("store total_heap   ===> ~12.. B rule: ~s ", [MSize, atom_to_list(Rule)])),
+            erlang:display(io:format("store Code         ===> ~12.. B rule: ~s ", [length(Code), atom_to_list(Rule)]));
+        _ -> ok
+    end,
 
     case Max == 0 of
         true ->
-%           erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [0, atom_to_list(Rule)])),
-            ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [0, atom_to_list(Rule)]);
+            case Logging of
+                true ->
+                    erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [0, atom_to_list(Rule)]));
+                _ -> ok
+            end;
         _ ->
             CodeUnique = ordsets:to_list(ordsets:from_list(Code)),
             CodeUnique_Length = length(CodeUnique),
@@ -4899,7 +4970,7 @@ store_code(Rule, Code, Max, Strict) ->
                                         lists:sublist(CodeUniqueSorted, 1, Max);
                                     _ -> CodeUnique
                                 end,
-            CodeTotal = case dets:lookup(?CODE_TEMPLATES, Rule) of
+            CodeTotal = case ets:lookup(?CODE_TEMPLATES, Rule) of
                             [{Rule, CodeOld}] ->
                                 lists:sort(?F_RANDOM, ordsets:to_list(ordsets:from_list(lists:append([CodeOld, CodeUniqueLimited]))));
                             _ -> CodeUniqueLimited
@@ -4910,7 +4981,17 @@ store_code(Rule, Code, Max, Strict) ->
                               [lists:nth(rand:uniform(CodeTotal_Length), CodeTotal) || _ <- lists:seq(1, Max)];
                           _ -> CodeTotal
                       end,
-            dets:insert(?CODE_TEMPLATES, {Rule, CodeNew}),
-%           erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [length(CodeNew), atom_to_list(Rule)])),
-            ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [length(CodeNew), atom_to_list(Rule)])
-    end.
+            ets:insert(?CODE_TEMPLATES, {Rule, CodeNew}),
+            case Logging of
+                true ->
+                    erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [length(CodeNew), atom_to_list(Rule)]));
+                _ -> ok
+            end
+    end,
+
+    case Logging of
+        true ->
+            erlang:display(io:format("store table size   ===> ~12.. B rule: ~s ", [ets:info(?CODE_TEMPLATES, memory), atom_to_list(Rule)]));
+        _ -> ok
+    end,
+    ok.
