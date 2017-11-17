@@ -67,7 +67,6 @@ Nonterminals
  multiply_divide_modulo_expression_addon_list
  multi_part_query
  namespace
- namespace_list
  node_label
  node_label_list
  node_labels
