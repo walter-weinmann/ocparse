@@ -24,185 +24,9 @@
 
 -export([generate/0]).
 
--define(ALL_CLAUSE_PERFORMANCE, [
-    cypher,
-    special
-]).
--define(ALL_CLAUSE_RELIABILITY, [
-    create,
-    cypher,
-    merge,
-    multiPartQuery,
-    readOnlyEnd,
-    readUpdateEnd,
-    regularQuery,
-    return,
-    standaloneCall,
-    updatingEnd
-]).
--define(ALL_CLAUSE_RELIABILITY_DETAILED, [
-%%%% Level 01 ..........................
-%%    decimalInteger,
-%%    escapedSymbolicName,
-%%    exponentDecimalReal,
-%%    hexInteger,
-%%    hexLetter,
-%%    octalInteger,
-%%    propertyKeyName,
-%%    regularDecimalReal,
-%%    relTypeName,
-%%    reservedWord,
-%%    symbolicName,
-%%    unescapedSymbolicName,
-%%%% Level 02 ..........................
-%%    nodeLabel,
-%%    procedureName,
-%%    propertyLookup,
-%%    rangeLiteral,
-%%    relationshipTypes,
-%%    yieldItem,
-%%%% Level 03 ..........................
-%%    nodeLabels,
-%%    yieldItems,
-%%%% Level 04 ..........................
-%%    removeItem,
-%%%% Level 05 ..........................
-%%    remove,
-%%%% Level 11 ..........................
-%%    addOrSubtractExpression,
-%%    andExpression,
-%%    comparisonExpression,
-%%    expressionCommalist,
-%%    multiplyDivideModuloExpression,
-%%    notExpression,
-%%    orExpression,
-%%    partialComparisonExpression,
-%%    powerOfExpression,
-%%    propertyOrLabelsExpression,
-%%    stringListNullOperatorExpression,
-%%    unaryAddOrSubtractExpression,
-%%    xorExpression,
-%%%% ...................................
-%%    expression,
-%%%% Level 12 ..........................
-%%    caseAlternatives,
-%%    delete,
-%%    explicitProcedureInvocation,
-%%    idInColl,
-%%    limit,
-%%    nodePattern,
-%%    propertyExpression,
-%%    relationshipDetail,
-%%    returnItem,
-%%    skip,
-%%    sortItem,
-%%    unwind,
-%%    where,
-%%%% Level 13 ..........................
-%%    caseAlternativesList,
-%%    inQueryCall,
-%%    order,
-%%    relationshipPattern,
-%%    returnItems,
-%%    setItem,
-%%    standaloneCall,
-%%%% Level 14 ..........................
-%%    patternElementChain,
-%%    patternElementChainList,
-%%    returnBody,
-%%    set,
-%%%% Level 15 ..........................
-%%    mergeAction,
-%%    patternElement,
-%%    return,
-%%    with,
-%%%% Level 16 ..........................
-%%    patternPart,
-%%%% Level 17 ..........................
-%%    merge,
-%%    pattern,
-%%%% Level 18 ..........................
-%%    create,
-%%    match,
-%%    readPart,
-%%    updatingPart,
-%%%% Level 19 ..........................
-%%    readOnlyEnd,
-%%    readPartUpdatingPartWithList,
-%%    readUpdateEnd,
-%%    updatingEnd,
-%%%% Level 20 ..........................
-%%    multiPartQuery,
-%%%% Level 21 ..........................
-%%    union,
-%%%% Level 22 ..........................
-%%    regularQuery,
-%%%% Level 23 ..........................
-%%    cypher,
-%%%% Level 24 ..........................
-%%    caseExpression,
-%%    filterExpression,
-%%    functionInvocation,
-%%    listComprehension,
-%%%% ...................................
-%%    booleanLiteral,
-%%    listLiteral,
-%%    mapLiteral,
-%%    numberLiteral,
-%%    stringLiteral,
-%%%% ...................................
-%%    literal,
-%%    parameter,
-%% wwe
-%%    parenthesizedExpression,
-%%    patternComprehension,
-%%    relationshipsPattern,
-%%    variable,
-%%%% ...................................
-%%    atom,
-%% Level 25 ..........................
-    special
-]).
-
--define(CODE_TEMPLATES, code_templates).
--define(CREATE_CODE_END,
-    [_CodeFirst | _] = Code,
-    {_, _MemorySize} = erlang:process_info(self(), memory),
-    ?debugFmt("~ntime (ms)          ===  ~12.. B rule: ~s ~n", [erlang:monotonic_time(1000) - _Start, atom_to_list(Rule)]),
-    ?debugFmt("~nmemory (bytes)     ===  ~12.. B rule: ~s ~n", [_MemorySize, atom_to_list(Rule)]),
-    ?debugFmt("~ncode size (bytes) <===  ~12.. B rule: ~s ~n", [length(_CodeFirst), atom_to_list(Rule)]),
-    ok
-).
--define(CREATE_CODE_START,
-    [garbage_collect(Pid) || Pid <- processes()],
-    _Start = erlang:monotonic_time(1000)
-).
--define(DASH, "-").
-
--define(F_RANDOM, fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end).
-
--define(GENERATE_COMPACTED, true).                         % true: compacted / false: detailed.
--define(GENERATE_CT, true).
--define(GENERATE_EUNIT, true).
--define(GENERATE_PERFORMANCE, true).
-
--define(LEFT_ARROW_HEAD, "<").
-
-%-define(MAX_BASIC_RULE, 250).
--define(MAX_BASIC_RULE, 100).
--define(MAX_CYPHER, ?MAX_BASIC_RULE * 10).
-
--define(PATH_CT, "test").
--define(PATH_EUNIT, "test").
-
--define(RIGHT_ARROW_HEAD, ">").
--define(SP, " ").
--define(SP_OPT, []).
-
--define(TIMETRAP_MINUTES, 30).
-
 -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
+-include("ocparse_generator.hrl").
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Generate Test Data.
@@ -486,6 +310,7 @@ create_code() ->
     create_code(literalNull),
     create_code(mapLiteralEmpty),
     create_code(octalInteger),
+    create_code(referenceExamples),
     create_code(regularDecimalReal),
     create_code(relationshipDetailEmpty),
     create_code(relationshipPatternEmpty),
@@ -2365,6 +2190,62 @@ create_code(readUpdateEnd = Rule) ->
     store_code(singlePartQuery, Code, ?MAX_CYPHER, true),
     store_code(singleQuery, Code, ?MAX_CYPHER, true),
     ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Reference examples from 'The Neo4j Developer Manual v3.3'.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(referenceExamples = Rule) ->
+    ?CREATE_CODE_START,
+
+    LineSep = io_lib:nl(),
+
+    Code = [
+        lists:append([
+            LineSep,
+            "        // =====================================================================", LineSep,
+            "        // from chapter:    ", Chapter, LineSep,
+            case Section of
+                [] -> [];
+                _ ->
+                    lists:append(["        //      section:    ", Section, LineSep])
+            end,
+            case Subsection of
+                [] -> [];
+                _ ->
+                    lists:append(["        //      subsection: ", Subsection, LineSep])
+            end,
+            "        // ---------------------------------------------------------------------", LineSep,
+%%            LineSep,
+            lists:append([
+                case Completion of
+                    expression ->
+                        "Unwind";
+                    nodePattern ->
+                        "Create () --";
+                    pattern ->
+                        "Create";
+%%                    properties ->
+%%                        "Create () -- (";
+                    relationshipPattern ->
+                        "Create ()";
+                    _ -> []
+                end,
+                string:replace(CodeExample, "\"", "\\\"", all),
+                case Completion of
+                    expression ->
+                        "As variable_1 Return *";
+%%                    properties ->
+%%                        ")";
+                    relationshipPattern ->
+                        "()";
+                    _ -> []
+                end
+            ])
+        ]) || {Chapter, Section, Subsection, Completion, CodeExample} <- ?TESTS_FROM_NEO4J_V3_3
+    ],
+    ets:insert(?CODE_TEMPLATES, {Rule, Code}),
+    ok;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RegularDecimalReal = ({ Digit } | DecimalInteger), '.', (DigitString | DecimalInteger) ;
