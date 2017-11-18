@@ -150,7 +150,6 @@
 %%%% ...................................
 %%    literal,
 %%    parameter,
-%% wwe
 %%    parenthesizedExpression,
 %%    patternComprehension,
 %%    relationshipsPattern,
@@ -181,7 +180,7 @@
 
 -define(GENERATE_COMPACTED, true).                         % true: compacted / false: detailed.
 -define(GENERATE_CT, true).
--define(GENERATE_EUNIT, true).
+-define(GENERATE_EUNIT, false).
 -define(GENERATE_PERFORMANCE, true).
 
 -define(LEFT_ARROW_HEAD, "<").
@@ -447,7 +446,7 @@
         WHERE appearances > 1
         RETURN person.name, appearances, movies
     "},
-%% wwe legacy
+%% wwe legacy - CONSTRAINT / INDEX
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 4. Get started with Cypher", "4.5. Constraints and indexes", "4.5.1. Using constraints", cypher,
 %%        "
@@ -491,7 +490,7 @@
         WHERE friendsCount > 3
         RETURN n, friendsCount
     "},
-%% wwe SET ???
+%% wwe - open issue
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 5. Introduction", "5.2. Querying and updating the graph", "5.2.1. The structure of update queries", cypher,
 %%        "
@@ -648,7 +647,7 @@
         "
         CALL db.resampleIndex($indexname)
     "},
-%% wwe legacy
+%% wwe legacy - START
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 6. Syntax", "6.4. Parameters", "6.4.12. Index value (explicit indexes)", cypher,
 %%        "
@@ -952,8 +951,8 @@
         "
         RETURN { key: 'Value', listKey: [{ inner: 'Map1' }, { inner: 'Map2' }]}
     "},
-%% wwe
-%%    % --------------------------------------------------------------------------
+%% wwe - open issue
+%%    % ------------------ --------------------------------------------------------
 %%    {"Chapter 6. Syntax", "6.9. Maps", "6.9.2. Map projection", cypher,
 %%        "
 %%        MATCH (actor:Person { name: 'Charlie Sheen' })-[:ACTED_IN]->(movie:Movie)
@@ -1091,7 +1090,7 @@ _______ WITH SPACE`]->()
         WHERE id(r)= 0
         RETURN a,b
     "},
-%% wwe legacy
+%% wwe legacy - function_call with pattern as argument
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 7. Clauses", "7.1. MATCH", "7.1.5. Shortest path", cypher,
 %%        "
@@ -1750,7 +1749,7 @@ _______ WITH SPACE`]->()
         MERGE (person)-[r:HAS_CHAUFFEUR]->(chauffeur:Chauffeur { name: person.chauffeurName })
         RETURN person.name, person.chauffeurName, chauffeur
     "},
-%% wwe legacy
+%% wwe legacy - CONSTRAINT
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 7. Clauses", "7.16. MERGE", "7.16.5. Using unique constraints with MERGE", cypher,
 %%        "
@@ -1792,7 +1791,7 @@ _______ WITH SPACE`]->()
         "
         CALL db.labels
     "},
-%% wwe legacy
+%% wwe legacy - CALL
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 7. Clauses", "7.17. CALL[...YIELD]", "7.17.3. View the signature for a procedure", cypher,
 %%        "
@@ -1831,7 +1830,7 @@ _______ WITH SPACE`]->()
         CALL db.labels() YIELD label
         RETURN count(label) AS numLabels
     "},
-%% wwe legacy
+%% wwe legacy - CALL
     % --------------------------------------------------------------------------
 %%    {"Chapter 7. Clauses", "7.17. CALL[...YIELD]", "7.17.10. Call a procedure and filter its results", cypher,
 %%        "
@@ -2147,7 +2146,7 @@ _______ WITH SPACE`]->()
         "
         RETURN range(0, 10), range(2, 18, 3)
     "},
-%% wwe |
+%% wwe legacy - argument in reduce function
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 8. Functions", "8.4. List functions", "8.4.7. reduce()", cypher,
 %%        "
@@ -2404,7 +2403,7 @@ _______ WITH SPACE`]->()
         "
         RETURN point({ x: 2.3, y: 4.5 }) AS point
     "}
-%% wwe user-defined functions
+%% wwe legacy - function_name not schema_name
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 8. Functions", "8.10. User-defined functions", "8.10.1. Call a user-defined function", cypher,
 %%        "
