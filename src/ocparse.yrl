@@ -279,7 +279,7 @@ Endsymbol
 %% Operator precedences.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Nonassoc    500 properties.                                                                     % atom vs. properties / literal vs. properties
+Nonassoc    100 properties.                                                                     % atom vs. properties / literal vs. properties
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
