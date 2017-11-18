@@ -894,8 +894,7 @@ Atom11.                                          Atom ::= "ANY"     "(" FilterEx
 Atom12.                                          Atom ::= "NONE"    "(" FilterExpression                ")" ;
 Atom13.                                          Atom ::= "SINGLE"  "(" FilterExpression                ")" ;
 Atom14.                                          Atom ::= RelationshipsPattern                              ;
--- wwe
--- Atom15.                                          Atom ::= ParenthesizedExpression                           ;
+Atom15.                                          Atom ::= ParenthesizedExpression                           ;
 Atom16.                                          Atom ::= FunctionInvocation                                ;
 Atom17.                                          Atom ::= Variable                                          ;
 
@@ -941,8 +940,7 @@ PartialComparisonExpression06.                   PartialComparisonExpression ::=
 
 -- parenthesized_expression -> '(' expression ')'                                                  : {parenthesizedExpression, '$2'}.
 
--- wwe
--- ParenthesizedExpression01.                       ParenthesizedExpression ::= "(" Expression ")" ;
+ParenthesizedExpression01.                       ParenthesizedExpression ::= "(" Expression ")" ;
 
 -- relationships_pattern -> node_pattern pattern_element_chain_list                                : {relationshipsPattern, '$1', '$2'}.
 
