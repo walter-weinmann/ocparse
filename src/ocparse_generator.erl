@@ -3906,25 +3906,24 @@ create_code(orExpression = Rule, Max) ->
 %% ParenthesizedExpression = '(', [SP], Expression, [SP], ')' ;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% wwe
-%%create_code(parenthesizedExpression = Rule, Max) ->
-%%    ?CREATE_CODE_START,
-%%    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
-%%    Expression_Length = length(Expression),
-%%
-%%    Code = [
-%%        lists:append([
-%%            "(",
-%%            ?SP_OPT,
-%%            lists:nth(rand:uniform(Expression_Length), Expression),
-%%            ?SP_OPT,
-%%            ")"
-%%        ])
-%%        || _ <- lists:seq(1, Max * 2)
-%%    ],
-%%    store_code(Rule, Code, Max, false),
-%%    store_code(atom, Code, Max, false),
-%%    ?CREATE_CODE_END;
+create_code(parenthesizedExpression = Rule, Max) ->
+    ?CREATE_CODE_START,
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
+    Expression_Length = length(Expression),
+
+    Code = [
+        lists:append([
+            "(",
+            ?SP_OPT,
+            lists:nth(rand:uniform(Expression_Length), Expression),
+            ?SP_OPT,
+            ")"
+        ])
+        || _ <- lists:seq(1, Max * 2)
+    ],
+    store_code(Rule, Code, Max, false),
+    store_code(atom, Code, Max, false),
+    ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PartialComparisonExpression = ('=', [SP], AddOrSubtractExpression)
@@ -4258,10 +4257,8 @@ create_code_expression(Max) ->
     create_code(andExpression, Max),
     create_code(xorExpression, Max),
     create_code(orExpression, Max),
-
-    create_code(expressionCommalist, Max).
-%% wwe
-%%    create_code(parenthesizedExpression, Max).
+    create_code(expressionCommalist, Max),
+    create_code(parenthesizedExpression, Max).
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Creating code layered.

@@ -232,10 +232,6 @@ The documentation for **ocparse** is available here: [Wiki](https://github.com/w
 
 The number of block comments (`/* ... */`) is limted to one per line.
 
-### ParenthesizedExpression
-
-`ParenthesizedExpression` is not supported due to a conflict with `NodePattern`.
-
 ### Properties / Literal
 
 The rule `Properties` has a higher precedence than the rule `Literal`.
@@ -283,12 +279,6 @@ it is only used
 
 `
 MultiPartQuery = (ReadPart | (UpdatingStartClause, [SP], UpdatingPart)), With, [SP], { ReadPart,               With, [SP] }, SinglePartQuery ;
-`
-
-### ParenthesizedExpression
-
-`
-ParenthesizedExpression = '(', [SP], Expression, [SP], ')' ;
 `
 
 ### SchemaName

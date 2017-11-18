@@ -2,7 +2,7 @@
 %%% File        : performance_compacted_referenceExamples_SUITE.erl
 %%% Description : Test Suite for rule: referenceExamples.
 %%%
-%%% Created     : 17.11.2017
+%%% Created     : 18.11.2017
 %%%-------------------------------------------------------------------
 -module(performance_compacted_referenceExamples_SUITE).
 

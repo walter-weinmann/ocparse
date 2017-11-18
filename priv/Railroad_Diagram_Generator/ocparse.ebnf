@@ -522,9 +522,7 @@ atom ::= literal
        | ( ( 'FILTER' | 'ALL' | 'ANY' | 'NONE' | 'SINGLE' ) '(' filterExpression ')' )
        | ( 'EXTRACT' '(' filterExpression ( '|' expression )? ')' )
        | relationshipsPattern
-/* wwe
        | parenthesizedExpression
-*/
        | functionInvocation
        | variable
 
@@ -542,9 +540,7 @@ listLiteral ::= '[' ( expression ( ',' expression )* )? ']'
 
 partialComparisonExpression ::= ( '=' | '<>' | '<' | '>' | '<=' | '>=' ) addOrSubtractExpression
 
-/* wwe
 parenthesizedExpression ::= '(' expression ')'
-*/
 
 relationshipsPattern ::= nodePattern patternElementChain+
 

@@ -2,7 +2,7 @@
 %%% File        : performance_compacted_special_SUITE.erl
 %%% Description : Test Suite for rule: special.
 %%%
-%%% Created     : 16.11.2017
+%%% Created     : 18.11.2017
 %%%-------------------------------------------------------------------
 -module(performance_compacted_special_SUITE).
 
@@ -23,7 +23,7 @@
 
 suite() ->
     [
-        {timetrap, {minutes, 30}}
+        {timetrap, {minutes, 10}}
     ].
 
 init_per_suite(Config) ->

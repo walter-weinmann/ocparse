@@ -198,9 +198,9 @@
 -define(SP_OPT, []).
 
 -define(TESTS_FROM_NEO4J_V3_3, [
-%% wwe
-%%  {"chapter name", "subchapter name", "page", "code"}
-    % --------------------------------------------------------------------------
+    % ==========================================================================
+    % Tuple structure: {chapter, section, subsection, completion, code}
+    % ==========================================================================
     % Chapter 4. Get started with Cypher
     % --------------------------------------------------------------------------
     {"Chapter 4. Get started with Cypher", "4.1. Patterns", "",
@@ -648,7 +648,7 @@
         "
         CALL db.resampleIndex($indexname)
     "},
-%% wwe
+%% wwe legacy
 %%    % --------------------------------------------------------------------------
 %%    {"Chapter 6. Syntax", "6.4. Parameters", "6.4.12. Index value (explicit indexes)", cypher,
 %%        "
