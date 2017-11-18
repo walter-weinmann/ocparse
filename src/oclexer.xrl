@@ -103,6 +103,7 @@ Erlang code.
     {"^(?i)(ASC)$",              'ASC'},
     {"^(?i)(ASCENDING)$",        'ASCENDING'},
     {"^(?i)(BY)$",               'BY'},
+    {"^(?i)(CALL)$",             'CALL'},
     {"^(?i)(CASE)$",             'CASE'},
     {"^(?i)(CONSTRAINT)$",       'CONSTRAINT'},
     {"^(?i)(CONTAINS)$",         'CONTAINS'},
