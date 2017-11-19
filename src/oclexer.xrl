@@ -154,7 +154,8 @@ Erlang code.
     {"^(?i)(WHEN)$",             'WHEN'},
     {"^(?i)(WHERE)$",            'WHERE'},
     {"^(?i)(WITH)$",             'WITH'},
-    {"^(?i)(XOR)$",              'XOR'}
+    {"^(?i)(XOR)$",              'XOR'},
+    {"^(?i)(YIELD)$",            'YIELD'}
 ]).
 
 %-define(DEBUG, true).
