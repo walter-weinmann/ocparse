@@ -31,27 +31,44 @@ IF "%1" == "" (
 > stress_test.log (
 
     ECHO =======================================================================
-    ECHO !TIME! Start run - in total %NO_RUNS%
+    ECHO %time% Start run - in total %NO_RUNS%
 
-    DEL _build\test\lib\ocparse\test\reliability_*.*
-    RD _build\test\logs /Q /S
+    IF EXIST _build\test\logs (
+        ECHO "Deleting _build\test\logs"
+        RD /Q /S _build\test\logs
+    )
     MD _build\test\logs
-    DEL test\reliability_*.*
-    RD tmp\backup /Q /S
+    IF EXIST tmp\backup (
+        ECHO "Deleting tmp\backup"
+        RD /Q /S tmp\backup
+    )
+    MD tmp\backup
+
+    REM Setting tnsparse options ...............................................
+    REM true: compacted / false: detailed.
+    SET GENERATE_COMPACTED=true
+    SET GENERATE_CT=true
+    SET GENERATE_EUNIT=false
+    SET GENERATE_PERFORMANCE=true
+    SET GENERATE_RELIABILITY=false
+    SET HEAP_SIZE=+hms 100663296
+    SET LOGGING=false
+    SET MAX_BASIC_RULE=10
 
     FOR /L %%G IN (1,1,%NO_RUNS%) DO (
        ECHO -----------------------------------------------------------------------
-       ECHO !TIME! %%G. Step: gen_tests.bat
-       CALL gen_tests.bat
-       REM DEL test\reliability_*_SUITE.erl
+       ECHO %time% %%G. Step: gen_tests.bat
+       CALL test\gen_tests.bat
+
        MD tmp\backup\%%G
        COPY test\*_SUITE.erl tmp\backup\%%G
-       ECHO !TIME! %%G. Step: rebar3 ct
+
+       ECHO %time% %%G. Step: rebar3 ct
        CALL rebar3 ct
     )
 
     ECHO -----------------------------------------------------------------------
-    ECHO !TIME! End   run
+    ECHO %time% End   run
     ECHO =======================================================================
 
 )

@@ -5,6 +5,5 @@ rebar.lock
 rebar3.crashdump
 src/oclexer.erl
 src/ocparse.erl
-test/reliability_*.tst
-test/reliability_*_SUITE.erl
+test/reliability_*
 tmp
