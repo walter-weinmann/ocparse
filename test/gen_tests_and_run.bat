@@ -24,7 +24,7 @@ rem ----------------------------------------------------------------------------
 > gen_tests_and_run.log (
 
     SETLOCAL enableDelayedExpansion
-    ECHO %time% Start Test Data Generation and Run
+    ECHO !time! Start Test Data Generation and Run
 
     REM Setting ocparse options ...............................................
     REM true: compacted / false: detailed.
@@ -38,21 +38,21 @@ rem ----------------------------------------------------------------------------
     SET MAX_BASIC_RULE=100
     CALL test\gen_tests
 
-    ECHO %time% Start EUnit Tests
+    ECHO !time! Start EUnit Tests
     SET SOURCEFILES_OLD=SOURCEFILES
     SET SOURCEFILES=
     CALL rebar3 eunit
 
     SET SOURCEFILES=SOURCEFILES_OLD
-    ECHO %time% Start Common Tests
+    ECHO !time! Start Common Tests
     CALL rebar3 ct
 
-    ECHO %time% Start Coverage Analysis
+    ECHO !time! Start Coverage Analysis
     CALL rebar3 cover
 
-    ECHO %time% Start Dialyzer
+    ECHO !time! Start Dialyzer
     CALL rebar3 dialyzer
 
-    ECHO %time% End   Test Data Generation and Run
+    ECHO !time! End   Test Data Generation and Run
 
 )

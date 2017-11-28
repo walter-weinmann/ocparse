@@ -37,9 +37,9 @@ if [ -d "tmp" ]; then
    rm tmp/*
 fi
 
-bnfc -o tmp --haskell priv/bnf_converter/tnsparse.cf
+bnfc -o tmp --haskell priv/bnf_converter/ocparse.cf
 
-happy -i tmp/ParTnsparse.y
+happy -i tmp/ParOcparse.y
 
 echo "----------------------------------------------------------------------------"
 echo "$(timestamp) End   run"

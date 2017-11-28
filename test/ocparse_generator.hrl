@@ -190,8 +190,8 @@
 -define(MAX_BASIC_RULE, list_to_integer(string:to_lower(os:getenv("MAX_BASIC_RULE", "100")))).
 -define(MAX_CYPHER, ?MAX_BASIC_RULE * 10).
 
--define(PATH_CT, "test").
--define(PATH_EUNIT, "test").
+-define(PATH_CT, "test/generated/ct/").
+-define(PATH_EUNIT, "test/generated/eunit/").
 
 -define(RIGHT_ARROW_HEAD, ">").
 -define(SP, " ").

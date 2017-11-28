@@ -5,7 +5,7 @@ sleep .1
 
 # ----------------------------------------------------------------------------
 #
-# stress_test.sh: Oracle tnsnames.ora file - stress testing.
+# stress_test.sh: opencypher - stress testing.
 #
 # Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
 #
@@ -50,7 +50,7 @@ if [ -d "tmp/backup" ]; then
 fi
 mkdir  tmp/backup
 
-# Setting tnsparse options ...............................................
+# Setting ocparse options ...............................................
 # true: compacted / false: detailed.
 export GENERATE_COMPACTED="true"
 export GENERATE_CT="true"
