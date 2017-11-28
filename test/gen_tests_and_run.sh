@@ -5,7 +5,7 @@ sleep .1
 
 # ----------------------------------------------------------------------------
 #
-# gen_tests_and_run.bat: opencypher - generate and run test data.
+# gen_tests_and_run.sh: opencypher - generate and run test data.
 #
 # Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
 #
