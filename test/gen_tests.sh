@@ -54,7 +54,7 @@ if [ "$GENERATE_COMPACTED" == "" ]; then
     export GENERATE_EUNIT="false"
     export GENERATE_PERFORMANCE="true"
     export GENERATE_RELIABILITY="true"
-    export HEAP_SIZE="+hms 33554432"
+    export HEAP_SIZE="+hms 67108864"
     export LOGGING="false"
     export MAX_BASIC_RULE=100
 fi
