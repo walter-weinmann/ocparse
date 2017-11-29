@@ -304,7 +304,7 @@ create_code() ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n======================================================> create_code: Level 01   <===================~n", []),
+    erlang:display(io:format("~n~n======================================================> create_code: Level 01   <===================~n", [])),
 
     create_code(atomCount),
     create_code(booleanLiteral),
@@ -354,7 +354,7 @@ create_code() ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n======================================================> create_code: Level 02   <===================~n", []),
+    erlang:display(io:format("~n~n======================================================> create_code: Level 02   <===================~n", [])),
 
     create_code(namespace),
     create_code(nodeLabel),
@@ -376,7 +376,7 @@ create_code() ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n======================================================> create_code: Level 03   <===================~n", []),
+    erlang:display(io:format("~n~n======================================================> create_code: Level 03   <===================~n", [])),
 
     create_code(nodeLabels),
     create_code(yieldItems),
@@ -390,7 +390,7 @@ create_code() ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n======================================================> create_code: Level 04   <===================~n", []),
+    erlang:display(io:format("~n~n======================================================> create_code: Level 04   <===================~n", [])),
 
     create_code(removeItem),
 
@@ -404,7 +404,7 @@ create_code() ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n======================================================> create_code: Level 05   <===================~n", []),
+    erlang:display(io:format("~n~n======================================================> create_code: Level 05   <===================~n", [])),
 
     create_code(remove),
 
@@ -412,7 +412,7 @@ create_code() ->
 %% Level 05 = 11-25/1
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n======================================================> create_code: Level 06   <===================~n", []),
+    erlang:display(io:format("~n~n======================================================> create_code: Level 06   <===================~n", [])),
 
     create_code_layer("1"),
 
@@ -420,7 +420,7 @@ create_code() ->
 %% Level 07 = 11-25/2
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n======================================================> create_code: Level 07   <===================~n", []),
+    erlang:display(io:format("~n~n======================================================> create_code: Level 07   <===================~n", [])),
 
     create_code_layer("2"),
 
@@ -487,7 +487,7 @@ create_code() ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n======================================================> create_code: Level 99   <===================~n", []),
+    erlang:display(io:format("~n~n======================================================> create_code: Level 99   <===================~n", [])),
 
     ok.
 
@@ -4273,7 +4273,7 @@ create_code_layer(_Version) ->
 %% Level 11
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 11/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 11/~s <===================~n", [_Version])),
 
     create_code_expression(?MAX_BASIC_RULE),
 
@@ -4335,7 +4335,7 @@ create_code_layer(_Version) ->
 %% 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 12/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 12/~s <===================~n", [_Version])),
 
     create_code(caseAlternatives),
     create_code(delete),
@@ -4387,7 +4387,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 13/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 13/~s <===================~n", [_Version])),
 
     create_code(caseAlternativesList),
     create_code(filterExpression),
@@ -4420,7 +4420,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 14/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 14/~s <===================~n", [_Version])),
 
     create_code(caseExpression),
     create_code(listComprehension),
@@ -4451,7 +4451,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 15/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 15/~s <===================~n", [_Version])),
 
     create_code(mergeAction),
     create_code(patternElement),
@@ -4472,7 +4472,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 16/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 16/~s <===================~n", [_Version])),
 
     create_code(patternComprehension),
     create_code(patternPart),
@@ -4490,7 +4490,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 17/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 17/~s <===================~n", [_Version])),
 
     create_code(merge),
     create_code(pattern),
@@ -4510,7 +4510,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 18/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 18/~s <===================~n", [_Version])),
 
     create_code(create),
     create_code(match),
@@ -4539,7 +4539,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 19/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 19/~s <===================~n", [_Version])),
 
     create_code(readOnlyEnd),
     create_code(readPartUpdatingPartWithList),
@@ -4556,7 +4556,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 20/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 20/~s <===================~n", [_Version])),
 
     create_code(multiPartQuery),
 
@@ -4569,7 +4569,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 21/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 21/~s <===================~n", [_Version])),
 
     create_code(union),
 
@@ -4584,7 +4584,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 22/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 22/~s <===================~n", [_Version])),
 
     create_code(regularQuery),
 
@@ -4596,7 +4596,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 23/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 23/~s <===================~n", [_Version])),
 
     create_code(cypher),
 
@@ -4623,7 +4623,7 @@ create_code_layer(_Version) ->
 %%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 24/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 24/~s <===================~n", [_Version])),
 
     create_code(atom),
 
@@ -4631,7 +4631,7 @@ create_code_layer(_Version) ->
 %% Level 25
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ?debugFmt("~n~n================================================> create_code_layer: Level 25/~s <===================~n", [_Version]),
+    erlang:display(io:format("~n~n================================================> create_code_layer: Level 25/~s <===================~n", [_Version])),
 
     ok.
 
