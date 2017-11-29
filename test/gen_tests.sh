@@ -31,17 +31,17 @@ timestamp() {
 
 echo "$(timestamp) Start Test Data Generation"
 
+if [ -d "_build/test/lib/ocparse/test/generated" ]; then
+    rm -rf _build/test/lib/ocparse/test/generated
+fi
 if ls _build/test/lib/ocparse/test/performance_*.* 1> /dev/null 2>&1; then
     rm _build/test/lib/ocparse/test/performance_*.*
 fi
 if ls _build/test/lib/ocparse/test/reliability_*.* 1> /dev/null 2>&1; then
     rm _build/test/lib/ocparse/test/reliability_*.*
 fi
-if ls test/performance_*.* 1> /dev/null 2>&1; then
-    rm test/performance_*.*
-fi
-if ls test/reliability_*.* 1> /dev/null 2>&1; then
-    rm test/reliability_*.*
+if [ -d "test/generated" ]; then
+    rm -rf test/generated
 fi
 
 rebar3 as test compile
@@ -54,7 +54,7 @@ if [ "$GENERATE_COMPACTED" == "" ]; then
     export GENERATE_EUNIT="false"
     export GENERATE_PERFORMANCE="true"
     export GENERATE_RELIABILITY="true"
-    export HEAP_SIZE="+hms 100663296"
+    export HEAP_SIZE="+hms 33554432"
     export LOGGING="false"
     export MAX_BASIC_RULE=100
 fi
