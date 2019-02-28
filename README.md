@@ -1,6 +1,11 @@
 # ocparse - the openCypher parser written in Erlang
 
-[![Build Status](https://travis-ci.org/walter-weinmann/ocparse.svg?branch=master)](https://travis-ci.org/walter-weinmann/ocparse) [![Coverage Status](https://coveralls.io/repos/github/walter-weinmann/ocparse/badge.svg?branch=master)](https://coveralls.io/github/walter-weinmann/ocparse?branch=master)
+![Travis (.org)](https://img.shields.io/travis/walter-weinmann/ocparse.svg)
+![Coveralls github](https://img.shields.io/coveralls/github/walter-weinmann/ocparse.svg)
+![GitHub](https://img.shields.io/github/license/walter-weinmann/ocparse.svg)
+![GitHub release](https://img.shields.io/github/release/walter-weinmann/ocparse.svg)
+![GitHub Release Date](https://img.shields.io/github/release-date/walter-weinmann/ocparse.svg)
+![GitHub commits since latest release](https://img.shields.io/github/commits-since/walter-weinmann/ocparse/1.4.3.svg)
 
 **ocparse** is a production-ready [openCypher](https://github.com/opencypher/openCypher) parser written in pure Erlang.  **ocparse** is closely aligned to the openCypher project and in future will be adapted on a regular basis as the openCypher project evolves. The [openCypher project](http://www.opencypher.org) aims to deliver a full and open specification of the industry’s most widely adopted graph database query language: [Cypher](https://neo4j.com/docs/developer-manual/current/#cypher-query-lang). And, with the [EBNF file](https://s3.amazonaws.com/artifacts.opencypher.org/cypher.ebnf) the project provides the basis for the definition of the LALR grammar.
 
